@@ -35,7 +35,28 @@ export function AppProvider({ children }) {
       balance: 100
     }
   ])
+        const [bookings, setBookings] = useState([
+        {
+          turf: "Green Valley Ground",
+          sport: "Cricket",
+          amount: 2000,
+          status: "Paid"
+        },
 
+        {
+          turf: "City Sports Arena",
+          sport: "Football",
+          amount: 1500,
+          status: "Partial"
+        },
+
+        {
+          turf: "Victory Ground",
+          sport: "Cricket",
+          amount: 2500,
+          status: "Pending"
+        }
+])
   // ADD PLAYER
   const addPlayer = (player) => {
 

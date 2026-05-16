@@ -7,11 +7,11 @@ import {
 } from "lucide-react"
 
 export default function BookingCard({
-        turf,
-        sport,
-        amount,
-        status
-      }){
+  turf,
+  sport,
+  amount,
+  status
+}) {
 
   const statusColors = {
     Paid: "text-green-500",
@@ -20,6 +20,7 @@ export default function BookingCard({
   }
 
   return (
+
     <GlassCard className="space-y-4">
 
       {/* Top */}
@@ -80,7 +81,8 @@ export default function BookingCard({
           </h3>
 
           <p className={`
-            text-sm font-medium
+            text-sm
+            font-medium
             ${statusColors[status]}
           `}>
             {status}
@@ -109,9 +111,10 @@ export default function BookingCard({
 
       </div>
 
-      {/* Partial Info */}
+      {/* Partial Payment Info */}
       {
         status === "Partial" && (
+
           <div className="
             flex justify-between
             text-sm font-medium
@@ -126,9 +129,11 @@ export default function BookingCard({
             </span>
 
           </div>
+
         )
       }
 
     </GlassCard>
+
   )
 }

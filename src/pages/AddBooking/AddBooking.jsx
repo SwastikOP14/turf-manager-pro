@@ -11,10 +11,18 @@ import PrimaryButton from "../../components/common/PrimaryButton"
 
 export default function AddBooking() {
 const [playerModal, setPlayerModal] = useState(false)
-const { players, addPlayer } = useApp()
+const {
+  players,
+  addPlayer,
+  addBooking
+} = useApp()
 const [playerName, setPlayerName] = useState("")
 const [playerPhone, setPlayerPhone] = useState("")
 const [playerError, setPlayerError] = useState("")
+const [turf, setTurf] = useState("")
+const [sport, setSport] = useState("")
+const [amount, setAmount] = useState("")
+const [status, setStatus] = useState("Paid")
   return (
     <MobileLayout hideFab>
 
@@ -33,14 +41,26 @@ const [playerError, setPlayerError] = useState("")
 
           <SectionTitle title="Booking Details" />
 
-          <SelectField
+          <InputField
             label="Sport / Game"
-            placeholder="Select sport"
+            placeholder="Cricket"
+
+            value={sport}
+
+            onChange={(e) =>
+              setSport(e.target.value)
+            }
           />
 
-          <SelectField
-            label="Turf / Ground"
-            placeholder="Select turf"
+          <InputField
+              label="Turf / Ground"
+              placeholder="Green Valley Ground"
+
+              value={turf}
+
+              onChange={(e) =>
+                setTurf(e.target.value)
+              }
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -71,12 +91,24 @@ const [playerError, setPlayerError] = useState("")
 
           <InputField
             label="Total Amount"
-            placeholder="₹ 2000"
+            placeholder="2000"
+
+            value={amount}
+
+            onChange={(e) =>
+              setAmount(e.target.value)
+            }
           />
 
-          <SelectField
+          <InputField
             label="Payment Status"
-            placeholder="Partial"
+            placeholder="Paid / Partial / Pending"
+
+            value={status}
+
+            onChange={(e) =>
+              setStatus(e.target.value)
+            }
           />
 
           <InputField
@@ -124,11 +156,6 @@ const [playerError, setPlayerError] = useState("")
 
             <SectionTitle title="Total Players" />
 
-            <button className="
-              text-sm
-              text-green-500
-              font-medium
-            ">
               <button
                   onClick={() => setPlayerModal(true)}
                   className="
@@ -139,7 +166,6 @@ const [playerError, setPlayerError] = useState("")
                 >
                   Add / Search Players
               </button>
-            </button>
 
           </div>
 
@@ -179,6 +205,23 @@ const [playerError, setPlayerError] = useState("")
 
         <PrimaryButton
           text="Continue"
+
+          onClick={() => {
+
+            if (!turf || !sport || !amount) return
+
+            addBooking({
+              turf,
+              sport,
+              amount,
+              status
+            })
+
+            setTurf("")
+            setSport("")
+            setAmount("")
+            setStatus("Paid")
+          }}
         />
 
       </div>

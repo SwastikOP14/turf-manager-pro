@@ -7,8 +7,11 @@ import {
 } from "lucide-react"
 
 export default function BookingCard({
-  status = "Paid"
-}) {
+        turf,
+        sport,
+        amount,
+        status
+      }){
 
   const statusColors = {
     Paid: "text-green-500",
@@ -45,14 +48,14 @@ export default function BookingCard({
               text-black dark:text-white
               font-semibold text-lg
             ">
-              Green Valley Ground
+              {turf}
             </h3>
 
             <p className="
               text-sm
               text-gray-500 dark:text-gray-400
             ">
-              Cricket
+              {sport}
             </p>
 
             <p className="
@@ -73,7 +76,7 @@ export default function BookingCard({
             text-green-500
             font-bold text-xl
           ">
-            ₹2,000
+            ₹{amount}
           </h3>
 
           <p className={`

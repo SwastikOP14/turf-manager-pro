@@ -74,14 +74,24 @@ export function AppProvider({ children }) {
     )
   )
 }
+const addBooking = (booking) => {
+
+  setBookings((prev) => [
+    ...prev,
+    booking
+  ])
+}
 
   return (
     <AppContext.Provider
       value={{
-        players,
-        addPlayer,
-        deletePlayer
-      }}
+              players,
+              addPlayer,
+              deletePlayer,
+
+              bookings,
+              addBooking
+            }}
     >
 
       {children}

@@ -1,10 +1,10 @@
 import MobileLayout from "../../components/layout/MobileLayout"
-
+import { useApp } from "../../context/AppContext"
 import BookingTabs from "../../components/booking/BookingTabs"
 import BookingCard from "../../components/booking/BookingCard"
 
 export default function Bookings() {
-
+const { bookings } = useApp()
   return (
     <MobileLayout>
 
@@ -27,13 +27,20 @@ export default function Bookings() {
 
         {/* Cards */}
         <div className="space-y-4">
+           {
+              bookings.map((booking, index) => (
 
-          <BookingCard status="Paid" />
+                <BookingCard
+                  key={index}
 
-          <BookingCard status="Partial" />
+                  turf={booking.turf}
+                  sport={booking.sport}
+                  amount={booking.amount}
+                  status={booking.status}
+                />
 
-          <BookingCard status="Pending" />
-
+              ))
+            }
         </div>
 
       </div>

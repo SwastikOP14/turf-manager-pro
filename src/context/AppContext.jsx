@@ -1,0 +1,72 @@
+import {
+  createContext,
+  useContext,
+  useState
+} from "react"
+
+const AppContext = createContext()
+
+export function AppProvider({ children }) {
+
+  const [players, setPlayers] = useState([
+    {
+      name: "Arjun Sharma",
+      phone: "+91 9888777665",
+      balance: 1200
+    },
+    {
+      name: "Chirag Sehgal",
+      phone: "+91 9123456789",
+      balance: -200
+    },
+    {
+      name: "Priya Patel",
+      phone: "+91 9876501234",
+      balance: 750
+    },
+    {
+      name: "Ritesh Mohapatra",
+      phone: "+91 9876543210",
+      balance: 500
+    },
+    {
+      name: "Ritik Raj",
+      phone: "+91 9000001111",
+      balance: 100
+    }
+  ])
+
+  // ADD PLAYER
+  const addPlayer = (player) => {
+
+    setPlayers((prev) => [
+      ...prev,
+      player
+    ])
+  }
+
+  const deletePlayer = (phone) => {
+
+  setPlayers((prev) =>
+    prev.filter(
+      (player) => player.phone !== phone
+    )
+  )
+}
+
+  return (
+    <AppContext.Provider
+      value={{
+        players,
+        addPlayer,
+        deletePlayer
+      }}
+    >
+
+      {children}
+
+    </AppContext.Provider>
+  )
+}
+
+export const useApp = () => useContext(AppContext)

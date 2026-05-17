@@ -25,6 +25,8 @@ const [turf, setTurf] = useState("")
 const [sport, setSport] = useState("")
 const [amount, setAmount] = useState("")
 const [status, setStatus] = useState("Paid")
+const [date, setDate] = useState("")
+const [time, setTime] = useState("")
   return (
     <MobileLayout hideFab>
 
@@ -69,14 +71,27 @@ const [status, setStatus] = useState("Paid")
 
             <InputField
               label="Date"
-              placeholder="18 May 2026"
+
+              type="date"
+
+              value={date}
+
+              onChange={(e) =>
+                setDate(e.target.value)
+              }
             />
 
             <InputField
               label="Time"
-              placeholder="08:00 AM"
-            />
 
+              type="time"
+
+              value={time}
+
+              onChange={(e) =>
+                setTime(e.target.value)
+              }
+            />
           </div>
 
           <InputField
@@ -215,19 +230,34 @@ const [status, setStatus] = useState("Paid")
 
           onClick={() => {
 
-            if (!turf || !sport || !amount) return
-
+            if (
+              !turf ||
+              !sport ||
+              !amount ||
+              !date ||
+              !time
+            ) return
             addBooking({
+
               turf,
+
               sport,
+
               amount: Number(amount),
-              status
+
+              status,
+
+              date,
+
+              time
             })
 
             setTurf("")
             setSport("")
             setAmount("")
             setStatus("Paid")
+            setDate("")
+            setTime("")
           }}
         />
 

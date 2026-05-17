@@ -4,63 +4,89 @@ import { useTheme } from "../../context/ThemeContext"
 
 export default function Header() {
 
-  const { darkMode, toggleTheme } = useTheme()
+  const {
+    darkMode,
+    toggleTheme
+  } = useTheme()
 
   return (
-    <div className="
-      flex items-center justify-between
-      px-4 py-4
-      border-b
-      border-black/10 dark:border-white/10
-      backdrop-blur-md
-      bg-white/70 dark:bg-white/5
+
+    <header className="
       sticky top-0 z-50
+
+      backdrop-blur-xl
+
+      bg-white/70
+      dark:bg-[#0B1120]/70
+
+      border-b
+      border-black/5
+      dark:border-white/10
     ">
 
-      <div className="flex items-center gap-3">
+      <div className="
+        max-w-md mx-auto
 
-        <div className="
-          w-10 h-10 rounded-xl
-          bg-green-500
-          flex items-center justify-center
-          font-bold text-black
-        ">
-          TM
-        </div>
+        flex items-center justify-between
 
+        px-5 py-4
+      ">
+
+        {/* Left */}
         <div>
+
           <h1 className="
-            font-bold text-lg
+            text-xl font-bold
             text-black dark:text-white
           ">
             Turf Manager
           </h1>
 
-          <p className="text-xs text-green-500">
-            PRO
+          <p className="
+            text-xs
+            text-gray-500 dark:text-gray-400
+          ">
+            Smart Turf Booking System
           </p>
+
         </div>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+
+          className="
+            w-11 h-11
+
+            rounded-2xl
+
+            bg-white/80
+            dark:bg-white/5
+
+            border
+            border-black/5
+            dark:border-white/10
+
+            flex items-center justify-center
+
+            text-black
+            dark:text-white
+
+            transition
+          "
+        >
+
+          {
+            darkMode
+              ? <Sun size={20} />
+              : <Moon size={20} />
+          }
+
+        </button>
 
       </div>
 
-      <button
-        onClick={toggleTheme}
-        className="
-          w-10 h-10 rounded-xl
-          bg-black/5 dark:bg-white/10
-          flex items-center justify-center
-          text-black dark:text-white
-        "
-      >
+    </header>
 
-        {
-          darkMode
-            ? <Sun size={18} />
-            : <Moon size={18} />
-        }
-
-      </button>
-
-    </div>
   )
 }

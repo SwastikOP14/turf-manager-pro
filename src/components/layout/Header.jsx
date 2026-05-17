@@ -1,5 +1,5 @@
 import { Moon, Sun } from "lucide-react"
-
+import Logo from "../../assets/LOGO.png"
 import { useTheme } from "../../context/ThemeContext"
 
 export default function Header() {
@@ -33,23 +33,41 @@ export default function Header() {
       ">
 
         {/* Left */}
-        <div>
+          <div className="flex items-center gap-3">
 
-          <h1 className="
-            text-xl font-bold
-            text-black dark:text-white
-          ">
-            Turf Manager
-          </h1>
+              <img
+              src={Logo}
+              alt="Turf Manager Pro"
 
-          <p className="
-            text-xs
-            text-gray-500 dark:text-gray-400
-          ">
-            Smart Turf Booking System
-          </p>
+              className="
+                w-14 h-14
 
-        </div>
+                object-contain
+
+                rounded-2xl
+              "
+            />
+
+            {/* Title */}
+            <div>
+
+              <h1 className="
+                text-xl font-bold
+                text-black dark:text-white
+              ">
+                Turf Manager
+              </h1>
+
+              <p className="
+                text-xs
+                text-green-500 dark:text-gray-400
+              ">
+                PRO
+              </p>
+
+            </div>
+
+          </div>
 
         {/* Theme Toggle */}
         <button

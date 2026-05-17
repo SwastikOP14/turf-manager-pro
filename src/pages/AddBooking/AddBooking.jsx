@@ -1,7 +1,6 @@
 import { useState } from "react"
 import MobileLayout from "../../components/layout/MobileLayout"
 import Modal from "../../components/common/Modal"
-
 import { useApp } from "../../context/AppContext"
 import GlassCard from "../../components/common/GlassCard"
 import SectionTitle from "../../components/common/SectionTitle"
@@ -11,14 +10,17 @@ import PrimaryButton from "../../components/common/PrimaryButton"
 
 export default function AddBooking() {
 const [playerModal, setPlayerModal] = useState(false)
+
 const {
   players,
   addPlayer,
   addBooking
 } = useApp()
+
 const [playerName, setPlayerName] = useState("")
 const [playerPhone, setPlayerPhone] = useState("")
 const [playerError, setPlayerError] = useState("")
+
 const [turf, setTurf] = useState("")
 const [sport, setSport] = useState("")
 const [amount, setAmount] = useState("")
@@ -100,15 +102,20 @@ const [status, setStatus] = useState("Paid")
             }
           />
 
-          <InputField
+          <SelectField
             label="Payment Status"
-            placeholder="Paid / Partial / Pending"
 
             value={status}
 
             onChange={(e) =>
               setStatus(e.target.value)
             }
+
+            options={[
+              "Paid",
+              "Partial",
+              "Pending"
+            ]}
           />
 
           <InputField
@@ -213,7 +220,7 @@ const [status, setStatus] = useState("Paid")
             addBooking({
               turf,
               sport,
-              amount,
+              amount: Number(amount),
               status
             })
 

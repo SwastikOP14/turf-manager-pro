@@ -11,9 +11,6 @@ import InputField from "../../components/common/InputField"
 import SelectField from "../../components/common/SelectField"
 import PrimaryButton from "../../components/common/PrimaryButton"
 
-import DatePicker from "react-datepicker"
-import "react-datepicker/dist/react-datepicker.css"
-
 export default function AddBooking() {
 
   const [playerModal, setPlayerModal] = useState(false)
@@ -33,20 +30,14 @@ export default function AddBooking() {
   const [amount, setAmount] = useState("")
   const [status, setStatus] = useState("Paid")
 
-  const [date, setDate] = useState(null)
-  const [time, setTime] = useState(null)
+  const [date, setDate] = useState("")
+  const [time, setTime] = useState("")
 
   return (
 
     <MobileLayout hideFab>
 
-      <div className="
-          p-5
-          space-y-5
-
-          relative
-          z-50
-        ">
+      <div className="p-5 space-y-5">
 
         {/* PAGE TITLE */}
         <h1 className="
@@ -89,108 +80,34 @@ export default function AddBooking() {
           <div className="grid grid-cols-2 gap-3">
 
             {/* DATE */}
-            <div className="flex flex-col gap-2">
+            <InputField
+              label="Date"
 
-              <label className="
-                text-sm
-                font-medium
-                text-black
-                dark:text-white
-              ">
-                Date
-              </label>
+              type="date"
 
-              <DatePicker
-                selected={date}
+              value={date}
 
-                onChange={(selectedDate) =>
-                  setDate(selectedDate)
-                }
+              onChange={(e) =>
+                setDate(e.target.value)
+              }
 
-                withPortal
-
-                dateFormat="dd-MM-yyyy"
-
-                placeholderText="DD-MM-YYYY"
-
-                className="
-                  w-full
-                  rounded-2xl
-                  px-4 py-3
-
-                  text-center
-
-                  outline-none
-
-                  bg-white
-                  dark:bg-white/5
-
-                  border
-                  border-black/10
-                  dark:border-white/10
-
-                  text-black
-                  dark:text-white
-                "
-              />
-
-            </div>
+              centered
+            />
 
             {/* TIME */}
-            <div className="flex flex-col gap-2">
+            <InputField
+              label="Time"
 
-              <label className="
-                text-sm
-                font-medium
-                text-black
-                dark:text-white
-              ">
-                Time
-              </label>
+              type="time"
 
-              <DatePicker
-                selected={time}
+              value={time}
 
-                onChange={(selectedTime) =>
-                  setTime(selectedTime)
-                }
+              onChange={(e) =>
+                setTime(e.target.value)
+              }
 
-                withPortal
-
-                showTimeSelect
-
-                showTimeSelectOnly
-
-                timeIntervals={5}
-
-                timeCaption="Select Time"
-
-                dateFormat="hh:mm aa"
-
-                placeholderText="00:00 AM"
-
-                className="
-                  w-full
-                  rounded-2xl
-                  px-4 py-3
-
-                  text-center
-
-                  outline-none
-
-                  bg-white
-                  dark:bg-white/5
-
-                  border
-                  border-black/10
-                  dark:border-white/10
-
-                  text-black
-                  dark:text-white
-                "
-              />
-
-            </div>
+              centered
+            />
 
           </div>
 
@@ -202,7 +119,7 @@ export default function AddBooking() {
         </GlassCard>
 
         {/* PAYMENT SUMMARY */}
-        <GlassCard className="relative z-0" >
+        <GlassCard className="space-y-4">
 
           <SectionTitle title="Payment Summary" />
 
@@ -362,12 +279,8 @@ export default function AddBooking() {
 
               status,
 
-              date: date?.toLocaleDateString(),
-
-              time: time?.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit"
-              })
+              date,
+              time
             })
 
             setTurf("")
@@ -375,8 +288,8 @@ export default function AddBooking() {
             setAmount("")
             setStatus("Paid")
 
-            setDate(null)
-            setTime(null)
+            setDate("")
+            setTime("")
           }}
         />
 

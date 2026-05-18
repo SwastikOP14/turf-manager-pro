@@ -53,6 +53,14 @@ input[type="time"]:valid:before {
   display: none;
 }
 
+/* INPUT CENTER ALIGN */
+
+input[type="date"],
+input[type="time"] {
+
+  text-align: center;
+}
+
 /* REACT DATE PICKER */
 
 .react-datepicker-popper {
@@ -156,12 +164,4 @@ input[type="time"]:valid:before {
   background-color: #22c55e !important;
 
   color: black !important;
-  /* DATE PICKER PORTAL FIX */
-
-.react-datepicker-popper {
-
-  z-index: 999999 !important;
-
-  position: fixed !important;
-}
 }

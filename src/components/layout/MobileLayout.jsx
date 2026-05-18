@@ -16,7 +16,8 @@ export default function MobileLayout({
 
       bg-[#020817]
 
-      flex justify-center
+      flex
+      justify-center
     ">
 
       {/* Mobile Container */}
@@ -32,14 +33,18 @@ export default function MobileLayout({
 
         border-x
         border-white/10
+
+        bg-[#020817]
       ">
 
         <Header />
 
         <main className="
-          pb-40
+          pb-32
 
           overflow-visible
+
+          scroll-smooth
         ">
 
           {children}

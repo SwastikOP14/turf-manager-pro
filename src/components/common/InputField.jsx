@@ -13,8 +13,10 @@ export default function InputField({
 
       <label
         className="
-          text-sm font-medium
-          text-black dark:text-white
+          text-sm
+          font-medium
+          text-black
+          dark:text-white
         "
       >
         {label}
@@ -27,6 +29,8 @@ export default function InputField({
 
         onChange={onChange}
 
+        placeholder={placeholder}
+
         style={{
           textAlign:
             centered
@@ -34,11 +38,11 @@ export default function InputField({
               : "left"
         }}
 
-        placeholder={placeholder}
-
         className="
           w-full
+
           rounded-2xl
+
           px-4 py-3
 
           outline-none
@@ -54,6 +58,13 @@ export default function InputField({
           dark:text-white
 
           placeholder:text-gray-400
+
+          transition-all
+          duration-200
+
+          focus:border-green-500
+          focus:ring-2
+          focus:ring-green-500/20
         "
       />
 

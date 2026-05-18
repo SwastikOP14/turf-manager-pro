@@ -23,50 +23,72 @@ export default function InputField({
       </label>
 
       <input
-        type={type}
+  type={type}
 
-        value={value}
+  value={value}
 
-        onChange={onChange}
+  onChange={(e) => {
 
-        placeholder={placeholder}
+    onChange(e)
 
-        style={{
-          textAlign:
-            centered
-              ? "center"
-              : "left"
-        }}
+    if (
+      type === "date" ||
+      type === "time"
+    ) {
 
-        className="
-          w-full
+      e.target.blur()
+    }
+  }}
 
-          rounded-2xl
+  onFocus={(e) => {
 
-          px-4 py-3
+    if (
+      type === "date" ||
+      type === "time"
+    ) {
 
-          outline-none
+      e.target.showPicker?.()
+    }
+  }}
 
-          bg-white
-          dark:bg-white/5
+  placeholder={placeholder}
 
-          border
-          border-black/10
-          dark:border-white/10
+  style={{
+    textAlign:
+      centered
+        ? "center"
+        : "left"
+  }}
 
-          text-black
-          dark:text-white
+  className="
+    w-full
 
-          placeholder:text-gray-400
+    rounded-2xl
 
-          transition-all
-          duration-200
+    px-4 py-3
 
-          focus:border-green-500
-          focus:ring-2
-          focus:ring-green-500/20
-        "
-      />
+    outline-none
+
+    bg-white
+    dark:bg-white/5
+
+    border
+    border-black/10
+    dark:border-white/10
+
+    text-black
+    dark:text-white
+
+    placeholder:text-gray-400
+
+    transition-all
+    duration-200
+
+    focus:border-green-500
+    focus:ring-2
+    focus:ring-green-500/20
+  "
+/>
 
     </div>
 

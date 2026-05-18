@@ -13,7 +13,8 @@ import PrimaryButton from "../../components/common/PrimaryButton"
 
 export default function AddBooking() {
 
-  const [playerModal, setPlayerModal] = useState(false)
+  const [playerModal, setPlayerModal] =
+    useState(false)
 
   const {
     players,
@@ -21,17 +22,58 @@ export default function AddBooking() {
     addBooking
   } = useApp()
 
-  const [playerName, setPlayerName] = useState("")
-  const [playerPhone, setPlayerPhone] = useState("")
-  const [playerError, setPlayerError] = useState("")
+  const [playerName, setPlayerName] =
+    useState("")
+
+  const [playerPhone, setPlayerPhone] =
+    useState("")
+
+  const [playerError, setPlayerError] =
+    useState("")
 
   const [turf, setTurf] = useState("")
   const [sport, setSport] = useState("")
   const [amount, setAmount] = useState("")
-  const [status, setStatus] = useState("Paid")
+
+  const [status, setStatus] =
+    useState("Paid")
+
+  /* DATE */
 
   const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
+
+  /* TIME */
+
+  const [startTime, setStartTime] =
+    useState("")
+
+  const [endTime, setEndTime] =
+    useState("")
+
+  /* DURATION */
+
+  const calculateDuration = () => {
+
+    if (!startTime || !endTime)
+      return ""
+
+    const start =
+      new Date(
+        `1970-01-01T${startTime}`
+      )
+
+    const end =
+      new Date(
+        `1970-01-01T${endTime}`
+      )
+
+    const diffMs = end - start
+
+    const hours =
+      diffMs / (1000 * 60 * 60)
+
+    return `${hours} hrs`
+  }
 
   return (
 
@@ -40,9 +82,11 @@ export default function AddBooking() {
       <div className="p-5 space-y-5">
 
         {/* PAGE TITLE */}
+
         <h1 className="
           text-3xl
           font-bold
+
           text-black
           dark:text-white
         ">
@@ -50,12 +94,18 @@ export default function AddBooking() {
         </h1>
 
         {/* BOOKING DETAILS */}
+
         <GlassCard className="space-y-4">
 
-          <SectionTitle title="Booking Details" />
+          <SectionTitle
+            title="Booking Details"
+          />
+
+          {/* SPORT */}
 
           <InputField
             label="Sport / Game"
+
             placeholder="Cricket"
 
             value={sport}
@@ -65,8 +115,11 @@ export default function AddBooking() {
             }
           />
 
+          {/* TURF */}
+
           <InputField
             label="Turf / Ground"
+
             placeholder="Green Valley Ground"
 
             value={turf}
@@ -76,55 +129,135 @@ export default function AddBooking() {
             }
           />
 
-          {/* DATE + TIME */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* DATE */}
 
-            {/* DATE */}
+          <InputField
+            label="Date"
+
+            type="date"
+
+            value={date}
+
+            onChange={(e) =>
+              setDate(e.target.value)
+            }
+
+            placeholder="DD-MM-YYYY"
+
+            centered
+          />
+
+          {/* START + END TIME */}
+
+          <div className="
+            grid
+            grid-cols-2
+            gap-3
+          ">
+
+            {/* START TIME */}
+
             <InputField
-              label="Date"
+              label="Start Time"
 
-              type="date"
+              type="time"
 
-              value={date}
+              value={startTime}
 
               onChange={(e) =>
-                setDate(e.target.value)
+                setStartTime(e.target.value)
               }
+
+              placeholder="00:00"
 
               centered
             />
 
-            {/* TIME */}
+            {/* END TIME */}
+
             <InputField
-              label="Time"
+              label="End Time"
 
               type="time"
 
-              value={time}
+              value={endTime}
 
               onChange={(e) =>
-                setTime(e.target.value)
+                setEndTime(e.target.value)
               }
+
+              placeholder="00:00"
 
               centered
             />
 
           </div>
 
+          {/* TOTAL DURATION */}
+
+          {
+            startTime &&
+            endTime && (
+
+              <div className="
+                flex
+                items-center
+                justify-between
+
+                rounded-2xl
+
+                px-4
+                py-3
+
+                bg-green-500/10
+
+                border
+                border-green-500/20
+              ">
+
+                <span className="
+                  text-sm
+                  font-medium
+
+                  text-black
+                  dark:text-white
+                ">
+                  Total Duration
+                </span>
+
+                <span className="
+                  text-green-500
+                  font-bold
+                ">
+                  {calculateDuration()}
+                </span>
+
+              </div>
+
+            )
+          }
+
+          {/* CONTACT */}
+
           <InputField
             label="Turf Owner Contact"
+
             placeholder="+91 9876543210"
           />
 
         </GlassCard>
 
         {/* PAYMENT SUMMARY */}
+
         <GlassCard className="space-y-4">
 
-          <SectionTitle title="Payment Summary" />
+          <SectionTitle
+            title="Payment Summary"
+          />
 
           <InputField
             label="Total Amount"
+
             placeholder="2000"
 
             value={amount}
@@ -152,11 +285,13 @@ export default function AddBooking() {
 
           <InputField
             label="Paid Amount"
+
             placeholder="₹ 1500"
           />
 
           <div className="
             flex
+            items-center
             justify-between
 
             text-sm
@@ -170,7 +305,9 @@ export default function AddBooking() {
               Remaining Amount
             </span>
 
-            <span className="text-orange-400">
+            <span className="
+              text-orange-400
+            ">
               ₹500
             </span>
 
@@ -178,19 +315,8 @@ export default function AddBooking() {
 
         </GlassCard>
 
-        {/* PAID BY */}
-        <GlassCard className="space-y-4">
-
-          <SectionTitle title="Paid By" />
-
-          <SelectField
-            label="Player"
-            placeholder="Select player"
-          />
-
-        </GlassCard>
-
         {/* PLAYERS */}
+
         <GlassCard className="space-y-4">
 
           <div className="
@@ -199,7 +325,9 @@ export default function AddBooking() {
             justify-between
           ">
 
-            <SectionTitle title="Total Players" />
+            <SectionTitle
+              title="Total Players"
+            />
 
             <button
               onClick={() =>
@@ -208,8 +336,9 @@ export default function AddBooking() {
 
               className="
                 text-sm
-                text-green-500
                 font-medium
+
+                text-green-500
               "
             >
               Add / Search Players
@@ -220,35 +349,36 @@ export default function AddBooking() {
           <div className="space-y-3">
 
             {
-              ["Arjun", "Ritesh", "Sana"].map((player) => (
+              ["Arjun", "Ritesh", "Sana"]
+                .map((player) => (
 
-                <div
-                  key={player}
+                  <div
+                    key={player}
 
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                  "
-                >
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                    "
+                  >
 
-                  <span className="
-                    text-black
-                    dark:text-white
-                  ">
-                    {player}
-                  </span>
+                    <span className="
+                      text-black
+                      dark:text-white
+                    ">
+                      {player}
+                    </span>
 
-                  <span className="
-                    text-green-500
-                    font-semibold
-                  ">
-                    ₹400
-                  </span>
+                    <span className="
+                      font-semibold
+                      text-green-500
+                    ">
+                      ₹400
+                    </span>
 
-                </div>
+                  </div>
 
-              ))
+                ))
             }
 
           </div>
@@ -256,6 +386,7 @@ export default function AddBooking() {
         </GlassCard>
 
         {/* CONTINUE BUTTON */}
+
         <PrimaryButton
           text="Continue"
 
@@ -266,7 +397,8 @@ export default function AddBooking() {
               !sport ||
               !amount ||
               !date ||
-              !time
+              !startTime ||
+              !endTime
             ) return
 
             addBooking({
@@ -275,27 +407,40 @@ export default function AddBooking() {
 
               sport,
 
-              amount: Number(amount),
+              amount:
+                Number(amount),
 
               status,
 
               date,
-              time
+
+              startTime,
+
+              endTime,
+
+              duration:
+                calculateDuration()
             })
+
+            /* RESET */
 
             setTurf("")
             setSport("")
             setAmount("")
+
             setStatus("Paid")
 
             setDate("")
-            setTime("")
+
+            setStartTime("")
+            setEndTime("")
           }}
         />
 
       </div>
 
       {/* PLAYER MODAL */}
+
       <Modal
         open={playerModal}
 
@@ -326,8 +471,8 @@ export default function AddBooking() {
               }
 
               className="
-                text-gray-400
                 text-xl
+                text-gray-400
               "
             >
               ✕
@@ -337,23 +482,29 @@ export default function AddBooking() {
 
           <InputField
             label="Player Name"
+
             placeholder="Enter player name"
 
             value={playerName}
 
             onChange={(e) =>
-              setPlayerName(e.target.value)
+              setPlayerName(
+                e.target.value
+              )
             }
           />
 
           <InputField
             label="Phone Number"
+
             placeholder="+91 9876543210"
 
             value={playerPhone}
 
             onChange={(e) =>
-              setPlayerPhone(e.target.value)
+              setPlayerPhone(
+                e.target.value
+              )
             }
           />
 
@@ -361,9 +512,10 @@ export default function AddBooking() {
             playerError && (
 
               <div className="
-                text-red-400
                 text-sm
                 font-medium
+
+                text-red-400
               ">
                 {playerError}
               </div>
@@ -408,7 +560,8 @@ export default function AddBooking() {
               const playerExists =
                 players.some(
                   (player) =>
-                    player.phone === trimmedPhone
+                    player.phone ===
+                    trimmedPhone
                 )
 
               if (playerExists) {
@@ -423,8 +576,11 @@ export default function AddBooking() {
               setPlayerError("")
 
               addPlayer({
+
                 name: trimmedName,
+
                 phone: trimmedPhone,
+
                 balance: 0
               })
 

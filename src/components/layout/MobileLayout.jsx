@@ -28,6 +28,8 @@ export default function MobileLayout({
 
         relative
 
+        overflow-visible
+
         border-x
         border-white/10
       ">
@@ -36,6 +38,8 @@ export default function MobileLayout({
 
         <main className="
           pb-40
+
+          overflow-visible
         ">
 
           {children}

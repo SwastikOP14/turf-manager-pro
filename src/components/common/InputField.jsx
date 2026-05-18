@@ -3,17 +3,20 @@ export default function InputField({
   placeholder,
   type = "text",
   value,
-  onChange
+  onChange,
+  centered = false
 }) {
 
   return (
 
     <div className="flex flex-col gap-2">
 
-      <label className="
-        text-sm font-medium
-        text-black dark:text-white
-      ">
+      <label
+        className="
+          text-sm font-medium
+          text-black dark:text-white
+        "
+      >
         {label}
       </label>
 
@@ -21,7 +24,15 @@ export default function InputField({
         type={type}
 
         value={value}
+
         onChange={onChange}
+
+        style={{
+          textAlign:
+            centered
+              ? "center"
+              : "left"
+        }}
 
         placeholder={placeholder}
 

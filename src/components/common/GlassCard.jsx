@@ -1,26 +1,38 @@
-export default function GlassCard({ children, className = "" }) {
+export default function GlassCard({
+  children,
+  className = ""
+}) {
 
   return (
-    <div className={`
-      rounded-3xl
-      p-4
 
-      bg-white/70
-      dark:bg-white/5
+    <div
+      className={`
+        relative
+        z-0
 
-      backdrop-blur-xl
+        rounded-3xl
+        p-4
 
-      border
-      border-black/5
-      dark:border-white/10
+        overflow-visible
 
-      shadow-lg
+        bg-white/70
+        dark:bg-white/5
 
-      ${className}
-    `}>
+        backdrop-blur-xl
+
+        border
+        border-black/5
+        dark:border-white/10
+
+        shadow-lg
+
+        ${className}
+      `}
+    >
 
       {children}
 
     </div>
+
   )
 }

@@ -1,46 +1,64 @@
 import { useState } from "react"
+
 import MobileLayout from "../../components/layout/MobileLayout"
 import Modal from "../../components/common/Modal"
+
 import { useApp } from "../../context/AppContext"
+
 import GlassCard from "../../components/common/GlassCard"
 import SectionTitle from "../../components/common/SectionTitle"
 import InputField from "../../components/common/InputField"
 import SelectField from "../../components/common/SelectField"
 import PrimaryButton from "../../components/common/PrimaryButton"
 
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+
 export default function AddBooking() {
-const [playerModal, setPlayerModal] = useState(false)
 
-const {
-  players,
-  addPlayer,
-  addBooking
-} = useApp()
+  const [playerModal, setPlayerModal] = useState(false)
 
-const [playerName, setPlayerName] = useState("")
-const [playerPhone, setPlayerPhone] = useState("")
-const [playerError, setPlayerError] = useState("")
+  const {
+    players,
+    addPlayer,
+    addBooking
+  } = useApp()
 
-const [turf, setTurf] = useState("")
-const [sport, setSport] = useState("")
-const [amount, setAmount] = useState("")
-const [status, setStatus] = useState("Paid")
-const [date, setDate] = useState("")
-const [time, setTime] = useState("")
+  const [playerName, setPlayerName] = useState("")
+  const [playerPhone, setPlayerPhone] = useState("")
+  const [playerError, setPlayerError] = useState("")
+
+  const [turf, setTurf] = useState("")
+  const [sport, setSport] = useState("")
+  const [amount, setAmount] = useState("")
+  const [status, setStatus] = useState("Paid")
+
+  const [date, setDate] = useState(null)
+  const [time, setTime] = useState(null)
+
   return (
+
     <MobileLayout hideFab>
 
-      <div className="p-5 space-y-5">
+      <div className="
+          p-5
+          space-y-5
 
-        {/* Page Title */}
+          relative
+          z-50
+        ">
+
+        {/* PAGE TITLE */}
         <h1 className="
-          text-3xl font-bold
-          text-black dark:text-white
+          text-3xl
+          font-bold
+          text-black
+          dark:text-white
         ">
           Add Booking
         </h1>
 
-        {/* Booking Details */}
+        {/* BOOKING DETAILS */}
         <GlassCard className="space-y-4">
 
           <SectionTitle title="Booking Details" />
@@ -57,41 +75,123 @@ const [time, setTime] = useState("")
           />
 
           <InputField
-              label="Turf / Ground"
-              placeholder="Green Valley Ground"
+            label="Turf / Ground"
+            placeholder="Green Valley Ground"
 
-              value={turf}
+            value={turf}
 
-              onChange={(e) =>
-                setTurf(e.target.value)
-              }
+            onChange={(e) =>
+              setTurf(e.target.value)
+            }
           />
 
+          {/* DATE + TIME */}
           <div className="grid grid-cols-2 gap-3">
 
-            <InputField
-              label="Date"
+            {/* DATE */}
+            <div className="flex flex-col gap-2">
 
-              type="date"
+              <label className="
+                text-sm
+                font-medium
+                text-black
+                dark:text-white
+              ">
+                Date
+              </label>
 
-              value={date}
+              <DatePicker
+                selected={date}
 
-              onChange={(e) =>
-                setDate(e.target.value)
-              }
-            />
+                onChange={(selectedDate) =>
+                  setDate(selectedDate)
+                }
 
-            <InputField
-              label="Time"
+                withPortal
 
-              type="time"
+                dateFormat="dd-MM-yyyy"
 
-              value={time}
+                placeholderText="DD-MM-YYYY"
 
-              onChange={(e) =>
-                setTime(e.target.value)
-              }
-            />
+                className="
+                  w-full
+                  rounded-2xl
+                  px-4 py-3
+
+                  text-center
+
+                  outline-none
+
+                  bg-white
+                  dark:bg-white/5
+
+                  border
+                  border-black/10
+                  dark:border-white/10
+
+                  text-black
+                  dark:text-white
+                "
+              />
+
+            </div>
+
+            {/* TIME */}
+            <div className="flex flex-col gap-2">
+
+              <label className="
+                text-sm
+                font-medium
+                text-black
+                dark:text-white
+              ">
+                Time
+              </label>
+
+              <DatePicker
+                selected={time}
+
+                onChange={(selectedTime) =>
+                  setTime(selectedTime)
+                }
+
+                withPortal
+
+                showTimeSelect
+
+                showTimeSelectOnly
+
+                timeIntervals={5}
+
+                timeCaption="Select Time"
+
+                dateFormat="hh:mm aa"
+
+                placeholderText="00:00 AM"
+
+                className="
+                  w-full
+                  rounded-2xl
+                  px-4 py-3
+
+                  text-center
+
+                  outline-none
+
+                  bg-white
+                  dark:bg-white/5
+
+                  border
+                  border-black/10
+                  dark:border-white/10
+
+                  text-black
+                  dark:text-white
+                "
+              />
+
+            </div>
+
           </div>
 
           <InputField
@@ -101,8 +201,8 @@ const [time, setTime] = useState("")
 
         </GlassCard>
 
-        {/* Payment Summary */}
-        <GlassCard className="space-y-4">
+        {/* PAYMENT SUMMARY */}
+        <GlassCard className="relative z-0" >
 
           <SectionTitle title="Payment Summary" />
 
@@ -139,12 +239,16 @@ const [time, setTime] = useState("")
           />
 
           <div className="
-            flex justify-between
-            text-sm font-semibold
+            flex
+            justify-between
+
+            text-sm
+            font-semibold
           ">
 
             <span className="
-              text-black dark:text-white
+              text-black
+              dark:text-white
             ">
               Remaining Amount
             </span>
@@ -157,7 +261,7 @@ const [time, setTime] = useState("")
 
         </GlassCard>
 
-        {/* Paid By */}
+        {/* PAID BY */}
         <GlassCard className="space-y-4">
 
           <SectionTitle title="Paid By" />
@@ -169,29 +273,33 @@ const [time, setTime] = useState("")
 
         </GlassCard>
 
-        {/* Players */}
+        {/* PLAYERS */}
         <GlassCard className="space-y-4">
 
           <div className="
-            flex items-center justify-between
+            flex
+            items-center
+            justify-between
           ">
 
             <SectionTitle title="Total Players" />
 
-              <button
-                  onClick={() => setPlayerModal(true)}
-                  className="
-                    text-sm
-                    text-green-500
-                    font-medium
-                  "
-                >
-                  Add / Search Players
-              </button>
+            <button
+              onClick={() =>
+                setPlayerModal(true)
+              }
+
+              className="
+                text-sm
+                text-green-500
+                font-medium
+              "
+            >
+              Add / Search Players
+            </button>
 
           </div>
 
-          {/* Player Rows */}
           <div className="space-y-3">
 
             {
@@ -199,13 +307,17 @@ const [time, setTime] = useState("")
 
                 <div
                   key={player}
+
                   className="
-                    flex items-center justify-between
+                    flex
+                    items-center
+                    justify-between
                   "
                 >
 
                   <span className="
-                    text-black dark:text-white
+                    text-black
+                    dark:text-white
                   ">
                     {player}
                   </span>
@@ -218,6 +330,7 @@ const [time, setTime] = useState("")
                   </span>
 
                 </div>
+
               ))
             }
 
@@ -225,6 +338,7 @@ const [time, setTime] = useState("")
 
         </GlassCard>
 
+        {/* CONTINUE BUTTON */}
         <PrimaryButton
           text="Continue"
 
@@ -237,6 +351,7 @@ const [time, setTime] = useState("")
               !date ||
               !time
             ) return
+
             addBooking({
 
               turf,
@@ -247,149 +362,170 @@ const [time, setTime] = useState("")
 
               status,
 
-              date,
+              date: date?.toLocaleDateString(),
 
-              time
+              time: time?.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+              })
             })
 
             setTurf("")
             setSport("")
             setAmount("")
             setStatus("Paid")
-            setDate("")
-            setTime("")
+
+            setDate(null)
+            setTime(null)
           }}
         />
 
       </div>
-          <Modal
-            open={playerModal}
-            onClose={() => setPlayerModal(false)}
-          >
 
-            <div className="space-y-5">
+      {/* PLAYER MODAL */}
+      <Modal
+        open={playerModal}
+
+        onClose={() =>
+          setPlayerModal(false)
+        }
+      >
+
+        <div className="space-y-5">
+
+          <div className="
+            flex
+            items-center
+            justify-between
+          ">
+
+            <h2 className="
+              text-2xl
+              font-bold
+              text-white
+            ">
+              Add Player
+            </h2>
+
+            <button
+              onClick={() =>
+                setPlayerModal(false)
+              }
+
+              className="
+                text-gray-400
+                text-xl
+              "
+            >
+              ✕
+            </button>
+
+          </div>
+
+          <InputField
+            label="Player Name"
+            placeholder="Enter player name"
+
+            value={playerName}
+
+            onChange={(e) =>
+              setPlayerName(e.target.value)
+            }
+          />
+
+          <InputField
+            label="Phone Number"
+            placeholder="+91 9876543210"
+
+            value={playerPhone}
+
+            onChange={(e) =>
+              setPlayerPhone(e.target.value)
+            }
+          />
+
+          {
+            playerError && (
 
               <div className="
-                flex items-center justify-between
+                text-red-400
+                text-sm
+                font-medium
               ">
-
-                <h2 className="
-                  text-2xl font-bold
-                  text-white
-                ">
-                  Add Player
-                </h2>
-
-                <button
-                  onClick={() => setPlayerModal(false)}
-                  className="
-                    text-gray-400
-                    text-xl
-                  "
-                >
-                  ✕
-                </button>
-
+                {playerError}
               </div>
 
-              <InputField
-                  label="Player Name"
-                  placeholder="Enter player name"
+            )
+          }
 
-                  value={playerName}
+          <PrimaryButton
+            text="Add Player"
 
-                  onChange={(e) =>
-                    setPlayerName(e.target.value)
-                  }
-                />
+            onClick={() => {
 
-              <InputField
-                label="Phone Number"
-                placeholder="+91 9876543210"
+              const trimmedName =
+                playerName.trim()
 
-                value={playerPhone}
+              const trimmedPhone =
+                playerPhone.trim()
 
-                onChange={(e) =>
-                  setPlayerPhone(e.target.value)
-                }
-              />
-                    {
-                      playerError && (
+              if (
+                !trimmedName ||
+                !trimmedPhone
+              ) {
 
-                        <div className="
-                          text-red-400
-                          text-sm
-                          font-medium
-                        ">
-                          {playerError}
-                        </div>
+                setPlayerError(
+                  "All fields are required"
+                )
 
-                      )
-                    }
-              <PrimaryButton
-                text="Add Player"
+                return
+              }
 
-                onClick={() => {
+              if (
+                trimmedPhone.length < 7
+              ) {
 
-                  const trimmedName = playerName.trim()
-                  const trimmedPhone = playerPhone.trim()
+                setPlayerError(
+                  "Phone number is too short"
+                )
 
-                  // EMPTY CHECK
-                  if (!trimmedName || !trimmedPhone) {
+                return
+              }
 
-                    setPlayerError(
-                      "All fields are required"
-                    )
+              const playerExists =
+                players.some(
+                  (player) =>
+                    player.phone === trimmedPhone
+                )
 
-                    return
-                  }
+              if (playerExists) {
 
-                  // PHONE LENGTH
-                  if (trimmedPhone.length < 7) {
+                setPlayerError(
+                  "Player with this number already exists"
+                )
 
-                    setPlayerError(
-                      "Phone number is too short"
-                    )
+                return
+              }
 
-                    return
-                  }
+              setPlayerError("")
 
-                  // DUPLICATE CHECK
-                  const playerExists = players.some(
-                    (player) =>
-                      player.phone === trimmedPhone
-                  )
+              addPlayer({
+                name: trimmedName,
+                phone: trimmedPhone,
+                balance: 0
+              })
 
-                  if (playerExists) {
+              setPlayerName("")
+              setPlayerPhone("")
 
-                    setPlayerError(
-                      "Player with this number already exists"
-                    )
+              setPlayerModal(false)
+            }}
+          />
 
-                    return
-                  }
+        </div>
 
-                  // CLEAR ERROR
-                  setPlayerError("")
+      </Modal>
 
-                  // ADD PLAYER
-                  addPlayer({
-                    name: trimmedName,
-                    phone: trimmedPhone,
-                    balance: 0
-                  })
-
-                  // RESET
-                  setPlayerName("")
-                  setPlayerPhone("")
-
-                  setPlayerModal(false)
-                }}
-              />
-
-            </div>
-
-          </Modal>
     </MobileLayout>
   )
 }

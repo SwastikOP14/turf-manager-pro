@@ -5,6 +5,9 @@ import Modal from "../../components/common/Modal"
 
 import { useApp } from "../../context/AppContext"
 
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+
 import GlassCard from "../../components/common/GlassCard"
 import SectionTitle from "../../components/common/SectionTitle"
 import InputField from "../../components/common/InputField"
@@ -22,6 +25,8 @@ export default function AddBooking() {
     addBooking
   } = useApp()
 
+  /* PLAYER */
+
   const [playerName, setPlayerName] =
     useState("")
 
@@ -30,6 +35,8 @@ export default function AddBooking() {
 
   const [playerError, setPlayerError] =
     useState("")
+
+  /* BOOKING */
 
   const [turf, setTurf] = useState("")
   const [sport, setSport] = useState("")
@@ -40,31 +47,87 @@ export default function AddBooking() {
 
   /* DATE */
 
-  const [date, setDate] = useState("")
+  const [date, setDate] =
+    useState(null)
 
-  /* TIME */
+  /* START TIME */
 
-  const [startTime, setStartTime] =
+  const [startHour, setStartHour] =
     useState("")
 
-  const [endTime, setEndTime] =
+  const [startMinute, setStartMinute] =
     useState("")
+
+  const [startPeriod, setStartPeriod] =
+    useState("AM")
+
+  /* END TIME */
+
+  const [endHour, setEndHour] =
+    useState("")
+
+  const [endMinute, setEndMinute] =
+    useState("")
+
+  const [endPeriod, setEndPeriod] =
+    useState("AM")
 
   /* DURATION */
 
   const calculateDuration = () => {
 
-    if (!startTime || !endTime)
-      return ""
+    if (
+      !startHour ||
+      !startMinute ||
+      !endHour ||
+      !endMinute
+    ) return ""
+
+    const convertTo24Hour = (
+      hour,
+      minute,
+      period
+    ) => {
+
+      let h = parseInt(hour)
+
+      if (
+        period === "PM" &&
+        h !== 12
+      ) {
+        h += 12
+      }
+
+      if (
+        period === "AM" &&
+        h === 12
+      ) {
+        h = 0
+      }
+
+      return `${String(h).padStart(2, "0")}:${minute}`
+    }
 
     const start =
       new Date(
-        `1970-01-01T${startTime}`
+        `1970-01-01T${
+          convertTo24Hour(
+            startHour,
+            startMinute,
+            startPeriod
+          )
+        }`
       )
 
     const end =
       new Date(
-        `1970-01-01T${endTime}`
+        `1970-01-01T${
+          convertTo24Hour(
+            endHour,
+            endMinute,
+            endPeriod
+          )
+        }`
       )
 
     const diffMs = end - start
@@ -81,7 +144,7 @@ export default function AddBooking() {
 
       <div className="p-5 space-y-5">
 
-        {/* PAGE TITLE */}
+        {/* TITLE */}
 
         <h1 className="
           text-3xl
@@ -131,73 +194,409 @@ export default function AddBooking() {
 
           {/* DATE */}
 
-          <InputField
-            label="Date"
+          <div className="space-y-2">
 
-            type="date"
+            <label className="
+              text-sm
+              font-medium
 
-            value={date}
+              text-black
+              dark:text-white
+            ">
+              Date
+            </label>
 
-            onChange={(e) =>
-              setDate(e.target.value)
-            }
+            <DatePicker
+              selected={date}
 
-            placeholder="DD-MM-YYYY"
-
-            centered
-          />
-
-          {/* START + END TIME */}
-
-          <div className="
-            grid
-            grid-cols-2
-            gap-3
-          ">
-
-            {/* START TIME */}
-
-            <InputField
-              label="Start Time"
-
-              type="time"
-
-              value={startTime}
-
-              onChange={(e) =>
-                setStartTime(e.target.value)
+              onChange={(selectedDate) =>
+                setDate(selectedDate)
               }
 
-              placeholder="00:00"
+              dateFormat="dd-MM-yyyy"
 
-              centered
-            />
+              placeholderText="DD-MM-YYYY"
 
-            {/* END TIME */}
+              className="
+                w-full
 
-            <InputField
-              label="End Time"
+                rounded-2xl
 
-              type="time"
+                px-4 py-3
 
-              value={endTime}
+                text-center
 
-              onChange={(e) =>
-                setEndTime(e.target.value)
-              }
+                outline-none
 
-              placeholder="00:00"
+                bg-white
+                dark:bg-white/5
 
-              centered
+                border
+                border-black/10
+                dark:border-white/10
+
+                text-black
+                dark:text-white
+              "
             />
 
           </div>
 
-          {/* TOTAL DURATION */}
+          {/* TIME SECTION */}
+
+          <div className="
+            grid
+            grid-cols-2
+            gap-4
+          ">
+
+            {/* START TIME */}
+
+            <div className="space-y-2">
+
+              <label className="
+                text-sm
+                font-medium
+
+                text-black
+                dark:text-white
+              ">
+                Start Time
+              </label>
+
+              <div className="
+                flex
+                gap-2
+              ">
+
+                {/* HOUR */}
+
+                <select
+                  value={startHour}
+
+                  onChange={(e) =>
+                    setStartHour(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    flex-1
+
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option value="">
+                    HH
+                  </option>
+
+                  {
+                    Array.from(
+                      { length: 12 },
+                      (_, i) => i + 1
+                    ).map((hour) => (
+
+                      <option
+                        key={hour}
+                        value={String(hour).padStart(2, "0")}
+                      >
+                        {String(hour).padStart(2, "0")}
+                      </option>
+
+                    ))
+                  }
+
+                </select>
+
+                {/* MINUTE */}
+
+                <select
+                  value={startMinute}
+
+                  onChange={(e) =>
+                    setStartMinute(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    flex-1
+
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option value="">
+                    MM
+                  </option>
+
+                  {
+                    ["00", "15", "30", "45"]
+                      .map((minute) => (
+
+                        <option
+                          key={minute}
+                          value={minute}
+                        >
+                          {minute}
+                        </option>
+
+                      ))
+                  }
+
+                </select>
+
+                {/* AM PM */}
+
+                <select
+                  value={startPeriod}
+
+                  onChange={(e) =>
+                    setStartPeriod(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option>
+                    AM
+                  </option>
+
+                  <option>
+                    PM
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+            {/* END TIME */}
+
+            <div className="space-y-2">
+
+              <label className="
+                text-sm
+                font-medium
+
+                text-black
+                dark:text-white
+              ">
+                End Time
+              </label>
+
+              <div className="
+                flex
+                gap-2
+              ">
+
+                {/* HOUR */}
+
+                <select
+                  value={endHour}
+
+                  onChange={(e) =>
+                    setEndHour(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    flex-1
+
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option value="">
+                    HH
+                  </option>
+
+                  {
+                    Array.from(
+                      { length: 12 },
+                      (_, i) => i + 1
+                    ).map((hour) => (
+
+                      <option
+                        key={hour}
+                        value={String(hour).padStart(2, "0")}
+                      >
+                        {String(hour).padStart(2, "0")}
+                      </option>
+
+                    ))
+                  }
+
+                </select>
+
+                {/* MINUTE */}
+
+                <select
+                  value={endMinute}
+
+                  onChange={(e) =>
+                    setEndMinute(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    flex-1
+
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option value="">
+                    MM
+                  </option>
+
+                  {
+                    ["00", "15", "30", "45"]
+                      .map((minute) => (
+
+                        <option
+                          key={minute}
+                          value={minute}
+                        >
+                          {minute}
+                        </option>
+
+                      ))
+                  }
+
+                </select>
+
+                {/* AM PM */}
+
+                <select
+                  value={endPeriod}
+
+                  onChange={(e) =>
+                    setEndPeriod(
+                      e.target.value
+                    )
+                  }
+
+                  className="
+                    rounded-2xl
+
+                    px-3 py-3
+
+                    bg-white
+                    dark:bg-white/5
+
+                    border
+                    border-black/10
+                    dark:border-white/10
+
+                    text-black
+                    dark:text-white
+
+                    outline-none
+                  "
+                >
+
+                  <option>
+                    AM
+                  </option>
+
+                  <option>
+                    PM
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* DURATION */}
 
           {
-            startTime &&
-            endTime && (
+            startHour &&
+            startMinute &&
+            endHour &&
+            endMinute && (
 
               <div className="
                 flex
@@ -247,7 +646,7 @@ export default function AddBooking() {
 
         </GlassCard>
 
-        {/* PAYMENT SUMMARY */}
+        {/* PAYMENT */}
 
         <GlassCard className="space-y-4">
 
@@ -346,46 +745,9 @@ export default function AddBooking() {
 
           </div>
 
-          <div className="space-y-3">
-
-            {
-              ["Arjun", "Ritesh", "Sana"]
-                .map((player) => (
-
-                  <div
-                    key={player}
-
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                    "
-                  >
-
-                    <span className="
-                      text-black
-                      dark:text-white
-                    ">
-                      {player}
-                    </span>
-
-                    <span className="
-                      font-semibold
-                      text-green-500
-                    ">
-                      ₹400
-                    </span>
-
-                  </div>
-
-                ))
-            }
-
-          </div>
-
         </GlassCard>
 
-        {/* CONTINUE BUTTON */}
+        {/* CONTINUE */}
 
         <PrimaryButton
           text="Continue"
@@ -397,8 +759,10 @@ export default function AddBooking() {
               !sport ||
               !amount ||
               !date ||
-              !startTime ||
-              !endTime
+              !startHour ||
+              !startMinute ||
+              !endHour ||
+              !endMinute
             ) return
 
             addBooking({
@@ -414,9 +778,11 @@ export default function AddBooking() {
 
               date,
 
-              startTime,
+              startTime:
+                `${startHour}:${startMinute} ${startPeriod}`,
 
-              endTime,
+              endTime:
+                `${endHour}:${endMinute} ${endPeriod}`,
 
               duration:
                 calculateDuration()
@@ -430,10 +796,15 @@ export default function AddBooking() {
 
             setStatus("Paid")
 
-            setDate("")
+            setDate(null)
 
-            setStartTime("")
-            setEndTime("")
+            setStartHour("")
+            setStartMinute("")
+            setStartPeriod("AM")
+
+            setEndHour("")
+            setEndMinute("")
+            setEndPeriod("AM")
           }}
         />
 

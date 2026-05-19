@@ -7,27 +7,20 @@ export default function GlassCard({
 
     <div
       className={`
-        relative
-
         rounded-3xl
         p-4
 
-        overflow-visible
-
-        bg-white/70
-        dark:bg-[#111827]/80
+        bg-[#0F172A]/90
 
         border
-        border-black/5
-        dark:border-white/10
+        border-white/10
 
         shadow-lg
 
+        relative
+
         ${className}
       `}
-      style={{
-        isolation: "isolate"
-      }}
     >
 
       {children}

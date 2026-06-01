@@ -137,7 +137,7 @@ export default function AddBooking() {
 
         {/* BOOKING DETAILS */}
 
-        <GlassCard className="space-y-9">
+        <GlassCard className="space-y-6">
 
           <SectionTitle
             title="Booking Details"
@@ -145,7 +145,7 @@ export default function AddBooking() {
 
           {/* SPORT */}
 
-          <div className="space-y-3">
+          <div className="space-y-2">
 
             <label className="
               text-sm
@@ -169,7 +169,7 @@ export default function AddBooking() {
 
           {/* TURF */}
 
-          <div className="space-y-3">
+          <div className="space-y-2">
 
             <label className="
               text-sm
@@ -211,11 +211,7 @@ export default function AddBooking() {
 
           {/* DATE */}
 
-         <div className="
-            flex
-            flex-col
-            gap-3
-          ">
+         <div className="space-y-2">
 
             <label className="
               text-sm
@@ -267,7 +263,7 @@ export default function AddBooking() {
 
           {/* START TIME */}
 
-          <div className="space-y-40">
+          <div className="space-y-2">
 
             <label className="
               text-sm
@@ -294,7 +290,7 @@ export default function AddBooking() {
 
                 className="
                   flex-1
-                  h-14
+                  h-11
 
                   rounded-2xl
 
@@ -348,7 +344,7 @@ export default function AddBooking() {
                 }
 
                 className="
-                  w-full
+                  flex-1
                   h-11
 
                   rounded-2xl
@@ -462,7 +458,7 @@ export default function AddBooking() {
 
                 className="
                   flex-1
-                  h-14
+                  h-11
 
                   rounded-2xl
 
@@ -516,7 +512,7 @@ export default function AddBooking() {
                 }
 
                 className="
-                  w-full
+                  flex-1
                   h-11
 
                   rounded-2xl
@@ -567,7 +563,7 @@ export default function AddBooking() {
                 }
 
                 className="
-                  w-full
+                  flex-1
                   h-11
 
                   rounded-2xl
@@ -630,7 +626,7 @@ export default function AddBooking() {
 
               text-green-400
               font-semibold
-              text-lg
+              text-sm
             ">
 
               {calculateDuration()}

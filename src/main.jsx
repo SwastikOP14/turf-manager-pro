@@ -6,9 +6,9 @@ import App from "./App"
 
 import "./index.css"
 
-import { AppProvider } from "./context/AppContext"
+import { AppProvider } from "./context/AppProvider"
 
-import { ThemeProvider } from "./context/ThemeContext"
+import { ThemeProvider } from "./context/ThemeProvider"
 
 ReactDOM.createRoot(
   document.getElementById("root")

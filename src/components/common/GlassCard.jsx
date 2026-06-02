@@ -1,31 +1,20 @@
 export default function GlassCard({
   children,
-  className = ""
+  className = "",
+  onClick
 }) {
-
   return (
-
     <div
+      onClick={onClick}
       className={`
-        rounded-3xl
+        premium-card
         p-4
-
-        bg-[#0F172A]/90
-
-        border
-        border-white/10
-
-        shadow-lg
-
-        relative
-
+        animate-fade-in-up
+        ${onClick ? "cursor-pointer active:scale-[0.99]" : ""}
         ${className}
       `}
     >
-
       {children}
-
     </div>
-
   )
 }

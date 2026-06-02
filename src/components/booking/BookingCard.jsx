@@ -1,17 +1,17 @@
-import GlassCard from "../common/GlassCard"
+import { useNavigate } from "react-router-dom"
+import { Calendar, Clock3 } from "lucide-react"
 
-import {
-  Calendar,
-  Clock3,
-  Trophy
-} from "lucide-react"
+import GlassCard from "../common/GlassCard"
+import SportIcon from "../common/SportIcon"
+import { formatCurrency, formatDisplayDate, formatTimeRange } from "../../utils/format"
 
 export default function BookingCard({
-  turf,
-  sport,
-  amount,
-  status
+  booking,
+  turfName,
+  sportName,
+  sportId
 }) {
+  const navigate = useNavigate()
 
   const statusColors = {
     Paid: "text-green-500",
@@ -19,121 +19,71 @@ export default function BookingCard({
     Pending: "text-red-500"
   }
 
+  const remaining = Math.max(
+    0,
+    Number(booking.amount) - Number(booking.paidAmount || 0)
+  )
+
   return (
-
-    <GlassCard className="space-y-4">
-
-      {/* Top */}
-      <div className="flex justify-between">
-
-        {/* Left */}
-        <div className="flex gap-3">
-
-          {/* Sport Icon */}
+    <GlassCard
+      className="space-y-3"
+      onClick={() => navigate(`/booking/${booking.id}/edit`)}
+    >
+      <div className="flex justify-between gap-3">
+        <div className="flex gap-3 min-w-0">
           <div className="
-            w-12 h-12
-            rounded-2xl
-
-            bg-green-500/15
-            text-green-500
-
+            w-12 h-12 rounded-2xl shrink-0
+            bg-green-500/15 text-green-500
             flex items-center justify-center
           ">
-            <Trophy size={22} />
+            <SportIcon sportId={sportId} sportName={sportName} />
           </div>
 
-          {/* Details */}
-          <div>
-
-            <h3 className="
-              text-black dark:text-white
-              font-semibold text-lg
-            ">
-              {turf}
+          <div className="min-w-0">
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white truncate">
+              {turfName}
             </h3>
-
-            <p className="
-              text-sm
-              text-gray-500 dark:text-gray-400
-            ">
-              {sport}
+            <p className="text-sm text-slate-500 dark:text-gray-400">
+              {sportName}
             </p>
-
-            <p className="
-              text-xs mt-1
-              text-gray-400
-            ">
-              BK0024
+            <p className="text-xs mt-1 text-slate-400">
+              {booking.id}
             </p>
-
           </div>
-
         </div>
 
-        {/* Right */}
-        <div className="text-right">
-
-          <h3 className="
-            text-green-500
-            font-bold text-xl
-          ">
-            ₹{amount}
+        <div className="text-right shrink-0">
+          <h3 className="text-green-500 font-bold text-xl">
+            {formatCurrency(booking.amount)}
           </h3>
-
-          <p className={`
-            text-sm
-            font-medium
-            ${statusColors[status]}
-          `}>
-            {status}
+          <p className={`text-sm font-medium ${statusColors[booking.status]}`}>
+            {booking.status}
           </p>
-
         </div>
-
       </div>
 
-      {/* Bottom */}
-      <div className="
-        flex items-center gap-5
-        text-xs
-        text-gray-500 dark:text-gray-400
-      ">
-
+      <div className="flex items-center gap-5 text-xs text-slate-500 dark:text-gray-400">
         <div className="flex items-center gap-1">
           <Calendar size={14} />
-          <span>18 May 2026</span>
+          <span>{formatDisplayDate(booking.date)}</span>
         </div>
 
         <div className="flex items-center gap-1">
           <Clock3 size={14} />
-          <span>08:00 AM - 10:00 AM</span>
+          <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
         </div>
-
       </div>
 
-      {/* Partial Payment Info */}
-      {
-        status === "Partial" && (
-
-          <div className="
-            flex justify-between
-            text-sm font-medium
-          ">
-
-            <span className="text-green-500">
-              Paid ₹1,500
-            </span>
-
-            <span className="text-orange-400">
-              Remaining ₹500
-            </span>
-
-          </div>
-
-        )
-      }
-
+      {booking.status === "Partial" && (
+        <div className="flex justify-between text-sm font-medium">
+          <span className="text-green-500 line-through decoration-green-500/60">
+            Paid {formatCurrency(booking.paidAmount)}
+          </span>
+          <span className="text-orange-400">
+            Remaining {formatCurrency(remaining)}
+          </span>
+        </div>
+      )}
     </GlassCard>
-
   )
 }

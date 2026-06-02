@@ -5,28 +5,14 @@ export default function StatCard({
   value,
   color = "text-green-500"
 }) {
-
   return (
     <GlassCard>
-
-      <div className="space-y-2">
-
-        <p className="
-          text-sm
-          text-gray-500 dark:text-gray-400
-        ">
-          {title}
-        </p>
-
-        <h2 className={`
-          text-3xl font-bold
-          ${color}
-        `}>
-          {value}
-        </h2>
-
-      </div>
-
+      <p className="text-xs text-slate-500 dark:text-gray-400">
+        {title}
+      </p>
+      <p className={`text-2xl font-bold mt-2 ${color}`}>
+        {value}
+      </p>
     </GlassCard>
   )
 }

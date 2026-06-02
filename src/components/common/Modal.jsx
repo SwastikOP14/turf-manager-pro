@@ -9,7 +9,7 @@ export default function Modal({
   return (
     <div className="
       fixed inset-0
-      z-100
+      z-[100]
 
       flex items-center justify-center
 
@@ -34,9 +34,10 @@ export default function Modal({
 
         rounded-3xl
 
-        bg-[#111827]
+        bg-white
+        dark:bg-[#111827]
 
-        border border-white/10
+        border border-black/10 dark:border-white/10
 
         p-5
 

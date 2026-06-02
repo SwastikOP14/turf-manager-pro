@@ -1,10 +1,22 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        var stored = localStorage.getItem("theme");
+        var dark =
+          stored === "dark" ||
+          (stored !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+      })();
+    </script>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/app-logo.png" />
+    <link rel="apple-touch-icon" href="/app-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>turf-manager-pro</title>
+    <meta name="theme-color" content="#020817" />
+    <title>Turf Manager Pro</title>
   </head>
   <body>
     <div id="root"></div>

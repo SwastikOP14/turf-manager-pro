@@ -1,108 +1,146 @@
+import { useMemo, useState } from "react"
+
 import MobileLayout from "../../components/layout/MobileLayout"
-import { useState } from "react"
-import { useApp } from "../../context/AppContext"
-import BookingTabs from "../../components/booking/BookingTabs"
+import BookingPeriodTabs from "../../components/booking/BookingPeriodTabs"
+import BookingFilterMenu from "../../components/booking/BookingFilterMenu"
 import BookingCard from "../../components/booking/BookingCard"
+import DateRangeModal from "../../components/booking/DateRangeModal"
+import { useApp } from "../../context/useApp"
+import { filterBookingsByPeriod } from "../../utils/dates"
+
+const PERIODS = [
+  "All",
+  "This Week",
+  "This Month",
+  "This Year",
+  "Custom"
+]
+
 export default function Bookings() {
-const { bookings } = useApp()
-const [filter, setFilter] = useState("All")
-const filteredBookings =
-  filter === "All"
-    ? bookings
-    : bookings.filter(
-        (booking) =>
-          booking.status === filter
+  const { bookings, getTurfById, getSportById } = useApp()
+
+  const [period, setPeriod] = useState("All")
+  const [statusFilters, setStatusFilters] = useState([])
+  const [customRange, setCustomRange] = useState({ start: null, end: null })
+  const [rangeModalOpen, setRangeModalOpen] = useState(false)
+  const [draftStart, setDraftStart] = useState(null)
+  const [draftEnd, setDraftEnd] = useState(null)
+
+  const counts = useMemo(() => {
+    const result = {}
+
+    PERIODS.forEach((item) => {
+      if (item === "Custom") {
+        result[item] = filterBookingsByPeriod(
+          bookings,
+          "Custom",
+          customRange
+        ).length
+        return
+      }
+
+      result[item] = filterBookingsByPeriod(bookings, item).length
+    })
+
+    return result
+  }, [bookings, customRange])
+
+  const filteredBookings = useMemo(() => {
+    let list = filterBookingsByPeriod(
+      bookings,
+      period,
+      customRange
+    )
+
+    if (statusFilters.length) {
+      list = list.filter((booking) =>
+        statusFilters.includes(booking.status)
       )
+    }
+
+    return [...list].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    )
+  }, [bookings, period, customRange, statusFilters])
+
+  const toggleStatus = (status) => {
+    setStatusFilters((prev) =>
+      prev.includes(status)
+        ? prev.filter((item) => item !== status)
+        : [...prev, status]
+    )
+  }
+
   return (
     <MobileLayout>
+      <div className="p-5 space-y-4 animate-fade-in-up">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Bookings
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+              Premium turf booking dashboard
+            </p>
+          </div>
 
-      <div className="p-5 space-y-5">
-      <div className="
-          flex gap-3
-          overflow-x-auto
-        ">
-
-          {
-            [
-              "All",
-              "Paid",
-              "Partial",
-              "Pending"
-            ].map((item) => (
-
-              <button
-                key={item}
-
-                onClick={() =>
-                  setFilter(item)
-                }
-
-                className={`
-                  px-4 py-2
-
-                  rounded-2xl
-
-                  whitespace-nowrap
-
-                  transition
-
-                  ${
-                    filter === item
-                      ? "bg-green-500 text-black"
-                      : `
-                        bg-white/70
-                        dark:bg-white/5
-
-                        text-black
-                        dark:text-white
-                      `
-                  }
-                `}
-              >
-
-                {item}
-
-              </button>
-
-            ))
-          }
-
-        </div>
-        {/* Heading */}
-        <div>
-
-          <h1 className="
-            text-3xl font-bold
-            text-black dark:text-white
-          ">
-            Bookings
-          </h1>
-
+          <BookingFilterMenu
+            activeStatuses={statusFilters}
+            onToggle={toggleStatus}
+          />
         </div>
 
-        {/* Tabs */}
-        <BookingTabs />
+        <BookingPeriodTabs
+          activePeriod={period}
+          onChange={setPeriod}
+          counts={counts}
+          onCustomClick={() => {
+            setDraftStart(customRange.start)
+            setDraftEnd(customRange.end)
+            setRangeModalOpen(true)
+          }}
+        />
 
-        {/* Cards */}
         <div className="space-y-4">
-           {
-              filteredBookings.map((booking, index) => (
+          {filteredBookings.map((booking) => {
+            const turf = getTurfById(booking.turfId)
+            const sport = getSportById(booking.sportId)
 
-                <BookingCard
-                  key={index}
+            return (
+              <BookingCard
+                key={booking.id}
+                booking={booking}
+                turfName={turf?.name || "Unknown Turf"}
+                sportName={sport?.name || "Sport"}
+                sportId={sport?.id}
+              />
+            )
+          })}
 
-                  turf={booking.turf}
-                  sport={booking.sport}
-                  amount={booking.amount}
-                  status={booking.status}
-                />
-
-              ))
-            }
+          {!filteredBookings.length && (
+            <div className="
+              premium-card p-8 text-center
+              text-slate-500 dark:text-gray-400
+            ">
+              No bookings found for this filter.
+            </div>
+          )}
         </div>
-
       </div>
 
+      <DateRangeModal
+        open={rangeModalOpen}
+        onClose={() => setRangeModalOpen(false)}
+        startDate={draftStart}
+        endDate={draftEnd}
+        onStartChange={setDraftStart}
+        onEndChange={setDraftEnd}
+        onApply={() => {
+          setCustomRange({ start: draftStart, end: draftEnd })
+          setPeriod("Custom")
+          setRangeModalOpen(false)
+        }}
+      />
     </MobileLayout>
   )
 }

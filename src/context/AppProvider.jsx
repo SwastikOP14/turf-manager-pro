@@ -1,0 +1,315 @@
+import { useEffect, useState } from "react"
+
+import { AppContext } from "./AppContextInstance"
+import { loadAppData, saveAppData } from "./storage"
+import { createId, createBookingId } from "../utils/id"
+import { normalizePhone, isValidIndianPhone } from "../utils/phone"
+import { isDuplicateName, isDuplicatePhone } from "../utils/players"
+import { createEmptyPlayer } from "./initialData"
+import { applySharesToPlayers } from "../utils/bookingShares"
+
+export function AppProvider({ children }) {
+  const [data, setData] = useState(() => loadAppData())
+
+  useEffect(() => {
+    saveAppData(data)
+  }, [data])
+
+  const players = data.players
+  const turfs = data.turfs
+  const sports = data.sports
+  const bookings = data.bookings
+  const settings = data.settings
+
+  const getPlayerById = (id) => players.find((p) => p.id === id)
+  const getTurfById = (id) => turfs.find((t) => t.id === id)
+  const getSportById = (id) => sports.find((s) => s.id === id)
+
+  const addPlayer = (player) => {
+    const name = player.name?.trim()
+    const phone = normalizePhone(player.phone)
+
+    if (!name) {
+      return { ok: false, error: "Player name is required" }
+    }
+
+    if (!isValidIndianPhone(phone)) {
+      return { ok: false, error: "Enter a valid 10-digit Indian mobile number" }
+    }
+
+    if (isDuplicateName(players, name)) {
+      return { ok: false, error: "Player with this name already exists" }
+    }
+
+    if (isDuplicatePhone(players, phone)) {
+      return { ok: false, error: "Player with this mobile number already exists" }
+    }
+
+    const entry = {
+      ...createEmptyPlayer(),
+      ...player,
+      id: createId("p"),
+      name,
+      phone
+    }
+
+    setData((prev) => ({
+      ...prev,
+      players: [...prev.players, entry]
+    }))
+
+    return { ok: true, player: entry }
+  }
+
+  const updatePlayer = (id, updates) => {
+    const name = updates.name?.trim()
+    const phone = normalizePhone(updates.phone)
+
+    if (name && isDuplicateName(players, name, id)) {
+      return { ok: false, error: "Player with this name already exists" }
+    }
+
+    if (phone && !isValidIndianPhone(phone)) {
+      return { ok: false, error: "Enter a valid 10-digit Indian mobile number" }
+    }
+
+    if (phone && isDuplicatePhone(players, phone, id)) {
+      return { ok: false, error: "Player with this mobile number already exists" }
+    }
+
+    setData((prev) => ({
+      ...prev,
+      players: prev.players.map((player) =>
+        player.id === id
+          ? {
+              ...player,
+              ...updates,
+              ...(name ? { name } : {}),
+              ...(phone ? { phone } : {})
+            }
+          : player
+      )
+    }))
+
+    return { ok: true }
+  }
+
+  const deletePlayer = (id) => {
+    setData((prev) => ({
+      ...prev,
+      players: prev.players.filter((player) => player.id !== id)
+    }))
+  }
+
+  const addTurf = (turf) => {
+    const entry = {
+      id: createId("t"),
+      name: turf.name?.trim(),
+      location: turf.location?.trim() || "",
+      ownerName: turf.ownerName?.trim() || "",
+      ownerContact: normalizePhone(turf.ownerContact) || ""
+    }
+
+    setData((prev) => ({
+      ...prev,
+      turfs: [...prev.turfs, entry]
+    }))
+
+    return entry
+  }
+
+  const updateTurf = (id, updates) => {
+    setData((prev) => ({
+      ...prev,
+      turfs: prev.turfs.map((turf) =>
+        turf.id === id ? { ...turf, ...updates } : turf
+      )
+    }))
+  }
+
+  const deleteTurf = (id) => {
+    setData((prev) => ({
+      ...prev,
+      turfs: prev.turfs.filter((turf) => turf.id !== id)
+    }))
+  }
+
+  const addSport = (sport) => {
+    const entry = {
+      id: createId("s"),
+      name: sport.name?.trim(),
+      icon: sport.icon || "cricket"
+    }
+
+    setData((prev) => ({
+      ...prev,
+      sports: [...prev.sports, entry]
+    }))
+
+    return entry
+  }
+
+  const updateSport = (id, updates) => {
+    setData((prev) => ({
+      ...prev,
+      sports: prev.sports.map((sport) =>
+        sport.id === id ? { ...sport, ...updates } : sport
+      )
+    }))
+  }
+
+  const deleteSport = (id) => {
+    setData((prev) => ({
+      ...prev,
+      sports: prev.sports.filter((sport) => sport.id !== id)
+    }))
+  }
+
+  const addBooking = (booking) => {
+    let created = null
+
+    setData((prev) => {
+      const entry = {
+        id: createBookingId(prev.bookings),
+        paidAmount:
+          booking.status === "Paid"
+            ? booking.amount
+            : booking.status === "Partial"
+              ? Number(booking.paidAmount) || 0
+              : 0,
+        ...booking
+      }
+
+      created = entry
+
+      return {
+        ...prev,
+        bookings: [...prev.bookings, entry],
+        players: applySharesToPlayers(prev.players, entry)
+      }
+    })
+
+    return created
+  }
+
+  const updateBooking = (id, updates) => {
+    let updated = null
+
+    setData((prev) => {
+      const previous = prev.bookings.find((booking) => booking.id === id)
+
+      const entry = {
+        ...previous,
+        ...updates,
+        paidAmount:
+          updates.status === "Paid"
+            ? updates.amount ?? previous.amount
+            : updates.status === "Partial"
+              ? Number(updates.paidAmount ?? previous.paidAmount) || 0
+              : updates.status === "Pending"
+                ? 0
+                : previous.paidAmount
+      }
+
+      updated = entry
+
+      return {
+        ...prev,
+        bookings: prev.bookings.map((booking) =>
+          booking.id === id ? entry : booking
+        ),
+        players: applySharesToPlayers(prev.players, entry, previous)
+      }
+    })
+
+    return updated
+  }
+
+  const deleteBooking = (id) => {
+    setData((prev) => {
+      const previous = prev.bookings.find((booking) => booking.id === id)
+
+      return {
+        ...prev,
+        bookings: prev.bookings.filter((booking) => booking.id !== id),
+        players: applySharesToPlayers(prev.players, null, previous)
+      }
+    })
+  }
+
+  const addBalance = (playerId, payload) => {
+    setData((prev) => ({
+      ...prev,
+      players: prev.players.map((player) => {
+        if (player.id !== playerId) {
+          return player
+        }
+
+        const historyItem = {
+          id: createId("h"),
+          bookingId: null,
+          sportId: null,
+          turfId: null,
+          date: payload.date,
+          startTime: payload.time,
+          endTime: "",
+          amount: Number(payload.amount) || 0,
+          type: "credit",
+          paymentMode: payload.paymentMode,
+          notes: payload.notes || "Balance added"
+        }
+
+        return {
+          ...player,
+          balance: player.balance + Number(payload.amount || 0),
+          history: [historyItem, ...player.history]
+        }
+      })
+    }))
+  }
+
+  const updateSettings = (updates) => {
+    setData((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        ...updates,
+        notifications: {
+          ...prev.settings.notifications,
+          ...updates.notifications
+        }
+      }
+    }))
+  }
+
+  const value = {
+      players,
+      turfs,
+      sports,
+      bookings,
+      settings,
+      getPlayerById,
+      getTurfById,
+      getSportById,
+      addPlayer,
+      updatePlayer,
+      deletePlayer,
+      addTurf,
+      updateTurf,
+      deleteTurf,
+      addSport,
+      updateSport,
+      deleteSport,
+      addBooking,
+      updateBooking,
+      deleteBooking,
+      addBalance,
+      updateSettings
+    }
+
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  )
+}

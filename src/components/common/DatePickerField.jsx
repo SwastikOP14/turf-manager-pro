@@ -211,7 +211,7 @@ export default function DatePickerField({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="premium-input h-11 w-full flex items-center justify-between gap-2 px-4 text-left cursor-pointer"
+        className="premium-input w-full flex items-center justify-between gap-2 px-4 py-3 cursor-pointer"
       >
         <span className={displayValue ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}>
           {displayValue || placeholder}

@@ -21,7 +21,7 @@ export default function InputField({
         {prefix ? (
           <div className="
             premium-input
-            h-11
+            py-3
             flex items-center
             gap-2
             px-4

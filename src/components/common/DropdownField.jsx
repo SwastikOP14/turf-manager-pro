@@ -22,7 +22,7 @@ export default function DropdownField({
           onChange={onChange}
           className="
             premium-input
-            h-11
+            py-3
             pr-10
             appearance-none
           "

@@ -142,7 +142,7 @@ function SingleTimePicker({ label, hour, minute, period, onHourChange, onMinuteC
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="premium-input h-11 w-full flex items-center justify-between gap-2 px-4 cursor-pointer"
+        className="premium-input w-full flex items-center justify-between gap-2 px-4 py-3 cursor-pointer"
       >
         <TimeDisplay hour={hour} minute={minute} period={period} placeholder="--:-- --" />
         <span className="text-base shrink-0">🕒</span>
@@ -184,7 +184,7 @@ function DualTimePicker({
         <button
           type="button"
           onClick={() => setOpenPicker("start")}
-          className="premium-input h-11 flex-1 flex items-center justify-between gap-1.5 px-3 cursor-pointer"
+          className="premium-input flex-1 flex items-center justify-between gap-1.5 px-3 py-3 cursor-pointer"
         >
           <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 font-medium">Start</span>
           <TimeDisplay hour={startHour} minute={startMinute} period={startPeriod} placeholder="--:-- --" />
@@ -197,7 +197,7 @@ function DualTimePicker({
         <button
           type="button"
           onClick={() => setOpenPicker("end")}
-          className="premium-input h-11 flex-1 flex items-center justify-between gap-1.5 px-3 cursor-pointer"
+          className="premium-input flex-1 flex items-center justify-between gap-1.5 px-3 py-3 cursor-pointer"
         >
           <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 font-medium">End</span>
           <TimeDisplay hour={endHour} minute={endMinute} period={endPeriod} placeholder="--:-- --" />

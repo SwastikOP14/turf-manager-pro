@@ -67,7 +67,6 @@ function DateModal({
   function handleDayClick(day) {
     const clicked = new Date(viewYear, viewMonth, day)
     onChange(clicked)
-    if (!selectsRange) onClose()
   }
 
   // Build calendar grid cells

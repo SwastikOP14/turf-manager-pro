@@ -89,91 +89,6 @@ html.dark .premium-input {
   display: none;
 }
 
-/* DATE PICKER */
-
-.react-datepicker-popper,
-.react-datepicker-popper-custom {
-  z-index: 99999 !important;
-  pointer-events: auto !important;
-}
-
-.react-datepicker-wrapper {
-  display: block;
-  width: 100%;
-}
-
-.react-datepicker-wrapper .react-datepicker__input-container {
-  display: block;
-  width: 100%;
-}
-
-.react-datepicker {
-  border-radius: 20px !important;
-  overflow: visible !important;
-  border: none !important;
-  background: #ffffff !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
-  pointer-events: auto !important;
-}
-
-.tmp-datepicker-calendar {
-  pointer-events: auto !important;
-}
-
-.react-datepicker__day,
-.react-datepicker__day-name,
-.react-datepicker__navigation {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-.react-datepicker__day:hover {
-  background: rgba(34, 197, 94, 0.2) !important;
-}
-
-.react-datepicker__header {
-  background: #ffffff !important;
-  border-bottom: 1px solid #e5e7eb !important;
-}
-
-.react-datepicker__current-month,
-.react-datepicker-time__header,
-.react-datepicker__day-name,
-.react-datepicker__day {
-  color: #0f172a !important;
-}
-
-.react-datepicker__day--selected {
-  background: #22c55e !important;
-  color: #000000 !important;
-  border-radius: 8px !important;
-}
-
-.dark .react-datepicker {
-  background: #0f172a !important;
-}
-
-.dark .react-datepicker__header {
-  background: #111827 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.dark .react-datepicker__current-month,
-.dark .react-datepicker-time__header,
-.dark .react-datepicker__day-name,
-.dark .react-datepicker__day {
-  color: white !important;
-}
-
-.dark .react-datepicker__day:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
-
-.dark .react-datepicker__day--selected {
-  background: #22c55e !important;
-  color: black !important;
-}
-
 select {
   appearance: none;
   -webkit-appearance: none;
@@ -183,10 +98,6 @@ select {
 select option {
   background-color: white !important;
   color: black !important;
-}
-
-.react-datepicker-popper-custom {
-  z-index: 999999 !important;
 }
 
 #root-portal {

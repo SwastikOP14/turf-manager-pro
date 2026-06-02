@@ -226,23 +226,19 @@ export default function BookingForm() {
           />
 
           <TimePickerField
-            label="Start Time"
-            hour={startHour}
-            minute={startMinute}
-            period={startPeriod}
-            onHourChange={setStartHour}
-            onMinuteChange={setStartMinute}
-            onPeriodChange={setStartPeriod}
-          />
-
-          <TimePickerField
-            label="End Time"
-            hour={endHour}
-            minute={endMinute}
-            period={endPeriod}
-            onHourChange={setEndHour}
-            onMinuteChange={setEndMinute}
-            onPeriodChange={setEndPeriod}
+            label="Time"
+            startHour={startHour}
+            startMinute={startMinute}
+            startPeriod={startPeriod}
+            onStartHourChange={setStartHour}
+            onStartMinuteChange={setStartMinute}
+            onStartPeriodChange={setStartPeriod}
+            endHour={endHour}
+            endMinute={endMinute}
+            endPeriod={endPeriod}
+            onEndHourChange={setEndHour}
+            onEndMinuteChange={setEndMinute}
+            onEndPeriodChange={setEndPeriod}
           />
         </GlassCard>
 

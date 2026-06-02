@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useEffect, useState } from "react"
 import { Search, ChevronDown } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
@@ -19,6 +19,21 @@ export default function Players() {
   const [search, setSearch] = useState("")
   const [sortOpen, setSortOpen] = useState(false)
   const [sortType, setSortType] = useState("Sort A-Z")
+  const sortRef = useRef(null)
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    if (!sortOpen) return
+
+    const handleClick = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [sortOpen])
 
   const filteredPlayers = useMemo(() => {
     let list = searchPlayers(players, search)
@@ -45,13 +60,18 @@ export default function Players() {
   return (
     <MobileLayout>
       <div className="p-5 space-y-5 animate-fade-in-up">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Players
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            Players
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+            Manage balances, track dues &amp; add players
+          </p>
+        </div>
 
-        <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-stretch">
+        <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
           <div className="
-            px-4 rounded-2xl h-12
+            px-4 h-11 rounded-2xl
             bg-green-500 text-black
             font-semibold flex items-center justify-center
             whitespace-nowrap text-sm
@@ -60,13 +80,13 @@ export default function Players() {
           </div>
 
           <div className="
-            h-12 px-3 rounded-2xl
+            h-11 px-3 rounded-2xl
             bg-[var(--color-card)]
             border border-[var(--color-card-border)]
             flex items-center gap-2
             shadow-[var(--shadow-card)]
           ">
-            <Search size={18} className="text-slate-500" />
+            <Search size={16} className="text-slate-500 shrink-0" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -78,25 +98,26 @@ export default function Players() {
             />
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={sortRef}>
             <button
               onClick={() => setSortOpen(!sortOpen)}
               className="
-                h-12 px-4 rounded-2xl
+                h-11 px-4 rounded-2xl
                 bg-[var(--color-card)]
                 border border-[var(--color-card-border)]
-                flex items-center gap-2
+                flex items-center gap-1.5
                 text-slate-900 dark:text-white text-sm font-medium
                 shadow-[var(--shadow-card)]
+                whitespace-nowrap
               "
             >
               Sort
-              <ChevronDown size={16} />
+              <ChevronDown size={15} />
             </button>
 
             {sortOpen && (
               <div className="
-                absolute right-0 top-14 w-48 z-50
+                absolute right-0 top-[calc(100%+8px)] w-48 z-50
                 rounded-2xl overflow-hidden
                 bg-white dark:bg-[#111827]
                 border border-black/10 dark:border-white/10

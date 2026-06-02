@@ -27,7 +27,7 @@ export default function BookingPeriodTabs({
         const count = counts[period] ?? 0
         const label =
           period === "Custom"
-            ? `Custom ${count}`
+            ? `Custom`
             : `${period} ${count}`
 
         return (

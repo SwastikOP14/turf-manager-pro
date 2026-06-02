@@ -48,7 +48,7 @@ export default function BookingForm() {
 
   const {
     bookings, players, turfs, sports,
-    addBooking, updateBooking, addTurf, getPlayerById
+    addBooking, updateBooking, deleteBooking, addTurf, getPlayerById
   } = useApp()
 
   const existing = bookings.find((b) => b.id === id)
@@ -137,6 +137,12 @@ export default function BookingForm() {
 
     if (isEdit) updateBooking(id, payload)
     else addBooking(payload)
+    navigate("/")
+  }
+
+  const handleDelete = () => {
+    if (!window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) return
+    deleteBooking(id)
     navigate("/")
   }
 
@@ -303,10 +309,22 @@ export default function BookingForm() {
           <p className="text-sm text-red-500 text-center">{error}</p>
         )}
 
-        <PrimaryButton
-          text={isEdit ? "Update Booking" : "Create Booking"}
-          onClick={handleSave}
-        />
+        <div className="space-y-3">
+          <PrimaryButton
+            text={isEdit ? "Update Booking" : "Create Booking"}
+            onClick={handleSave}
+          />
+
+          {isEdit && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="w-full py-4 rounded-2xl border-2 border-red-500/30 bg-red-500/10 text-red-500 font-bold text-sm cursor-pointer hover:bg-red-500/20 transition-colors"
+            >
+              🗑️ Delete Booking
+            </button>
+          )}
+        </div>
       </div>
 
       <AddTurfModal

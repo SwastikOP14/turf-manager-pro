@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 const HOURS = Array.from({ length: 12 }, (_, i) =>
   String(i + 1).padStart(2, "0")
@@ -21,8 +22,13 @@ function TimeDisplay({ hour, minute, period, placeholder }) {
 }
 
 function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinuteChange, onPeriodChange }) {
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-6">
+  useEffect(() => {
+    document.body.classList.add("modal-open")
+    return () => document.body.classList.remove("modal-open")
+  }, [])
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md px-6">
       {/* Backdrop close */}
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -125,7 +131,8 @@ function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinut
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
@@ -52,6 +53,12 @@ function DateModal({
   const [viewYear, setViewYear] = useState(initDate.getFullYear())
   const [viewMonth, setViewMonth] = useState(initDate.getMonth())
 
+  // Blur background when modal is open
+  useEffect(() => {
+    document.body.classList.add("modal-open")
+    return () => document.body.classList.remove("modal-open")
+  }, [])
+
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const firstDay = getFirstDayOfWeek(viewYear, viewMonth)
 
@@ -74,8 +81,8 @@ function DateModal({
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-6">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-xl px-6">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-xs rounded-3xl bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10 shadow-2xl p-5 animate-fade-in-up">
@@ -178,7 +185,8 @@ function DateModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

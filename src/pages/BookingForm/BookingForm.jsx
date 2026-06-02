@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Pencil, Check, Search } from "lucide-react"
+import { createPortal } from "react-dom"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
@@ -21,6 +22,24 @@ import {
 } from "../../utils/format"
 import { formatPhoneDisplay } from "../../utils/phone"
 import { searchPlayers } from "../../utils/players"
+
+function ModalBlurWrapper({ onClose, children }) {
+  useEffect(() => {
+    document.body.classList.add("modal-open")
+    return () => document.body.classList.remove("modal-open")
+  }, [])
+
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.25rem", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
+      <div className="absolute inset-0" onClick={onClose} />
+      <div style={{ position: "relative", width: "100%", maxWidth: "22rem", maxHeight: "85vh", overflowY: "auto", borderRadius: "1.5rem", padding: "1.25rem", boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
+        className="bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10">
+        {children}
+      </div>
+    </div>,
+    document.body
+  )
+}
 
 export default function BookingForm() {
   const { id } = useParams()
@@ -208,9 +227,18 @@ export default function BookingForm() {
             onClick={() => setPaidByModalOpen(true)}
             className="premium-input w-full flex items-center justify-between gap-2 px-4 py-3 cursor-pointer text-left"
           >
-            <span className={paidByPlayerId ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}>
-              {paidByPlayerId ? getPlayerById(paidByPlayerId)?.name : "Select player"}
-            </span>
+            {paidByPlayerId ? (
+              <div>
+                <span className="text-slate-900 dark:text-white font-medium text-sm">
+                  {getPlayerById(paidByPlayerId)?.name}
+                </span>
+                <span className={`ml-2 text-xs font-semibold ${(getPlayerById(paidByPlayerId)?.balance ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {formatCurrency(getPlayerById(paidByPlayerId)?.balance ?? 0)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-slate-400 dark:text-slate-500">Select player</span>
+            )}
             <span className="text-base shrink-0">👤</span>
           </button>
 
@@ -243,11 +271,16 @@ export default function BookingForm() {
                     key={pid}
                     className="flex items-center gap-1.5 bg-green-500/15 border border-green-500/30 rounded-full px-3 py-1.5"
                   >
-                    <span className="text-sm font-medium text-green-700 dark:text-green-400">{p.name}</span>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-medium text-green-700 dark:text-green-400">{p.name}</span>
+                      <span className={`text-xs font-semibold ${p.balance >= 0 ? "text-green-600 dark:text-green-500" : "text-red-500 dark:text-red-400"}`}>
+                        {formatCurrency(p.balance)}
+                      </span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setPlayerIds((prev) => prev.filter((id) => id !== pid))}
-                      className="text-green-600 dark:text-green-400 hover:text-red-400 transition-colors cursor-pointer text-base leading-none"
+                      className="text-green-600 dark:text-green-400 hover:text-red-400 transition-colors cursor-pointer text-base leading-none ml-1"
                     >
                       ×
                     </button>
@@ -287,118 +320,124 @@ export default function BookingForm() {
 
       {/* ── Paid By Modal (single select) ───────────────── */}
       {paidByModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm">
-          <div className="absolute inset-0" onClick={() => setPaidByModalOpen(false)} />
-          <div className="relative w-full max-w-md rounded-t-3xl bg-white dark:bg-[#111827] border-t border-black/10 dark:border-white/10 shadow-2xl p-5 pb-8 animate-fade-in-up">
-            <div className="flex items-center mb-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">👤 Paid By</h2>
-            </div>
-
-            <div className="relative mb-3">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                type="text"
-                value={paidByQuery}
-                onChange={(e) => setPaidByQuery(e.target.value)}
-                placeholder="Search player..."
-                className="premium-input py-3 text-sm"
-                style={{ paddingLeft: "2.25rem" }}
-              />
-            </div>
-
-            <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-hide">
-              {filteredPaidBy.map((player) => {
-                const selected = paidByPlayerId === player.id
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => { setPaidByPlayerId(player.id); setPaidByModalOpen(false) }}
-                    className={`w-full flex items-center justify-between rounded-2xl p-3 border transition-all cursor-pointer text-left
-                      ${selected ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
-                  >
-                    <div>
-                      <p className={`font-semibold text-sm ${selected ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-                        {player.name}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{formatPhoneDisplay(player.phone)}</p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
-                      ${selected ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
-                      {selected && <Check size={11} className="text-white" />}
-                    </div>
-                  </button>
-                )
-              })}
-              {filteredPaidBy.length === 0 && (
-                <p className="text-sm text-center text-slate-400 py-4">No players found</p>
-              )}
-            </div>
+        <ModalBlurWrapper onClose={() => setPaidByModalOpen(false)}>
+          <div className="flex items-center mb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">👤 Paid By</h2>
           </div>
-        </div>
+
+          <div className="relative mb-3">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={paidByQuery}
+              onChange={(e) => setPaidByQuery(e.target.value)}
+              placeholder="Search player..."
+              className="premium-input py-3 text-sm"
+              style={{ paddingLeft: "2.25rem" }}
+            />
+          </div>
+
+          <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-hide">
+            {filteredPaidBy.map((player) => {
+              const selected = paidByPlayerId === player.id
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() => { setPaidByPlayerId(player.id); setPaidByModalOpen(false) }}
+                  className={`w-full flex items-center justify-between rounded-2xl p-3 border transition-all cursor-pointer text-left
+                    ${selected ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm ${selected ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                      {player.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">{formatPhoneDisplay(player.phone)}</p>
+                      <span className="text-xs">•</span>
+                      <p className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                        {formatCurrency(player.balance)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
+                    ${selected ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
+                    {selected && <Check size={11} className="text-white" />}
+                  </div>
+                </button>
+              )
+            })}
+            {filteredPaidBy.length === 0 && (
+              <p className="text-sm text-center text-slate-400 py-4">No players found</p>
+            )}
+          </div>
+        </ModalBlurWrapper>
       )}
 
       {/* ── Total Players Modal (multi select) ──────────── */}
       {playersModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm">
-          <div className="absolute inset-0" onClick={() => setPlayersModalOpen(false)} />
-          <div className="relative w-full max-w-md rounded-t-3xl bg-white dark:bg-[#111827] border-t border-black/10 dark:border-white/10 shadow-2xl p-5 pb-6 animate-fade-in-up">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">👥 Select Players</h2>
-              <span className="text-sm text-slate-500 dark:text-gray-400">{playerIds.length} selected</span>
-            </div>
-
-            <div className="relative my-3">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                type="text"
-                value={playerQuery}
-                onChange={(e) => setPlayerQuery(e.target.value)}
-                placeholder="Search by name or mobile..."
-                className="premium-input py-3 text-sm"
-                style={{ paddingLeft: "2.25rem" }}
-              />
-            </div>
-
-            <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide mb-4">
-              {filteredPlayers.map((player) => {
-                const checked = playerIds.includes(player.id)
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => togglePlayer(player.id)}
-                    className={`w-full flex items-center justify-between rounded-2xl p-3 border transition-all cursor-pointer text-left
-                      ${checked ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
-                  >
-                    <div>
-                      <p className={`font-semibold text-sm ${checked ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-                        {player.name}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{formatPhoneDisplay(player.phone)}</p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all
-                      ${checked ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
-                      {checked && <Check size={11} className="text-white" />}
-                    </div>
-                  </button>
-                )
-              })}
-              {filteredPlayers.length === 0 && (
-                <p className="text-sm text-center text-slate-400 py-4">No players found</p>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => { setPlayersModalOpen(false); setPlayerQuery("") }}
-              className="w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-bold text-sm cursor-pointer transition-colors"
-            >
-              ✓ Done — {playerIds.length} player{playerIds.length !== 1 ? "s" : ""} selected
-              {playerIds.length > 0 && ` · ${formatCurrency(perPersonShare)}/person`}
-            </button>
+        <ModalBlurWrapper onClose={() => setPlayersModalOpen(false)}>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">👥 Select Players</h2>
+            <span className="text-sm text-slate-500 dark:text-gray-400">{playerIds.length} selected</span>
           </div>
-        </div>
+
+          <div className="relative my-3">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={playerQuery}
+              onChange={(e) => setPlayerQuery(e.target.value)}
+              placeholder="Search by name or mobile..."
+              className="premium-input py-3 text-sm"
+              style={{ paddingLeft: "2.25rem" }}
+            />
+          </div>
+
+          <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide mb-4">
+            {filteredPlayers.map((player) => {
+              const checked = playerIds.includes(player.id)
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() => togglePlayer(player.id)}
+                  className={`w-full flex items-center justify-between rounded-2xl p-3 border transition-all cursor-pointer text-left
+                    ${checked ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm ${checked ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                      {player.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-gray-400">{formatPhoneDisplay(player.phone)}</p>
+                      <span className="text-xs text-slate-400">•</span>
+                      <p className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                        {formatCurrency(player.balance)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all
+                    ${checked ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
+                    {checked && <Check size={11} className="text-white" />}
+                  </div>
+                </button>
+              )
+            })}
+            {filteredPlayers.length === 0 && (
+              <p className="text-sm text-center text-slate-400 py-4">No players found</p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { setPlayersModalOpen(false); setPlayerQuery("") }}
+            className="w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-bold text-sm cursor-pointer transition-colors"
+          >
+            ✓ Done — {playerIds.length} player{playerIds.length !== 1 ? "s" : ""} selected
+            {playerIds.length > 0 && ` · ${formatCurrency(perPersonShare)}/person`}
+          </button>
+        </ModalBlurWrapper>
       )}
     </MobileLayout>
   )

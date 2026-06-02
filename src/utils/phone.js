@@ -28,7 +28,16 @@ export function formatPhoneDisplay(phone = "") {
 }
 
 export function formatPhoneInput(value = "") {
-  const digits = String(value).replace(/\D/g, "").slice(0, 10)
+  const str = String(value)
+
+  // Always strip the "+91 " prefix first, then work with what remains
+  let raw = str
+  if (raw.startsWith("+91")) {
+    raw = raw.slice(3) // remove "+91"
+  }
+
+  // Now strip all non-digits from the remaining part
+  const digits = raw.replace(/\D/g, "").slice(0, 10)
 
   if (!digits) {
     return "+91 "

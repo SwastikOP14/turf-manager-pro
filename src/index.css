@@ -7,11 +7,11 @@
   --color-brand-dark: #16a34a;
   --color-navy: #020817;
   --color-navy-soft: #0b1120;
-  --color-surface: #f4f6f9;
-  --color-card: #eef1f6;
-  --color-card-border: rgba(15, 23, 42, 0.08);
-  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --shadow-card-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
+  --color-surface: #e8ecf2;
+  --color-card: #ffffff;
+  --color-card-border: rgba(15, 23, 42, 0.10);
+  --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.07);
+  --shadow-card-hover: 0 8px 30px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.10);
   --shadow-glow: 0 0 0 1px rgba(34, 197, 94, 0.15), 0 12px 30px rgba(34, 197, 94, 0.12);
 }
 
@@ -54,6 +54,16 @@ html.dark body {
   box-shadow: var(--shadow-card-hover);
 }
 
+/* Stronger shadow and background in light mode */
+body:not(.dark) .premium-card {
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+body:not(.dark) .premium-card:hover {
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.1);
+}
+
 html.dark .premium-card {
   background: rgba(15, 23, 42, 0.88);
 }
@@ -61,13 +71,14 @@ html.dark .premium-card {
 .premium-input {
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1.5px solid rgba(15, 23, 42, 0.18);
   background: #ffffff;
   color: #0f172a;
   padding: 0.75rem 1rem;
   line-height: 1.5;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 }
 
 .premium-input:focus {
@@ -110,6 +121,11 @@ select option {
 
 #root-portal > * {
   pointer-events: auto;
+}
+
+/* Modal active — prevent scroll */
+body.modal-open {
+  overflow: hidden;
 }
 
 @keyframes fade-in-up {

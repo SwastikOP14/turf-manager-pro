@@ -3,43 +3,27 @@ import { useState } from "react"
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
 import PrimaryButton from "../common/PrimaryButton"
-import { formatPhoneInput, isValidIndianPhone } from "../../utils/phone"
 
-export default function AddTurfModal({
+export default function AddSportModal({
   open,
   onClose,
   onSave
 }) {
   const [form, setForm] = useState({
     name: "",
-    location: "",
-    ownerName: "",
-    ownerContact: "+91 "
+    icon: "🏃" // Default icon
   })
 
   const [error, setError] = useState("")
 
   const handleSave = () => {
     if (!form.name.trim()) {
-      setError("Turf/Ground name is required")
-      return
-    }
-
-    if (
-      form.ownerContact &&
-      !isValidIndianPhone(form.ownerContact)
-    ) {
-      setError("Enter a valid owner contact number")
+      setError("Sport/Game name is required")
       return
     }
 
     onSave(form)
-    setForm({
-      name: "",
-      location: "",
-      ownerName: "",
-      ownerContact: "+91 "
-    })
+    setForm({ name: "", icon: "🏃" })
     setError("")
     onClose()
   }
@@ -48,43 +32,42 @@ export default function AddTurfModal({
     <Modal open={open} onClose={onClose}>
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Add New Turf/Ground
+          Add New Sport/Game
         </h2>
 
         <InputField
-          label="Turf/Ground Name"
+          label="Sport/Game Name"
           value={form.name}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, name: e.target.value }))
           }
+          placeholder="e.g. Football, Cricket, Basketball"
         />
 
-        <InputField
-          label="Location"
-          value={form.location}
-          onChange={(e) =>
-            setForm((prev) => ({ ...prev, location: e.target.value }))
-          }
-        />
-
-        <InputField
-          label="Owner Name"
-          value={form.ownerName}
-          onChange={(e) =>
-            setForm((prev) => ({ ...prev, ownerName: e.target.value }))
-          }
-        />
-
-        <InputField
-          label="Owner Contact Number"
-          value={form.ownerContact}
-          onChange={(e) =>
-            setForm((prev) => ({
-              ...prev,
-              ownerContact: formatPhoneInput(e.target.value)
-            }))
-          }
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-900 dark:text-white">
+            Sport Icon
+          </label>
+          <div className="grid grid-cols-6 gap-2">
+            {["⚽", "🏏", "🏀", "🏐", "🏸", "🎾", "🏓", "🥅", "🏈", "🏉", "⛳", "🏃"].map((icon) => (
+              <button
+                key={icon}
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, icon }))}
+                className={`
+                  aspect-square rounded-xl text-xl
+                  border transition-all
+                  ${form.icon === icon
+                    ? "border-green-500 bg-green-500/10 scale-110"
+                    : "border-black/10 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:scale-105"
+                  }
+                `}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {error && (
           <p className="text-sm text-red-500">{error}</p>
@@ -109,7 +92,7 @@ export default function AddTurfModal({
           </button>
 
           <PrimaryButton
-            text="Save Turf/Ground"
+            text="Save Sport/Game"
             onClick={handleSave}
             className="flex-1"
           />

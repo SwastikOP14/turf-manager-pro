@@ -9,7 +9,11 @@ export default {
   ],
 
   theme: {
-    extend: {},
+    extend: {
+      boxShadow: {
+        glow: '0 0 20px var(--shadow-glow)',
+      },
+    },
   },
 
   plugins: [],

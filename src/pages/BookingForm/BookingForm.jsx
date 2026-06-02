@@ -133,8 +133,18 @@ export default function BookingForm() {
   }
 
   const handleSave = () => {
-    if (!sportId || !turfId || !date || !amount) {
-      setError("Please complete booking details and payment summary")
+    if (!sportId || !turfId) {
+      setError("Please select sport and turf")
+      return
+    }
+
+    if (!date) {
+      setError("Please select a booking date")
+      return
+    }
+
+    if (!amount) {
+      setError("Please enter total amount")
       return
     }
 
@@ -209,7 +219,10 @@ export default function BookingForm() {
           <DatePickerField
             label="Date"
             selected={date}
-            onChange={setDate}
+            onChange={(value) => {
+              setDate(value)
+              setError("")
+            }}
           />
 
           <TimePickerField

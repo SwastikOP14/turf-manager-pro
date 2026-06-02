@@ -1,23 +1,30 @@
-import {
-  Trophy,
-  Circle,
-  Dumbbell,
-  Volleyball,
-  Feather,
-  CircleDot,
-  Target,
-  Activity
-} from "lucide-react"
-
-const ICONS = {
-  cricket: Trophy,
-  football: Circle,
-  basketball: Dumbbell,
-  volleyball: Volleyball,
-  badminton: Feather,
-  tennis: CircleDot,
-  hockey: Target,
-  default: Activity
+const SPORT_EMOJIS = {
+  cricket: "🏏",
+  football: "⚽",
+  basketball: "🏀",
+  volleyball: "🏐",
+  badminton: "🏸",
+  tennis: "🎾",
+  hockey: "🏑",
+  rugby: "🏉",
+  baseball: "⚾",
+  softball: "🥎",
+  golf: "⛳",
+  swimming: "🏊",
+  cycling: "🚴",
+  boxing: "🥊",
+  wrestling: "🤼",
+  tabletennis: "🏓",
+  pingpong: "🏓",
+  archery: "🏹",
+  skiing: "⛷️",
+  snowboarding: "🏂",
+  surfing: "🏄",
+  gymnastics: "🤸",
+  weightlifting: "🏋️",
+  running: "🏃",
+  athletics: "🏃",
+  default: "🏅"
 }
 
 export default function SportIcon({
@@ -26,20 +33,24 @@ export default function SportIcon({
   size = 22,
   className = ""
 }) {
-  const key = (sportId || sportName || "cricket")
+  const key = (sportId || sportName || "")
     .toString()
     .toLowerCase()
     .replace(/\s+/g, "")
 
   const matchedKey =
-    Object.keys(ICONS).find((name) => key.includes(name)) || "default"
+    Object.keys(SPORT_EMOJIS).find((name) => key.includes(name)) || "default"
 
-  const Icon = ICONS[matchedKey]
+  const emoji = SPORT_EMOJIS[matchedKey]
 
   return (
-    <Icon
-      size={size}
+    <span
+      style={{ fontSize: size }}
       className={className}
-    />
+      role="img"
+      aria-label={sportName || sportId || "sport"}
+    >
+      {emoji}
+    </span>
   )
 }

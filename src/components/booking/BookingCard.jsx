@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom"
-import { Calendar, Clock3 } from "lucide-react"
 
 import GlassCard from "../common/GlassCard"
 import SportIcon from "../common/SportIcon"
@@ -17,6 +16,12 @@ export default function BookingCard({
     Paid: "text-green-500",
     Partial: "text-orange-400",
     Pending: "text-red-500"
+  }
+
+  const statusEmojis = {
+    Paid: "✅",
+    Partial: "🕐",
+    Pending: "⏳"
   }
 
   const remaining = Math.max(
@@ -57,19 +62,19 @@ export default function BookingCard({
             {formatCurrency(booking.amount)}
           </h3>
           <p className={`text-sm font-medium ${statusColors[booking.status]}`}>
-            {booking.status}
+            {statusEmojis[booking.status]} {booking.status}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-5 text-xs text-slate-500 dark:text-gray-400">
         <div className="flex items-center gap-1">
-          <Calendar size={14} />
+          <span>📅</span>
           <span>{formatDisplayDate(booking.date)}</span>
         </div>
 
         <div className="flex items-center gap-1">
-          <Clock3 size={14} />
+          <span>🕒</span>
           <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
         </div>
       </div>
@@ -77,10 +82,10 @@ export default function BookingCard({
       {booking.status === "Partial" && (
         <div className="flex justify-between text-sm font-medium">
           <span className="text-green-500 line-through decoration-green-500/60">
-            Paid {formatCurrency(booking.paidAmount)}
+            💵 Paid {formatCurrency(booking.paidAmount)}
           </span>
           <span className="text-orange-400">
-            Remaining {formatCurrency(remaining)}
+            💸 Remaining {formatCurrency(remaining)}
           </span>
         </div>
       )}

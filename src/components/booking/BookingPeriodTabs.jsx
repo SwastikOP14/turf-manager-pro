@@ -15,13 +15,25 @@ export default function BookingPeriodTabs({
   onCustomClick
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+    <div className="
+      -mx-1 px-1
+      flex gap-2
+      overflow-x-auto scrollbar-hide
+      snap-x snap-mandatory
+      pb-1
+    ">
       {PERIODS.map((period) => {
         const active = activePeriod === period
+        const count = counts[period] ?? 0
+        const label =
+          period === "Custom"
+            ? `Custom ${count}`
+            : `${period} ${count}`
 
         return (
           <button
             key={period}
+            type="button"
             onClick={() => {
               if (period === "Custom") {
                 onCustomClick?.()
@@ -31,20 +43,18 @@ export default function BookingPeriodTabs({
               onChange(period)
             }}
             className={`
-              min-w-[88px] px-3 py-2 rounded-2xl border transition
+              shrink-0 snap-start
+              px-3.5 py-2 rounded-2xl border transition
+              whitespace-nowrap text-sm font-semibold
+              flex items-center gap-1.5
               ${active
                 ? "bg-green-500 text-black border-green-500 shadow-[var(--shadow-glow)]"
                 : "bg-[var(--color-card)] text-slate-900 dark:text-white border-[var(--color-card-border)]"
               }
             `}
           >
-            <div className="flex items-center justify-center gap-1 text-[11px] font-medium">
-              {period === "Custom" && <CalendarRange size={12} />}
-              <span>{period}</span>
-            </div>
-            <div className="text-sm font-bold text-center">
-              {counts[period] ?? 0}
-            </div>
+            {period === "Custom" && <CalendarRange size={14} />}
+            <span>{label}</span>
           </button>
         )
       })}

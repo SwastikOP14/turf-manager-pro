@@ -1,11 +1,20 @@
+import { useLocation } from "react-router-dom"
+
 import Header from "./Header"
 import BottomNavbar from "./BottomNavbar"
 import FloatingButton from "./FloatingButton"
+
+function shouldShowFab(pathname) {
+  return pathname === "/" || pathname === "/players"
+}
 
 export default function MobileLayout({
   children,
   hideFab = false
 }) {
+  const { pathname } = useLocation()
+  const showFab = !hideFab && shouldShowFab(pathname)
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-[#020817] flex justify-center">
       <div className="
@@ -21,7 +30,7 @@ export default function MobileLayout({
 
         <BottomNavbar />
 
-        {!hideFab && <FloatingButton />}
+        {showFab && <FloatingButton />}
       </div>
     </div>
   )

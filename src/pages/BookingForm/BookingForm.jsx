@@ -319,7 +319,7 @@ export default function BookingForm() {
             <button
               type="button"
               onClick={handleDelete}
-              className="w-full py-4 rounded-2xl border-2 border-red-500/30 bg-red-500/10 text-red-500 font-bold text-sm cursor-pointer hover:bg-red-500/20 transition-colors"
+              className="w-full py-4 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm cursor-pointer transition-colors"
             >
               🗑️ Delete Booking
             </button>

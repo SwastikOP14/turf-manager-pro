@@ -1,18 +1,24 @@
-import { Plus } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 
-export default function FloatingButton() {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function FloatingButton({ onClick }) {
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const handleClick = () => {
-    if (location.pathname.startsWith("/players")) {
-      navigate("/player/new");
-      return;
+    // If a custom onClick is provided, use it
+    if (onClick) {
+      onClick()
+      return
     }
 
-    navigate("/booking/new");
-  };
+    if (location.pathname.startsWith("/players")) {
+      navigate("/player/new")
+      return
+    }
+
+    navigate("/booking/new")
+  }
 
   return (
     <button
@@ -29,5 +35,5 @@ export default function FloatingButton() {
     >
       <Plus size={32} />
     </button>
-  );
+  )
 }

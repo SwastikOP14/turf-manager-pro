@@ -10,7 +10,8 @@ function shouldShowFab(pathname) {
 
 export default function MobileLayout({
   children,
-  hideFab = false
+  hideFab = false,
+  onFabClick
 }) {
   const { pathname } = useLocation()
   const showFab = !hideFab && shouldShowFab(pathname)
@@ -30,7 +31,7 @@ export default function MobileLayout({
 
         <BottomNavbar />
 
-        {showFab && <FloatingButton />}
+        {showFab && <FloatingButton onClick={onFabClick} />}
       </div>
     </div>
   )

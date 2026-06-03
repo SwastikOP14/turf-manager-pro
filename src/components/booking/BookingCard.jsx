@@ -9,98 +9,111 @@ export default function BookingCard({
   turfName,
   sportName,
   sportId,
-  sport // Add sport object
+  sport
 }) {
   const navigate = useNavigate()
 
   const statusConfig = {
-    Paid:    { color: "text-green-500",  bg: "bg-green-500/10",  label: "Paid" },
-    Partial: { color: "text-orange-400", bg: "bg-orange-400/10", label: "Partial" },
-    Pending: { color: "text-red-500",    bg: "bg-red-500/10",    label: "Pending" },
+    Paid:    { color: "text-green-500",  dot: "bg-green-500",  label: "Paid" },
+    Partial: { color: "text-orange-400", dot: "bg-orange-400", label: "Partial" },
+    Pending: { color: "text-red-500",    dot: "bg-red-500",    label: "Pending" },
   }
 
   const status = statusConfig[booking.status] ?? statusConfig.Pending
-
   const paidAmt   = Number(booking.paidAmount || 0)
   const totalAmt  = Number(booking.amount)
   const remaining = Math.max(0, totalAmt - paidAmt)
+  const displayAmount = booking.status === "Partial" ? remaining : totalAmt
 
   return (
-    <GlassCard
-      className="space-y-3"
-      onClick={() => navigate(`/booking/${booking.id}/edit`)}
-    >
-      {/* ── Top row: sport icon + turf info + amount + status ── */}
-      <div className="flex justify-between gap-3">
-        <div className="flex gap-3 min-w-0">
-          <div className="
-            w-12 h-12 rounded-2xl shrink-0
-            bg-green-500/15 text-green-500
-            flex items-center justify-center
-          ">
-            <SportIcon sportId={sportId} sportName={sportName} sport={sport} />
-          </div>
+    <GlassCard onClick={() => navigate(`/booking/${booking.id}/edit`)}>
 
-          <div className="min-w-0">
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white truncate">
-              {turfName}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-gray-400">
-              {sportName}
-            </p>
-            <p className="text-xs mt-0.5 text-slate-400">
-              {booking.id}
-            </p>
-          </div>
+      {/* ── Main body ── */}
+      <div className="flex items-start gap-4">
+
+        {/* Sport emoji */}
+        <div className="shrink-0 leading-none mt-1">
+          <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={36} />
         </div>
 
-        <div className="text-right shrink-0 flex flex-col items-end gap-1">
-          {/* For Partial: top-right = remaining amount + "To Pay" label */}
-          {booking.status === "Partial" ? (
-            <>
-              <h3 className={`font-bold text-xl ${status.color}`}>
-                {formatCurrency(remaining)}
-              </h3>
-              <span className={`text-sm font-semibold ${status.color}`}>
+        {/* Two-column */}
+        <div className="flex-1 min-w-0 flex justify-between gap-3">
+
+          {/* Left: Name / Date / Time */}
+          <div className="min-w-0">
+            {/* Turf name — base size e.g. 17px */}
+            <p className="font-bold text-[17px] text-slate-900 dark:text-white leading-tight truncate tracking-tight">
+              {turfName}
+            </p>
+            {/* Date — 15px (2px smaller) */}
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="text-[15px]">📅</span>
+              <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-300 tracking-tight">
+                {formatDisplayDate(booking.date)}
+              </p>
+            </div>
+            {/* Time — 15px */}
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <span className="text-[15px]">🕒</span>
+              <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-300 tracking-tight">
+                {formatTimeRange(booking.startTime, booking.endTime)}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Amount / Booking ID / Players */}
+          <div className="text-right shrink-0">
+            {/* Amount — 21px */}
+            <p className={`font-extrabold text-[21px] tracking-tight leading-tight ${status.color}`}>
+              {formatCurrency(displayAmount)}
+            </p>
+            {/* Show "To Pay" label for partial under amount — removed */}
+            {/* Booking ID — darker in both themes */}
+            <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-200 mt-2 tracking-wide">
+              #{booking.id}
+            </p>
+            {/* Players — brighter in dark theme */}
+            <p className="text-[15px] font-semibold text-slate-700 dark:text-gray-100 mt-1">
+              👥 {booking.playerIds?.length || 0}
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Bottom status bar ── */}
+      <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-black/15 dark:border-white/20">
+
+        {booking.status === "Partial" ? (
+          <>
+            <span className="text-[14px] font-bold text-slate-600 dark:text-gray-200 tracking-tight">
+              Total {formatCurrency(totalAmt)}
+            </span>
+            <span className="text-[14px] font-semibold text-green-500 tracking-tight">
+              Paid {formatCurrency(paidAmt)}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${status.dot}`} />
+              <span className={`text-[14px] font-bold tracking-tight ${status.color}`}>
                 To Pay
               </span>
-            </>
-          ) : (
-            <>
-              <h3 className={`font-bold text-xl ${status.color}`}>
-                {formatCurrency(totalAmt)}
-              </h3>
-              <span className={`text-sm font-semibold ${status.color}`}>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="text-[14px] font-bold text-slate-600 dark:text-gray-200 tracking-tight">
+              Total {formatCurrency(totalAmt)}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${status.dot}`} />
+              <span className={`text-[14px] font-bold tracking-tight ${status.color}`}>
                 {status.label}
               </span>
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+          </>
+        )}
 
-      {/* ── Date & time row ── */}
-      <div className="flex items-center gap-5 text-xs text-slate-500 dark:text-gray-400">
-        <div className="flex items-center gap-1">
-          <span>📅</span>
-          <span>{formatDisplayDate(booking.date)}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span>🕒</span>
-          <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
-        </div>
       </div>
-
-      {/* ── Partial footer: paid (left) + total (right) ── */}
-      {booking.status === "Partial" && (
-        <div className="flex justify-between items-center text-sm font-semibold pt-1 border-t border-black/5 dark:border-white/5">
-          <span className="text-green-500">
-            Paid {formatCurrency(paidAmt)}
-          </span>
-          <span className="text-slate-500 dark:text-gray-400">
-            Total {formatCurrency(totalAmt)}
-          </span>
-        </div>
-      )}
     </GlassCard>
   )
 }

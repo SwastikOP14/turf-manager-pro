@@ -45,14 +45,14 @@ export default function DropdownField({
   }
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`} ref={ref}>
+    <div className={`flex flex-col gap-2 relative ${className}`} ref={ref}>
       {label && (
         <label className="text-sm font-medium text-slate-900 dark:text-white">
           {label}
         </label>
       )}
 
-      <div className="relative">
+      <div className="relative z-40">
         {/* Trigger Button */}
         <button
           type="button"
@@ -84,7 +84,7 @@ export default function DropdownField({
         {/* Dropdown Menu */}
         {isOpen && (
           <div className="
-            absolute top-[calc(100%+4px)] left-0 right-0 z-50
+            absolute top-[calc(100%+4px)] left-0 right-0 z-[9999]
             rounded-2xl overflow-hidden
             bg-white dark:bg-[#1e293b]
             border border-black/10 dark:border-white/12

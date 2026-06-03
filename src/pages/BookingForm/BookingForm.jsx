@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Pencil, Check, Search } from "lucide-react"
+import { Pencil, Check, Search, Trash2 } from "lucide-react"
 import { createPortal } from "react-dom"
 
 import MobileLayout from "../../components/layout/MobileLayout"
@@ -176,9 +176,27 @@ export default function BookingForm() {
   return (
     <MobileLayout hideFab>
       <div className="p-5 space-y-5 animate-fade-in-up">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-          {isEdit ? "Edit Booking" : "Add Booking"}
-        </h1>
+        {/* Header with Title and Delete Button */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            {isEdit ? "Edit Booking" : "Add Booking"}
+          </h1>
+
+          {isEdit && (
+            <button
+              onClick={handleDelete}
+              className="
+                w-10 h-10 rounded-xl
+                bg-red-500/15 text-red-500
+                flex items-center justify-center
+                hover:bg-red-500/25 transition-all duration-200
+              "
+              title="Delete booking"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
 
         {/* ── Booking Details ──────────────────────────────── */}
         <GlassCard className="space-y-4">
@@ -341,16 +359,6 @@ export default function BookingForm() {
             text={isEdit ? "Update Booking" : "Create Booking"}
             onClick={handleSave}
           />
-
-          {isEdit && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="w-full py-4 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm cursor-pointer transition-colors"
-            >
-              🗑️ Delete Booking
-            </button>
-          )}
         </div>
       </div>
 

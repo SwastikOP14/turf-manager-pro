@@ -1,8 +1,8 @@
 import { useState } from "react"
+import { X } from "lucide-react"
 
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
-import PrimaryButton from "../common/PrimaryButton"
 import { formatPhoneInput, isValidIndianPhone } from "../../utils/phone"
 
 export default function AddTurfModal({
@@ -47,9 +47,25 @@ export default function AddTurfModal({
   return (
     <Modal open={open} onClose={onClose}>
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Add New Turf/Ground
-        </h2>
+        {/* Header with Title and Close Button */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Add New Turf/Ground
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="
+              w-10 h-10 rounded-xl
+              bg-red-500/15 text-red-500
+              flex items-center justify-center
+              hover:bg-red-500/25 transition-all duration-200
+            "
+            title="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
         <InputField
           label="Turf/Ground Name"
@@ -90,30 +106,16 @@ export default function AddTurfModal({
           <p className="text-sm text-red-500">{error}</p>
         )}
 
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={onClose}
-            className="
-              w-12 h-12 rounded-2xl
-              border border-black/10 dark:border-white/10
-              bg-slate-100 dark:bg-white/5
-              text-slate-600 dark:text-slate-400
-              hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30
-              transition-colors
-              flex items-center justify-center
-              text-lg
-            "
-            title="Cancel"
-          >
-            ✕
-          </button>
-
-          <PrimaryButton
-            text="Save Turf/Ground"
-            onClick={handleSave}
-            className="flex-1"
-          />
-        </div>
+        <button
+          onClick={handleSave}
+          className="
+            w-full py-3 px-4 rounded-xl
+            bg-green-500 text-black font-semibold
+            hover:bg-green-600 transition-all
+          "
+        >
+          Save Turf/Ground
+        </button>
       </div>
     </Modal>
   )

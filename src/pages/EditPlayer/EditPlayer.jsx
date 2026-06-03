@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
-import { useParams } from "react-router-dom"
-import { Check, X } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import { Check, X, Trash2 } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
@@ -9,6 +9,7 @@ import PrimaryButton from "../../components/common/PrimaryButton"
 import AddBalanceModal from "../../components/player/AddBalanceModal"
 import PhotoUpload from "../../components/common/PhotoUpload"
 import SportIcon from "../../components/common/SportIcon"
+import Modal from "../../components/common/Modal"
 import { useApp } from "../../context/useApp"
 import {
   formatCurrency,
@@ -20,6 +21,7 @@ import { getInitials } from "../../utils/players"
 
 export default function EditPlayer() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const {
     getPlayerById,
@@ -27,6 +29,7 @@ export default function EditPlayer() {
     getTurfById,
     getSportById,
     updatePlayer,
+    deletePlayer,
     addBalance
   } = useApp()
 
@@ -40,6 +43,7 @@ export default function EditPlayer() {
   const [address, setAddress] = useState(player?.address || "")
   const [photo, setPhoto] = useState(player?.photo || null)
   const [balanceModalOpen, setBalanceModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [error, setError] = useState("")
 
   const playerBookings = useMemo(
@@ -103,6 +107,16 @@ export default function EditPlayer() {
     setError("")
   }
 
+  const handleDeletePlayer = () => {
+    const result = deletePlayer(id)
+    if (result.ok) {
+      setDeleteConfirmOpen(false)
+      navigate("/players")
+    } else {
+      setError(result.error)
+    }
+  }
+
   return (
     <MobileLayout hideFab>
       <div className="p-5 space-y-5 animate-fade-in-up">
@@ -141,73 +155,96 @@ export default function EditPlayer() {
                 </div>
               </div>
 
-              {/* Edit Button */}
-              <button
-                onClick={() => setEditing(true)}
-                className="
-                  w-10 h-10 rounded-xl
-                  bg-green-500/15 text-green-500
-                  flex items-center justify-center
-                  hover:bg-green-500/25 transition-all duration-300
-                "
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                </svg>
-              </button>
+              {/* Edit and Delete Buttons - Vertical Stack */}
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="
+                    w-10 h-10 rounded-xl
+                    bg-green-500/15 text-green-500
+                    flex items-center justify-center
+                    hover:bg-green-500/25 transition-all duration-200
+                  "
+                  title="Edit player"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                  </svg>
+                </button>
+
+                <button
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="
+                    w-10 h-10 rounded-xl
+                    bg-red-500/15 text-red-500
+                    flex items-center justify-center
+                    hover:bg-red-500/25 transition-all duration-200
+                  "
+                  title="Delete player"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           ) : (
             /* Edit Mode Layout - Centered like Add Player */
-            <div className="space-y-5 transition-all duration-1000 ease-in-out animate-in slide-in-from-top-4 fade-in">
+            <div className="space-y-5 transition-all duration-300 ease-in-out">
+              {/* Cancel Button - Top Right */}
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={handleCancelEdit}
+                  className="
+                    w-10 h-10 rounded-xl
+                    bg-red-500/15 text-red-500
+                    flex items-center justify-center
+                    hover:bg-red-500/25 transition-all duration-200
+                  "
+                  title="Cancel edit"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
               {/* Centered Photo Section */}
-              <div className="flex flex-col items-center gap-2 py-3 transition-all duration-1000 ease-in-out">
-                <div className="transition-all duration-1000 ease-in-out transform">
-                  <PhotoUpload
-                    name={name}
-                    photo={photo}
-                    onPhotoChange={setPhoto}
-                    size="large"
-                  />
-                </div>
+              <div className="flex flex-col items-center gap-2 py-3">
+                <PhotoUpload
+                  name={name}
+                  photo={photo}
+                  onPhotoChange={setPhoto}
+                  size="large"
+                />
               </div>
 
               {/* Form Fields */}
-              <div className="space-y-4 transition-all duration-1000 delay-300 ease-in-out animate-in slide-in-from-bottom-4 fade-in">
-                <div className="transition-all duration-700 delay-200 ease-in-out transform">
-                  <InputField
-                    label="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="transition-all duration-700 delay-300 ease-in-out transform">
-                  <InputField
-                    label="Mobile"
-                    value={phone}
-                    onChange={(e) =>
-                      setPhone(formatPhoneInput(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="transition-all duration-700 delay-400 ease-in-out transform">
-                  <InputField
-                    label="Address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </div>
+              <div className="space-y-4">
+                <InputField
+                  label="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <InputField
+                  label="Mobile"
+                  value={phone}
+                  onChange={(e) =>
+                    setPhone(formatPhoneInput(e.target.value))
+                  }
+                />
+                <InputField
+                  label="Address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </div>
 
               {/* Action Buttons - Centered Row */}
-              <div className="flex items-center justify-center gap-4 pt-2 transition-all duration-1000 delay-500 ease-in-out animate-in slide-in-from-bottom-2 fade-in">
+              <div className="flex items-center justify-center gap-4 pt-2">
                 <button
                   onClick={handleSaveProfile}
                   className="
                     px-6 py-3 rounded-xl
                     bg-green-500/15 text-green-500 border border-green-500/30
                     font-semibold text-sm
-                    hover:bg-green-500/25 hover:scale-105 transition-all duration-300
-                    transform animate-in zoom-in-50
+                    hover:bg-green-500/25 hover:scale-105 transition-all duration-200
                   "
                 >
                   Save
@@ -219,8 +256,7 @@ export default function EditPlayer() {
                     px-6 py-3 rounded-xl
                     bg-red-500/15 text-red-500 border border-red-500/30
                     font-semibold text-sm
-                    hover:bg-red-500/25 hover:scale-105 transition-all duration-300
-                    transform animate-in zoom-in-50
+                    hover:bg-red-500/25 hover:scale-105 transition-all duration-200
                   "
                 >
                   Revert
@@ -333,6 +369,44 @@ export default function EditPlayer() {
         playerName={player.name}
         onSubmit={(payload) => addBalance(id, payload)}
       />
+
+      <Modal
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="Delete Player"
+        className="max-w-sm"
+      >
+        <div className="space-y-4">
+          <p className="text-slate-700 dark:text-gray-300">
+            Are you sure you want to delete <strong>{player.name}</strong>? This action cannot be undone.
+          </p>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="
+                px-4 py-2 rounded-lg
+                bg-slate-200/50 dark:bg-white/10 text-slate-700 dark:text-gray-300
+                font-medium text-sm
+                hover:bg-slate-300/50 dark:hover:bg-white/15 transition-all
+              "
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeletePlayer}
+              className="
+                px-4 py-2 rounded-lg
+                bg-red-500 text-white
+                font-medium text-sm
+                hover:bg-red-600 transition-all
+              "
+            >
+              Delete Player
+            </button>
+          </div>
+        </div>
+      </Modal>
     </MobileLayout>
   )
 }

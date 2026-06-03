@@ -1,8 +1,8 @@
 import { useState } from "react"
+import { X } from "lucide-react"
 
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
-import PrimaryButton from "../common/PrimaryButton"
 
 export default function AddSportModal({
   open,
@@ -30,10 +30,26 @@ export default function AddSportModal({
 
   return (
     <Modal open={open} onClose={onClose}>
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Add New Sport/Game
-        </h2>
+      <div className="space-y-3">
+        {/* Header with Title and Close Button */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Add New Sport/Game
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="
+              w-10 h-10 rounded-xl
+              bg-red-500/15 text-red-500
+              flex items-center justify-center
+              hover:bg-red-500/25 transition-all duration-200
+            "
+            title="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
         <InputField
           label="Sport/Game Name"
@@ -48,17 +64,17 @@ export default function AddSportModal({
           <label className="text-sm font-medium text-slate-900 dark:text-white">
             Sport Icon (Optional)
           </label>
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-6 gap-2.5 mt-2">
             {/* No Icon Option */}
             <button
               type="button"
               onClick={() => setForm((prev) => ({ ...prev, icon: "" }))}
               className={`
-                aspect-square rounded-xl text-xs font-medium
-                border transition-all flex items-center justify-center
+                aspect-square rounded-lg text-xs font-semibold
+                border-2 transition-all flex items-center justify-center
                 ${form.icon === ""
-                  ? "border-green-500 bg-green-500/10 scale-110 text-green-600 dark:text-green-400"
-                  : "border-black/10 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:scale-105 text-slate-600 dark:text-slate-400"
+                  ? "border-green-500 bg-green-500/10 scale-105 text-green-600 dark:text-green-400"
+                  : "border-slate-600 dark:border-slate-500 bg-slate-700 dark:bg-slate-800 hover:scale-105 text-slate-300"
                 }
               `}
             >
@@ -72,11 +88,11 @@ export default function AddSportModal({
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, icon }))}
                 className={`
-                  aspect-square rounded-xl text-xl
-                  border transition-all
+                  aspect-square rounded-lg text-2xl
+                  border-2 transition-all flex items-center justify-center
                   ${form.icon === icon
-                    ? "border-green-500 bg-green-500/10 scale-110"
-                    : "border-black/10 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:scale-105"
+                    ? "border-green-500 bg-green-500/10 scale-105"
+                    : "border-slate-600 dark:border-slate-500 bg-slate-700 dark:bg-slate-800 hover:scale-105"
                   }
                 `}
               >
@@ -84,8 +100,8 @@ export default function AddSportModal({
               </button>
             ))}
           </div>
-          <p className="text-xs text-slate-500 dark:text-gray-400">
-            Select an icon or leave as "None" to use a neutral emoji in bookings
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-2">
+            Select an icon or leave as "None" to use a neutral emoji
           </p>
         </div>
 
@@ -93,30 +109,16 @@ export default function AddSportModal({
           <p className="text-sm text-red-500">{error}</p>
         )}
 
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={onClose}
-            className="
-              w-12 h-12 rounded-2xl
-              border border-black/10 dark:border-white/10
-              bg-slate-100 dark:bg-white/5
-              text-slate-600 dark:text-slate-400
-              hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30
-              transition-colors
-              flex items-center justify-center
-              text-lg
-            "
-            title="Cancel"
-          >
-            ✕
-          </button>
-
-          <PrimaryButton
-            text="Save Sport/Game"
-            onClick={handleSave}
-            className="flex-1"
-          />
-        </div>
+        <button
+          onClick={handleSave}
+          className="
+            w-full py-3 px-4 rounded-xl
+            bg-green-500 text-black font-semibold
+            hover:bg-green-600 transition-all
+          "
+        >
+          Save Sport/Game
+        </button>
       </div>
     </Modal>
   )

@@ -57,9 +57,25 @@ export default function AddBalanceModal({
   return (
     <Modal open={open} onClose={handleClose}>
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          Add Balance
-        </h2>
+        {/* Header with Title and Close Button */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Add Balance
+          </h2>
+
+          <button
+            onClick={handleClose}
+            className="
+              w-10 h-10 rounded-xl
+              bg-red-500/15 text-red-500
+              flex items-center justify-center
+              hover:bg-red-500/25 transition-all duration-200
+            "
+            title="Cancel"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
         <InputField
           label="Player"
@@ -111,27 +127,11 @@ export default function AddBalanceModal({
           <p className="text-sm text-red-500 text-center">{error}</p>
         )}
 
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={handleClose}
-            className="
-              w-12 h-12 rounded-2xl
-              bg-red-500/10 border border-red-500/30
-              text-red-500 hover:bg-red-500/20
-              flex items-center justify-center
-              transition-colors
-            "
-            title="Cancel"
-          >
-            <X size={18} />
-          </button>
-
-          <PrimaryButton
-            text="Add Balance"
-            onClick={handleSubmit}
-            className="flex-1"
-          />
-        </div>
+        <PrimaryButton
+          text="Add Balance"
+          onClick={handleSubmit}
+          className="w-full"
+        />
       </div>
     </Modal>
   )

@@ -8,7 +8,8 @@ export default function BookingCard({
   booking,
   turfName,
   sportName,
-  sportId
+  sportId,
+  sport // Add sport object
 }) {
   const navigate = useNavigate()
 
@@ -37,7 +38,7 @@ export default function BookingCard({
             bg-green-500/15 text-green-500
             flex items-center justify-center
           ">
-            <SportIcon sportId={sportId} sportName={sportName} />
+            <SportIcon sportId={sportId} sportName={sportName} sport={sport} />
           </div>
 
           <div className="min-w-0">

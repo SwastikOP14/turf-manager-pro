@@ -113,6 +113,7 @@ export default function Bookings() {
                 turfName={turf?.name || "Unknown Turf"}
                 sportName={sport?.name || "Sport"}
                 sportId={sport?.id}
+                sport={sport}
               />
             )
           })}

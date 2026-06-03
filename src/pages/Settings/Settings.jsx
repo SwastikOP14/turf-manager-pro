@@ -195,19 +195,12 @@ export default function Settings() {
             </div>
           )}
 
-          <div className="space-y-3">
-            <input
-              className="premium-input"
-              placeholder="New turf name"
-              value=""
-              readOnly
-              onClick={() => setAddTurfModalOpen(true)}
-            />
-            <PrimaryButton
-              text="Add Turf"
-              onClick={() => setAddTurfModalOpen(true)}
-            />
-          </div>
+          <button
+            onClick={() => setAddTurfModalOpen(true)}
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            Add Turf/Ground
+          </button>
         </GlassCard>
 
         {/* Sport Management */}
@@ -243,12 +236,12 @@ export default function Settings() {
                     key={sport.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{sport.icon || "🏃"}</span>
-                      <p className="font-medium text-slate-900 dark:text-white text-sm">
-                        {sport.name}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{sport.icon || "🏅"}</span>
+                    <p className="font-medium text-slate-900 dark:text-white text-sm">
+                      {sport.name}
+                    </p>
+                  </div>
                     <button
                       onClick={() => handleDeleteSport(sport)}
                       className="
@@ -269,28 +262,27 @@ export default function Settings() {
             </div>
           )}
 
-          <div className="space-y-3">
-            <input
-              className="premium-input"
-              placeholder="New sport name"
-              value=""
-              readOnly
-              onClick={() => setAddSportModalOpen(true)}
-            />
-            <PrimaryButton
-              text="Add Sport"
-              onClick={() => setAddSportModalOpen(true)}
-            />
-          </div>
+          <button
+            onClick={() => setAddSportModalOpen(true)}
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            Add Sport/Game
+          </button>
         </GlassCard>
 
         <GlassCard className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Data Management
           </h2>
-          <PrimaryButton text="Backup to Google Drive" onClick={() => {}} />
-          <PrimaryButton text="Import Excel" onClick={() => {}} />
-          <PrimaryButton text="Export Excel" onClick={() => {}} />
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+            Backup to Google Drive
+          </button>
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+            Import Excel
+          </button>
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+            Export Excel
+          </button>
         </GlassCard>
 
         <GlassCard>

@@ -11,7 +11,7 @@ export default function AddSportModal({
 }) {
   const [form, setForm] = useState({
     name: "",
-    icon: "🏃" // Default icon
+    icon: "" // Default to no icon
   })
 
   const [error, setError] = useState("")
@@ -23,7 +23,7 @@ export default function AddSportModal({
     }
 
     onSave(form)
-    setForm({ name: "", icon: "🏃" })
+    setForm({ name: "", icon: "" })
     setError("")
     onClose()
   }
@@ -46,10 +46,27 @@ export default function AddSportModal({
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-900 dark:text-white">
-            Sport Icon
+            Sport Icon (Optional)
           </label>
           <div className="grid grid-cols-6 gap-2">
-            {["⚽", "🏏", "🏀", "🏐", "🏸", "🎾", "🏓", "🥅", "🏈", "🏉", "⛳", "🏃"].map((icon) => (
+            {/* No Icon Option */}
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, icon: "" }))}
+              className={`
+                aspect-square rounded-xl text-xs font-medium
+                border transition-all flex items-center justify-center
+                ${form.icon === ""
+                  ? "border-green-500 bg-green-500/10 scale-110 text-green-600 dark:text-green-400"
+                  : "border-black/10 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:scale-105 text-slate-600 dark:text-slate-400"
+                }
+              `}
+            >
+              None
+            </button>
+            
+            {/* Icon Options */}
+            {["⚽", "🏏", "🏀", "🏐", "🏸", "🎾", "🏓", "🥅", "🏈", "🏉", "⛳"].map((icon) => (
               <button
                 key={icon}
                 type="button"
@@ -67,6 +84,9 @@ export default function AddSportModal({
               </button>
             ))}
           </div>
+          <p className="text-xs text-slate-500 dark:text-gray-400">
+            Select an icon or leave as "None" to use a neutral emoji in bookings
+          </p>
         </div>
 
         {error && (

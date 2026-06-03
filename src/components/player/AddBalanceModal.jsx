@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { X } from "lucide-react"
 
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
@@ -21,8 +22,15 @@ export default function AddBalanceModal({
   const [period, setPeriod] = useState("PM")
   const [paymentMode, setPaymentMode] = useState("UPI")
   const [notes, setNotes] = useState("")
+  const [error, setError] = useState("")
 
   const handleSubmit = () => {
+    // Validate mandatory amount field
+    if (!amount || amount === "0") {
+      setError("Please fill amount")
+      return
+    }
+
     onSubmit({
       amount: Number(amount),
       date: toDateKey(date),
@@ -31,13 +39,23 @@ export default function AddBalanceModal({
       notes
     })
 
+    // Reset form
     setAmount("")
     setNotes("")
+    setError("")
+    onClose()
+  }
+
+  const handleClose = () => {
+    // Reset form and errors when closing
+    setAmount("")
+    setNotes("")
+    setError("")
     onClose()
   }
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={handleClose}>
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">
           Add Balance
@@ -89,21 +107,29 @@ export default function AddBalanceModal({
           onChange={(e) => setNotes(e.target.value)}
         />
 
-        <div className="flex gap-3">
+        {error && (
+          <p className="text-sm text-red-500 text-center">{error}</p>
+        )}
+
+        <div className="flex gap-3 items-center">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="
-              flex-1 py-3 rounded-2xl
-              border border-black/10 dark:border-white/10
-              text-slate-900 dark:text-white
+              w-12 h-12 rounded-2xl
+              bg-red-500/10 border border-red-500/30
+              text-red-500 hover:bg-red-500/20
+              flex items-center justify-center
+              transition-colors
             "
+            title="Cancel"
           >
-            Cancel
+            <X size={18} />
           </button>
 
           <PrimaryButton
             text="Add Balance"
             onClick={handleSubmit}
+            className="flex-1"
           />
         </div>
       </div>

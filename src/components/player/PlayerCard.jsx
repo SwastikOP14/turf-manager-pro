@@ -25,11 +25,19 @@ export default function PlayerCard({
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="
-          w-12 h-12 rounded-full shrink-0
+          w-12 h-12 rounded-full shrink-0 overflow-hidden
           bg-green-500 text-black
           font-bold flex items-center justify-center
         ">
-          {getInitials(player.name)}
+          {player.photo ? (
+            <img
+              src={player.photo}
+              alt={player.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            getInitials(player.name)
+          )}
         </div>
 
         <div className="min-w-0">

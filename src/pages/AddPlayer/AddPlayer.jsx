@@ -1,15 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import InputField from "../../components/common/InputField"
 import SegmentedControl from "../../components/common/SegmentedControl"
 import PrimaryButton from "../../components/common/PrimaryButton"
+import PhotoUpload from "../../components/common/PhotoUpload"
 import { useApp } from "../../context/useApp"
 import { formatPhoneInput } from "../../utils/phone"
-import { getInitials } from "../../utils/players"
 
 export default function AddPlayer() {
   const navigate = useNavigate()
@@ -19,14 +18,32 @@ export default function AddPlayer() {
   const [phone, setPhone] = useState("+91 ")
   const [address, setAddress] = useState("")
   const [preferredPayment, setPreferredPayment] = useState("UPI")
+  const [photo, setPhoto] = useState(null)
   const [error, setError] = useState("")
 
   const handleSave = () => {
+    // Validate all required fields
+    if (!name.trim()) {
+      setError("Please fill player name")
+      return
+    }
+    
+    if (!phone || phone === "+91 ") {
+      setError("Please fill mobile number")
+      return
+    }
+    
+    if (!address.trim()) {
+      setError("Please fill address")
+      return
+    }
+
     const result = addPlayer({
       name,
       phone,
       address,
-      preferredPayment
+      preferredPayment,
+      photo
     })
 
     if (!result.ok) {
@@ -45,23 +62,12 @@ export default function AddPlayer() {
         </h1>
 
         <GlassCard className="flex flex-col items-center gap-3 py-6">
-          <div className="
-            w-24 h-24 rounded-full
-            bg-green-500/15 text-green-500
-            border border-green-500/30
-            flex items-center justify-center
-          ">
-            {name ? (
-              <span className="text-2xl font-bold">
-                {getInitials(name)}
-              </span>
-            ) : (
-              <Plus size={32} />
-            )}
-          </div>
-          <p className="text-sm text-slate-500 dark:text-gray-400">
-            Tap + to add player photo
-          </p>
+          <PhotoUpload
+            name={name}
+            photo={photo}
+            onPhotoChange={setPhoto}
+            size="large"
+          />
         </GlassCard>
 
         <GlassCard className="space-y-4">

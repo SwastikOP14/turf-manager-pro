@@ -113,12 +113,39 @@ export default function BookingForm() {
   }
 
   const handleSave = () => {
-    if (!sportId || !turfId) { setError("Please select sport and turf"); return }
-    if (!date) { setError("Please select a booking date"); return }
-    if (!amount) { setError("Please enter total amount"); return }
-    if (!startHour || !startMinute || !endHour || !endMinute) { setError("Please select start and end time"); return }
-    if (!paidByPlayerId) { setError("Please select who paid the turf owner"); return }
-    if (!playerIds.length) { setError("Add at least one player in Total Players"); return }
+    // Validate all mandatory fields
+    if (!sportId) { 
+      setError("Please select sport/game")
+      return 
+    }
+    if (!turfId) { 
+      setError("Please select turf/ground") 
+      return 
+    }
+    if (!date) { 
+      setError("Please select a booking date") 
+      return 
+    }
+    if (!amount) { 
+      setError("Please enter total amount") 
+      return 
+    }
+    if (!startHour || !startMinute || !endHour || !endMinute) { 
+      setError("Please select start and end time") 
+      return 
+    }
+    if (!paidByPlayerId) { 
+      setError("Please select who paid the turf owner") 
+      return 
+    }
+    if (!playerIds.length) { 
+      setError("Please add at least one player in Total Players") 
+      return 
+    }
+    if (status === "Partial" && (!paidAmount || paidAmount === "0")) {
+      setError("Please enter paid amount for partial payment")
+      return
+    }
 
     const payload = {
       sportId, turfId,

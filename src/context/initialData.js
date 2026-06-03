@@ -160,6 +160,7 @@ export function createEmptyPlayer() {
     address: "",
     balance: 0,
     preferredPayment: "UPI",
+    photo: null, // Base64 encoded photo
     history: []
   }
 }

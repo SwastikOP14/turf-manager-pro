@@ -13,9 +13,9 @@ export default function PlayerCard({
   const tone = getBalanceTone(player.balance)
 
   const balanceClass = {
-    positive: "text-green-500",
-    low: "text-orange-400",
-    negative: "text-red-500"
+    positive: "text-green-700 dark:text-green-400",
+    low: "text-orange-500 dark:text-orange-400",
+    negative: "text-red-600 dark:text-red-500"
   }[tone]
 
   return (

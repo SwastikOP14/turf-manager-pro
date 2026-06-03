@@ -33,7 +33,7 @@ export default function BottomNavbar() {
               className={({ isActive }) => `
                 flex flex-col items-center gap-1 text-xs font-medium transition
                 ${isActive
-                  ? "text-green-500"
+                  ? "text-green-700 dark:text-green-400"
                   : "text-slate-500 dark:text-gray-400"
                 }
               `}

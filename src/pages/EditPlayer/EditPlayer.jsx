@@ -271,7 +271,7 @@ export default function EditPlayer() {
             <p className="text-xs text-slate-500 dark:text-gray-400">
               Total Bookings
             </p>
-            <p className="text-2xl font-bold text-green-500 mt-1">
+            <p className="text-2xl font-bold text-green-700 dark:text-green-400 mt-1">
               {playerBookings.length}
             </p>
           </GlassCard>
@@ -282,10 +282,10 @@ export default function EditPlayer() {
             </p>
             <p className={`text-2xl font-bold mt-1 ${
               player.balance < 0
-                ? "text-red-500"
+                ? "text-red-600 dark:text-red-500"
                 : player.balance < 300
-                  ? "text-orange-400"
-                  : "text-green-500"
+                  ? "text-orange-500 dark:text-orange-400"
+                  : "text-green-700 dark:text-green-400"
             }`}>
               {formatCurrency(player.balance)}
             </p>
@@ -294,7 +294,7 @@ export default function EditPlayer() {
 
         <button
           onClick={() => setBalanceModalOpen(true)}
-          className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors"
+          className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
         >
           Add Balance
         </button>
@@ -310,10 +310,10 @@ export default function EditPlayer() {
 
             const tone =
               item.type === "credit"
-                ? "text-green-500"
+                ? "text-green-700 dark:text-green-400"
                 : item.type === "debit"
-                  ? "text-red-500"
-                  : "text-orange-400"
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-orange-500 dark:text-orange-400"
 
             return (
               <div

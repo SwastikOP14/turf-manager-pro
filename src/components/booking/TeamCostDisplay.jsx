@@ -62,7 +62,7 @@ export default function TeamCostDisplay({
               {splitMode === "Team" && costs.teamAmount != null && (
                 <div className="text-right shrink-0 pl-3">
                   <p className="text-xs text-slate-500 dark:text-gray-400 leading-none">Team Amount</p>
-                  <p className="text-sm font-bold text-green-500 mt-0.5">
+                  <p className="text-sm font-bold text-green-700 dark:text-green-400 mt-0.5">
                     {formatCurrency(costs.teamAmount)}
                   </p>
                 </div>
@@ -83,7 +83,7 @@ export default function TeamCostDisplay({
                         <p className="text-sm font-medium text-slate-900 dark:text-white truncate pr-4">
                           {player?.name || "Unknown Player"}
                         </p>
-                        <p className="text-sm font-bold text-green-500 shrink-0">
+                        <p className="text-sm font-bold text-green-700 dark:text-green-400 shrink-0">
                           {formatCurrency(playerCost)}
                         </p>
                       </div>

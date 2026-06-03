@@ -197,7 +197,7 @@ export default function Settings() {
 
           <button
             onClick={() => setAddTurfModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors"
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
           >
             Add Turf/Ground
           </button>
@@ -264,7 +264,7 @@ export default function Settings() {
 
           <button
             onClick={() => setAddSportModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors"
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
           >
             Add Sport/Game
           </button>
@@ -274,13 +274,13 @@ export default function Settings() {
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Data Management
           </h2>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
             Backup to Google Drive
           </button>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
             Import Excel
           </button>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-500 font-semibold hover:bg-green-500/20 transition-colors">
+          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
             Export Excel
           </button>
         </GlassCard>

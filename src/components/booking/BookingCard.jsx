@@ -14,9 +14,9 @@ export default function BookingCard({
   const navigate = useNavigate()
 
   const statusConfig = {
-    Paid:    { color: "text-green-500",  dot: "bg-green-500",  label: "Paid" },
-    Partial: { color: "text-orange-400", dot: "bg-orange-400", label: "Partial" },
-    Pending: { color: "text-red-500",    dot: "bg-red-500",    label: "Pending" },
+    Paid:    { color: "text-green-700 dark:text-green-400",  dot: "bg-green-500",  label: "Paid" },
+    Partial: { color: "text-orange-500 dark:text-orange-400", dot: "bg-orange-400", label: "Partial" },
+    Pending: { color: "text-red-600 dark:text-red-500",    dot: "bg-red-500",    label: "Pending" },
   }
 
   const status = statusConfig[booking.status] ?? statusConfig.Pending
@@ -89,7 +89,7 @@ export default function BookingCard({
             <span className="text-[14px] font-bold text-slate-600 dark:text-gray-200 tracking-tight">
               Total {formatCurrency(totalAmt)}
             </span>
-            <span className="text-[14px] font-semibold text-green-500 tracking-tight">
+            <span className="text-[14px] font-semibold text-green-700 dark:text-green-400 tracking-tight">
               Paid {formatCurrency(paidAmt)}
             </span>
             <div className="flex items-center gap-1.5">

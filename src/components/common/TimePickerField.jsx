@@ -16,7 +16,7 @@ function TimeDisplay({ hour, minute, period, placeholder }) {
   }
   return (
     <span className="text-slate-900 dark:text-white font-semibold text-sm">
-      {hour}:{minute} <span className="text-green-500">{period}</span>
+      {hour}:{minute} <span className="text-green-700 dark:text-green-400">{period}</span>
     </span>
   )
 }
@@ -43,7 +43,7 @@ function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinut
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-bold text-green-500 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-green-500/10 transition-colors"
+            className="text-sm font-bold text-green-700 dark:text-green-400 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-green-500/10 transition-colors"
           >
             Done
           </button>
@@ -54,7 +54,7 @@ function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinut
           <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-wide">
             {hour || "--"}:{minute || "--"}
           </span>
-          <span className="text-2xl font-bold text-green-500 ml-2">{period}</span>
+          <span className="text-2xl font-bold text-green-700 dark:text-green-400 ml-2">{period}</span>
         </div>
 
         {/* AM / PM */}

@@ -320,7 +320,7 @@ export default function BookingForm() {
                 onChange={(e) => setPaidAmount(e.target.value.replace(/\D/g, ""))}
               />
               <div className="rounded-2xl p-3 bg-green-500/10 border border-green-500/20 flex justify-between text-sm font-semibold">
-                <span className="text-green-500">Paid {formatCurrency(paidAmount)}</span>
+                <span className="text-green-700 dark:text-green-400">Paid {formatCurrency(paidAmount)}</span>
                 <span className="text-orange-400">Remaining {formatCurrency(remaining)}</span>
               </div>
             </>
@@ -412,7 +412,7 @@ export default function BookingForm() {
             <div className="flex items-center justify-between">
               <SectionTitle title={`Total Players (${playerIds.length})`} />
               {playerIds.length > 0 && (
-                <span className="text-green-500 font-semibold text-sm">
+                <span className="text-green-700 dark:text-green-400 font-semibold text-sm">
                   {formatCurrency(perPersonShare)}/person
                 </span>
               )}
@@ -430,14 +430,14 @@ export default function BookingForm() {
                       className="flex items-center justify-between p-4 rounded-2xl bg-green-500/8 border border-green-500/30 hover:bg-green-500/15 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-green-400">{p.name}</p>
-                        <p className={`text-xs font-semibold mt-0.5 ${p.balance >= 0 ? "text-green-500" : "text-red-500"}`}>
+                        <p className="text-sm font-bold text-green-700 dark:text-green-400">{p.name}</p>
+                        <p className={`text-xs font-semibold mt-0.5 ${p.balance >= 0 ? "text-green-600 dark:text-green-500" : "text-red-500"}`}>
                           Balance: {formatCurrency(p.balance)}
                         </p>
                       </div>
                       <div className="text-right pl-4 shrink-0">
                         <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">Booking Share</p>
-                        <p className="text-lg font-bold text-green-400 mt-0.5">
+                        <p className="text-lg font-bold text-green-700 dark:text-green-400 mt-0.5">
                           {formatCurrency(perPersonShare)}
                         </p>
                       </div>
@@ -463,7 +463,7 @@ export default function BookingForm() {
             <button
               type="button"
               onClick={() => setPlayersModalOpen(true)}
-              className="w-full py-3 rounded-2xl border border-green-500/30 text-green-500 font-semibold flex items-center justify-center gap-2 hover:bg-green-500/10 transition-colors cursor-pointer"
+              className="w-full py-3 rounded-2xl border border-green-500/30 text-green-700 dark:text-green-400 font-semibold flex items-center justify-center gap-2 hover:bg-green-500/10 transition-colors cursor-pointer"
             >
               + {playerIds.length > 0 ? "Edit Players" : "Add / Search Players"}
             </button>
@@ -599,7 +599,7 @@ export default function BookingForm() {
             </div>
             <button
               onClick={() => setShowAddPlayerModal(true)}
-              className="px-3 py-3 rounded-2xl bg-green-500/20 border border-green-500/40 text-green-400 hover:bg-green-500/35 transition-colors font-semibold text-sm shrink-0"
+              className="px-3 py-3 rounded-2xl bg-green-500/20 border border-green-500/40 text-green-700 dark:text-green-400 hover:bg-green-500/35 transition-colors font-semibold text-sm shrink-0"
             >
               + Add
             </button>

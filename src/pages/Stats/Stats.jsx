@@ -149,7 +149,7 @@ export default function Stats() {
                 <span className="text-slate-600 dark:text-gray-300">
                   {item.name}
                 </span>
-                <span className="text-green-500 font-semibold">
+                <span className="text-green-700 dark:text-green-400 font-semibold">
                   {item.count}
                 </span>
               </div>
@@ -173,7 +173,7 @@ export default function Stats() {
                 <span className="text-slate-600 dark:text-gray-300">
                   {item.name}
                 </span>
-                <span className="text-green-500 font-semibold">
+                <span className="text-green-700 dark:text-green-400 font-semibold">
                   {item.count}
                 </span>
               </div>

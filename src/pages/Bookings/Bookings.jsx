@@ -73,13 +73,13 @@ export default function Bookings() {
 
   return (
     <MobileLayout>
-      <div className="p-5 space-y-4 animate-fade-in-up">
+      <div className="p-5 space-y-5 animate-fade-in-up">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
               Bookings
             </h1>
-            <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+            <p className="text-[14px] text-slate-500 dark:text-gray-400 mt-1.5">
               Premium turf booking dashboard
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function Bookings() {
           }}
         />
 
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {filteredBookings.map((booking) => {
             const turf = getTurfById(booking.turfId)
             const sport = getSportById(booking.sportId)

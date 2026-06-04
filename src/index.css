@@ -28,6 +28,9 @@ body {
   background-color: var(--color-surface);
   color: #0f172a;
   font-family: "Nunito", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
   transition:
     background-color 0.25s ease,
     color 0.25s ease;
@@ -40,7 +43,7 @@ html.dark body {
 }
 
 .premium-card {
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   border: 1px solid var(--color-card-border);
   background: var(--color-card);
   box-shadow: var(--shadow-card);
@@ -74,7 +77,8 @@ html.dark .premium-card {
   border: 1.5px solid rgba(15, 23, 42, 0.18);
   background: #ffffff;
   color: #0f172a;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
+  font-size: 15px;
   line-height: 1.5;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;

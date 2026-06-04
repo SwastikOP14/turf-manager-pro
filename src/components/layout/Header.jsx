@@ -15,12 +15,12 @@ export default function Header() {
         shadow-sm
       "
     >
-      <div className="max-w-md mx-auto flex items-center justify-between px-4 py-2.5">
+      <div className="max-w-md mx-auto flex items-center justify-between px-5 py-3">
 
-        <div className="flex items-center gap-3">
-          {/* 3D popped logo */}
+        <div className="flex items-center gap-3.5">
+          {/* Logo */}
           <div
-            className="w-12 h-12 rounded-2xl shrink-0 overflow-hidden"
+            className="w-11 h-11 rounded-2xl shrink-0 overflow-hidden"
             style={{
               background: darkMode
                 ? "linear-gradient(145deg, #1e2d3d, #0d1a26)"
@@ -37,21 +37,15 @@ export default function Header() {
               src={appLogo}
               alt="Turf Manager"
               className="w-full h-full object-contain p-1"
-              style={{
-                filter: darkMode
-                  ? "drop-shadow(0 2px 4px rgba(0,0,0,0.5))"
-                  : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                transform: "translateZ(0)",
-              }}
             />
           </div>
 
           <div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+            <h1 className="text-[17px] font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
               Turf Manager
             </h1>
-            <p className="text-xs font-semibold tracking-widest text-green-500">
-              PRO
+            <p className="text-[11px] font-bold tracking-[0.18em] text-green-700 dark:text-green-400 uppercase">
+              Pro
             </p>
           </div>
         </div>
@@ -59,16 +53,9 @@ export default function Header() {
         <button
           onClick={toggleTheme}
           aria-label="Toggle theme"
-          className="
-            w-11 h-11 rounded-2xl shrink-0
-            bg-slate-100 dark:bg-white/5
-            border border-black/5 dark:border-white/10
-            flex items-center justify-center
-            text-slate-900 dark:text-white
-            transition hover:scale-95
-          "
+          className="w-10 h-10 rounded-2xl shrink-0 bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center text-slate-900 dark:text-white transition hover:scale-95"
         >
-          {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          {darkMode ? <Sun size={19} /> : <Moon size={19} />}
         </button>
 
       </div>

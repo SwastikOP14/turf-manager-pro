@@ -16,65 +16,65 @@ export default function BookingCard({
   const statusConfig = {
     Paid:    { color: "text-green-700 dark:text-green-400",  dot: "bg-green-500",  label: "Paid" },
     Partial: { color: "text-orange-500 dark:text-orange-400", dot: "bg-orange-400", label: "Partial" },
-    Pending: { color: "text-red-600 dark:text-red-500",    dot: "bg-red-500",    label: "Pending" },
+    Pending: { color: "text-red-600 dark:text-red-500",      dot: "bg-red-500",    label: "Pending" },
   }
 
   const status = statusConfig[booking.status] ?? statusConfig.Pending
-  const paidAmt   = Number(booking.paidAmount || 0)
-  const totalAmt  = Number(booking.amount)
-  const remaining = Math.max(0, totalAmt - paidAmt)
+  const paidAmt      = Number(booking.paidAmount || 0)
+  const totalAmt     = Number(booking.amount)
+  const remaining    = Math.max(0, totalAmt - paidAmt)
   const displayAmount = booking.status === "Partial" ? remaining : totalAmt
 
+  // Count players across both individual and team bookings
+  const playerCount = booking.playerIds?.length
+    || booking.teams?.reduce((s, t) => s + (t.playerIds?.length || 0), 0)
+    || 0
+
   return (
-    <GlassCard onClick={() => navigate(`/booking/${booking.id}/edit`)}>
-
+    <GlassCard
+      onClick={() => navigate(`/booking/${booking.id}/edit`)}
+      className="p-5 space-y-4"
+    >
       {/* ── Main body ── */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
 
-        {/* Sport emoji */}
-        <div className="shrink-0 leading-none mt-1">
-          <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={36} />
+        {/* Sport icon — same size as text, not dominant */}
+        <div className="shrink-0 mt-0.5">
+          <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={28} />
         </div>
 
         {/* Two-column */}
-        <div className="flex-1 min-w-0 flex justify-between gap-3">
+        <div className="flex-1 min-w-0 flex justify-between gap-2">
 
           {/* Left: Name / Date / Time */}
-          <div className="min-w-0">
-            {/* Turf name — base size e.g. 17px */}
-            <p className="font-bold text-[17px] text-slate-900 dark:text-white leading-tight truncate tracking-tight">
+          <div className="min-w-0 space-y-1.5 flex-1">
+            <p className="font-bold text-[16px] text-slate-900 dark:text-white leading-snug">
               {turfName}
             </p>
-            {/* Date — 15px (2px smaller) */}
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className="text-[15px]">📅</span>
-              <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-300 tracking-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px]">📅</span>
+              <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
                 {formatDisplayDate(booking.date)}
               </p>
             </div>
-            {/* Time — 15px */}
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-[15px]">🕒</span>
-              <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-300 tracking-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px]">🕒</span>
+              <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
                 {formatTimeRange(booking.startTime, booking.endTime)}
               </p>
             </div>
           </div>
 
-          {/* Right: Amount / Booking ID / Players */}
-          <div className="text-right shrink-0">
-            {/* Amount — 21px */}
-            <p className={`font-extrabold text-[21px] tracking-tight leading-tight ${status.color}`}>
+          {/* Right: Amount / ID / Players — compact, doesn't steal width */}
+          <div className="text-right shrink-0 space-y-1.5">
+            <p className={`font-bold text-[17px] leading-tight ${status.color}`}>
               {formatCurrency(displayAmount)}
             </p>
-            {/* Show "To Pay" label for partial under amount — removed */}
-            {/* Booking ID — darker in both themes */}
-            <p className="text-[15px] font-semibold text-slate-600 dark:text-gray-200 mt-2 tracking-wide">
+            <p className="text-[12px] font-semibold text-slate-500 dark:text-gray-400 tracking-wide">
               #{booking.id}
             </p>
-            {/* Players — brighter in dark theme */}
-            <p className="text-[15px] font-semibold text-slate-700 dark:text-gray-100 mt-1">
-              👥 {booking.playerIds?.length || 0}
+            <p className="text-[12px] font-semibold text-slate-600 dark:text-gray-300">
+              👥 {playerCount}
             </p>
           </div>
 
@@ -82,31 +82,31 @@ export default function BookingCard({
       </div>
 
       {/* ── Bottom status bar ── */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-black/15 dark:border-white/20">
+      <div className="flex items-center justify-between pt-3.5 border-t border-black/10 dark:border-white/15">
 
         {booking.status === "Partial" ? (
           <>
-            <span className="text-[14px] font-bold text-slate-600 dark:text-gray-200 tracking-tight">
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
               Total {formatCurrency(totalAmt)}
             </span>
-            <span className="text-[14px] font-semibold text-green-700 dark:text-green-400 tracking-tight">
+            <span className="text-[13px] font-semibold text-green-700 dark:text-green-400">
               Paid {formatCurrency(paidAmt)}
             </span>
             <div className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-              <span className={`text-[14px] font-bold tracking-tight ${status.color}`}>
+              <span className={`text-[13px] font-bold ${status.color}`}>
                 To Pay
               </span>
             </div>
           </>
         ) : (
           <>
-            <span className="text-[14px] font-bold text-slate-600 dark:text-gray-200 tracking-tight">
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
               Total {formatCurrency(totalAmt)}
             </span>
             <div className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-              <span className={`text-[14px] font-bold tracking-tight ${status.color}`}>
+              <span className={`text-[13px] font-bold ${status.color}`}>
                 {status.label}
               </span>
             </div>

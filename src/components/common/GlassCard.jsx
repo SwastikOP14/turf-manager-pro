@@ -8,7 +8,7 @@ export default function GlassCard({
       onClick={onClick}
       className={`
         premium-card
-        p-4
+        p-5
         animate-fade-in-up
         ${onClick ? "cursor-pointer active:scale-[0.99]" : ""}
         ${className}

@@ -643,10 +643,12 @@ export default function BookingForm() {
           <button
             type="button"
             onClick={() => { setPlayersModalOpen(false); setPlayerQuery("") }}
-            className="w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-white font-bold text-sm cursor-pointer transition-colors"
+            className="w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-black font-bold text-[15px] cursor-pointer transition-colors"
           >
-            ✓ Done — {playerIds.length} player{playerIds.length !== 1 ? "s" : ""} selected
-            {playerIds.length > 0 && ` · ${formatCurrency(perPersonShare)}/person`}
+            {playerIds.length > 0
+              ? `Done (${playerIds.length})  •  ${formatCurrency(perPersonShare)} / person`
+              : "Done"
+            }
           </button>
         </ModalBlurWrapper>
       )}

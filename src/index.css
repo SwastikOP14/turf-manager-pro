@@ -35,6 +35,8 @@ body {
     background-color 0.25s ease,
     color 0.25s ease;
   overflow-x: hidden;
+  /* Edge-to-edge: no default padding, handled per-component */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 html.dark body {
@@ -145,4 +147,21 @@ body.modal-open {
 
 .animate-fade-in-up {
   animation: fade-in-up 0.35s ease;
+}
+
+/* ── Safe Area / Edge-to-Edge ──────────────────────────────────── */
+
+/* Bottom nav sits above gesture pill / hardware buttons */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+}
+
+/* Main content scroll area clears the bottom nav + safe area */
+.content-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+}
+
+/* Top padding accounts for transparent status bar */
+.top-safe {
+  padding-top: env(safe-area-inset-top, 0px);
 }

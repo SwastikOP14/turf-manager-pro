@@ -1,9 +1,21 @@
 import { useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 
-// Root tab routes — back here should minimize, not navigate
 const ROOT_ROUTES = ["/", "/players", "/stats", "/settings"]
 
+// ─── Global modal stack ────────────────────────────────────────────────────
+// Modals register a dismiss callback here. Back button dismisses top one first.
+const modalStack = []
+
+export function registerModal(dismissFn) {
+  modalStack.push(dismissFn)
+  return () => {
+    const idx = modalStack.lastIndexOf(dismissFn)
+    if (idx !== -1) modalStack.splice(idx, 1)
+  }
+}
+
+// ─── Hook: call once inside BrowserRouter ─────────────────────────────────
 export function useBackButton() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -15,9 +27,15 @@ export function useBackButton() {
       try {
         const { App } = await import("@capacitor/app")
 
-        const listener = await App.addListener("backButton", ({ canGoBack }) => {
-          const isRoot = ROOT_ROUTES.includes(location.pathname)
+        const listener = await App.addListener("backButton", () => {
+          // If any modal is open, close the top one first
+          if (modalStack.length > 0) {
+            const dismiss = modalStack[modalStack.length - 1]
+            dismiss()
+            return
+          }
 
+          const isRoot = ROOT_ROUTES.includes(location.pathname)
           if (isRoot) {
             App.minimizeApp()
           } else {
@@ -27,14 +45,11 @@ export function useBackButton() {
 
         cleanup = () => listener.remove()
       } catch {
-        // Not running in Capacitor — browser handles back natively, no intervention needed
+        // Browser — no intervention needed
       }
     }
 
     setup()
-
-    return () => {
-      cleanup?.()
-    }
+    return () => cleanup?.()
   }, [location.pathname, navigate])
 }

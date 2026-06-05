@@ -3,11 +3,21 @@
   "appName": "Turf Manager Pro",
   "webDir": "dist",
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "App": {
       "hardwareBackButton": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#00000000",
+      "overlaysWebView": true
+    },
+    "EdgeToEdge": {
+      "enabled": true
     }
   }
 }

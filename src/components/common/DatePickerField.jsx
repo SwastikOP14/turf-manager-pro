@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
+import { CalendarIcon } from "./AppIcons"
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
@@ -59,6 +61,8 @@ function DateModal({
     return () => document.body.classList.remove("modal-open")
   }, [])
 
+  useModalBackHandler(onClose)
+
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const firstDay = getFirstDayOfWeek(viewYear, viewMonth)
 
@@ -89,8 +93,9 @@ function DateModal({
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-base font-bold text-slate-900 dark:text-white">
-            📅 {title}
+          <span className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CalendarIcon size={16} />
+            {title}
           </span>
           <button
             type="button"
@@ -224,7 +229,7 @@ export default function DatePickerField({
         <span className={displayValue ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}>
           {displayValue || placeholder}
         </span>
-        <span className="text-lg shrink-0">📅</span>
+        <CalendarIcon size={18} className="shrink-0" />
       </button>
 
       {open && (

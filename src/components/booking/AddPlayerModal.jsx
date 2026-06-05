@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { useApp } from "../../context/useApp"
 import { formatPhoneInput } from "../../utils/phone"
 import PhotoUpload from "../common/PhotoUpload"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 export default function AddPlayerModal({ onClose, onPlayerAdded }) {
   const { addPlayer } = useApp()
@@ -13,6 +14,8 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
   const [preferredPayment, setPreferredPayment] = useState("UPI")
   const [photo, setPhoto] = useState(null)
   const [error, setError] = useState("")
+
+  useModalBackHandler(onClose)
 
   useEffect(() => {
     document.body.classList.add("modal-open")

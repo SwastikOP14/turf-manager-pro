@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom"
 
 import GlassCard from "../common/GlassCard"
 import SportIcon from "../common/SportIcon"
+import { CalendarIcon } from "../common/AppIcons"
 import { formatCurrency, formatDisplayDate, formatTimeRange } from "../../utils/format"
 
 export default function BookingCard({
@@ -26,9 +27,12 @@ export default function BookingCard({
   const displayAmount = booking.status === "Partial" ? remaining : totalAmt
 
   // Count players across both individual and team bookings
-  const playerCount = booking.playerIds?.length
-    || booking.teams?.reduce((s, t) => s + (t.playerIds?.length || 0), 0)
-    || 0
+  const playerCount = (() => {
+    if (booking.bookingType === "Team" || booking.teams?.length) {
+      return booking.teams?.reduce((s, t) => s + (t.playerIds?.length || 0), 0) || 0
+    }
+    return booking.playerIds?.length || 0
+  })()
 
   return (
     <GlassCard
@@ -51,14 +55,16 @@ export default function BookingCard({
             <p className="font-bold text-[16px] text-slate-900 dark:text-white leading-snug">
               {turfName}
             </p>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px]">📅</span>
+            <div className="flex items-center gap-2">
+              <CalendarIcon size={14} className="shrink-0" />
               <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
                 {formatDisplayDate(booking.date)}
               </p>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px]">🕒</span>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
               <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
                 {formatTimeRange(booking.startTime, booking.endTime)}
               </p>
@@ -73,8 +79,12 @@ export default function BookingCard({
             <p className="text-[12px] font-semibold text-slate-500 dark:text-gray-400 tracking-wide">
               #{booking.id}
             </p>
-            <p className="text-[12px] font-semibold text-slate-600 dark:text-gray-300">
-              👥 {playerCount}
+            <p className="text-[12px] font-semibold text-slate-600 dark:text-gray-300 flex items-center gap-1 justify-end">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {playerCount}
             </p>
           </div>
 

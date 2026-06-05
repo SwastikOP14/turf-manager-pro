@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 const HOURS = Array.from({ length: 12 }, (_, i) =>
   String(i + 1).padStart(2, "0")
@@ -27,6 +28,8 @@ function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinut
     return () => document.body.classList.remove("modal-open")
   }, [])
 
+  useModalBackHandler(onClose)
+
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md px-6">
       {/* Backdrop close */}
@@ -37,8 +40,11 @@ function TimeModal({ title, onClose, hour, minute, period, onHourChange, onMinut
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-base font-bold text-slate-900 dark:text-white">
-            🕒 {title}
+          <span className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {title}
           </span>
           <button
             type="button"
@@ -152,7 +158,9 @@ function SingleTimePicker({ label, hour, minute, period, onHourChange, onMinuteC
         className="premium-input w-full flex items-center justify-between gap-2 px-4 py-3 cursor-pointer"
       >
         <TimeDisplay hour={hour} minute={minute} period={period} placeholder="--:-- --" />
-        <span className="text-base shrink-0">🕒</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
       </button>
 
       {open && (
@@ -177,7 +185,7 @@ function DualTimePicker({
   endHour, endMinute, endPeriod,
   onEndHourChange, onEndMinuteChange, onEndPeriodChange
 }) {
-  const [openPicker, setOpenPicker] = useState(null) // "start" | "end" | null
+  const [openPicker, setOpenPicker] = useState(null)
   const close = useCallback(() => setOpenPicker(null), [])
 
   return (
@@ -186,30 +194,58 @@ function DualTimePicker({
         <label className="text-sm font-medium text-slate-900 dark:text-white">{label}</label>
       )}
 
-      <div className="flex items-center gap-2">
-        {/* Start */}
+      <div className="flex items-center gap-3">
+
+        {/* Start pill */}
         <button
           type="button"
           onClick={() => setOpenPicker("start")}
-          className="premium-input flex-1 flex items-center justify-between gap-1.5 px-3 py-3 cursor-pointer"
+          className="flex-1 premium-input px-4 pt-2.5 pb-3 cursor-pointer text-left"
         >
-          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 font-medium">Start</span>
-          <TimeDisplay hour={startHour} minute={startMinute} period={startPeriod} placeholder="--:-- --" />
-          <span className="text-sm shrink-0">🕐</span>
+          <p className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1.5">
+            Start
+          </p>
+          <div className="flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 dark:text-green-400 shrink-0">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {startHour && startMinute ? (
+              <span className="font-bold text-[16px] text-slate-900 dark:text-white leading-none">
+                {startHour}:{startMinute}{" "}
+                <span className="text-green-700 dark:text-green-400">{startPeriod}</span>
+              </span>
+            ) : (
+              <span className="text-slate-400 dark:text-slate-500 text-[15px] font-semibold">--:--</span>
+            )}
+          </div>
         </button>
 
-        <span className="text-slate-400 dark:text-slate-500 font-bold text-sm shrink-0">→</span>
+        <span className="text-slate-400 dark:text-slate-500 font-bold text-lg shrink-0">→</span>
 
-        {/* End */}
+        {/* End pill */}
         <button
           type="button"
           onClick={() => setOpenPicker("end")}
-          className="premium-input flex-1 flex items-center justify-between gap-1.5 px-3 py-3 cursor-pointer"
+          className="flex-1 premium-input px-4 pt-2.5 pb-3 cursor-pointer text-left"
         >
-          <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0 font-medium">End</span>
-          <TimeDisplay hour={endHour} minute={endMinute} period={endPeriod} placeholder="--:-- --" />
-          <span className="text-sm shrink-0">🕑</span>
+          <p className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-1.5">
+            End
+          </p>
+          <div className="flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 dark:text-green-400 shrink-0">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {endHour && endMinute ? (
+              <span className="font-bold text-[16px] text-slate-900 dark:text-white leading-none">
+                {endHour}:{endMinute}{" "}
+                <span className="text-green-700 dark:text-green-400">{endPeriod}</span>
+              </span>
+            ) : (
+              <span className="text-slate-400 dark:text-slate-500 text-[15px] font-semibold">--:--</span>
+            )}
+          </div>
         </button>
+
       </div>
 
       {openPicker === "start" && (

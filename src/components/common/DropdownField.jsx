@@ -1,6 +1,7 @@
 import { ChevronDown, Check } from "lucide-react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 export default function DropdownField({
   label,
@@ -10,133 +11,95 @@ export default function DropdownField({
   placeholder = "Select",
   className = ""
 }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen]     = useState(false)
   const [menuStyle, setMenuStyle] = useState({})
+  const wrapperRef = useRef(null)
   const triggerRef = useRef(null)
-  const ref = useRef(null)
+  const menuRef    = useRef(null)
 
-  // Position the portal menu under the trigger button
-  useEffect(() => {
-    if (!isOpen || !triggerRef.current) return
+  // ─── Calculate position ONCE when opening ───────────────────────
+  // Use scrollY so menu is absolutely positioned in document space,
+  // not viewport space — it doesn't move when the page scrolls.
+  const open = useCallback(() => {
+    if (!triggerRef.current) return
+    const rect    = triggerRef.current.getBoundingClientRect()
+    const absTop  = rect.bottom + window.scrollY
+    const absLeft = rect.left   + window.scrollX
 
-    const rect = triggerRef.current.getBoundingClientRect()
-    setMenuStyle({
-      position: "fixed",
-      top: rect.bottom + 4,
-      left: rect.left,
-      width: rect.width,
-      zIndex: 9999
-    })
-  }, [isOpen])
+    // Header height — clamp so dropdown never covers the sticky header
+    const headerEl = document.querySelector("header")
+    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 0
 
-  // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top - headerH   // space above = from header bottom to trigger
+    const maxH = 280
 
-    const handleClick = (e) => {
-      if (
-        ref.current && !ref.current.contains(e.target) &&
-        triggerRef.current && !triggerRef.current.contains(e.target)
-      ) {
-        setIsOpen(false)
-      }
+    let top
+    if (spaceBelow >= 150 || spaceBelow >= spaceAbove) {
+      // Open downward — clamp to never overlap header visually
+      top = absTop + 4
+    } else {
+      // Open upward
+      const height = Math.min(maxH, spaceAbove - 8)
+      top = rect.top + window.scrollY - height - 4
     }
 
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [isOpen])
+    // Never let top go above the header (in document space)
+    const minTop = headerH + window.scrollY + 4
+    top = Math.max(top, minTop)
 
-  // Close on scroll (repositioning would be needed otherwise)
+    setMenuStyle({
+      position: "absolute",
+      top:   `${top}px`,
+      left:  `${absLeft}px`,
+      width: `${rect.width}px`,
+      maxHeight: `${Math.min(maxH, Math.max(spaceBelow, spaceAbove) - 8)}px`,
+      zIndex: 99999,
+    })
+    setIsOpen(true)
+  }, [])
+
+  const close = useCallback(() => setIsOpen(false), [])
+
+  // ─── Outside pointer-down → close ───────────────────────────────
   useEffect(() => {
     if (!isOpen) return
-    const handleScroll = () => setIsOpen(false)
-    window.addEventListener("scroll", handleScroll, true)
-    return () => window.removeEventListener("scroll", handleScroll, true)
-  }, [isOpen])
+    const handler = (e) => {
+      if (
+        !wrapperRef.current?.contains(e.target) &&
+        !menuRef.current?.contains(e.target)
+      ) {
+        close()
+      }
+    }
+    // Slight delay so the open-click doesn't immediately close
+    const id = setTimeout(() =>
+      document.addEventListener("pointerdown", handler, true), 0)
+    return () => {
+      clearTimeout(id)
+      document.removeEventListener("pointerdown", handler, true)
+    }
+  }, [isOpen, close])
 
-  const selectedOption = options.find((opt) => {
-    const optValue = typeof opt === "string" ? opt : opt.value
-    return optValue === value
-  })
+  // ─── Android back button ─────────────────────────────────────────
+  useModalBackHandler(isOpen ? close : null)
 
+  // ─── Derived ─────────────────────────────────────────────────────
+  const selectedOption = options.find((opt) =>
+    (typeof opt === "string" ? opt : opt.value) === value
+  )
   const selectedLabel = selectedOption
-    ? typeof selectedOption === "string" ? selectedOption : selectedOption.label
+    ? (typeof selectedOption === "string" ? selectedOption : selectedOption.label)
     : ""
 
   const handleSelect = (optionValue) => {
     onChange({ target: { value: optionValue } })
-    setIsOpen(false)
+    close()
   }
 
-  const menu = isOpen ? createPortal(
-    <div
-      ref={ref}
-      style={menuStyle}
-      className="
-        rounded-2xl overflow-hidden
-        bg-white dark:bg-[#1e293b]
-        border border-black/10 dark:border-white/12
-        shadow-xl
-        max-h-64 overflow-y-auto
-        scrollbar-hide
-      "
-    >
-      {/* Placeholder option */}
-      {placeholder && (
-        <button
-          type="button"
-          onClick={() => handleSelect("")}
-          className={`
-            w-full px-4 py-3 text-left transition-colors
-            flex items-center justify-between
-            ${!value
-              ? "bg-green-500/10 text-green-700 dark:text-green-400"
-              : "text-slate-400 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5"
-            }
-          `}
-        >
-          <span className="text-sm">{placeholder}</span>
-          {!value && <Check size={14} className="text-green-700 dark:text-green-400" />}
-        </button>
-      )}
-
-      {/* Options */}
-      {options.map((option) => {
-        const optionValue = typeof option === "string" ? option : option.value
-        const optionLabel = typeof option === "string" ? option : option.label
-        const isSelected = optionValue === value
-
-        return (
-          <button
-            key={optionValue}
-            type="button"
-            onClick={() => handleSelect(optionValue)}
-            className={`
-              w-full px-4 py-3 text-left transition-colors
-              flex items-center justify-between
-              ${isSelected
-                ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                : "text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
-              }
-            `}
-          >
-            <span className="text-sm font-medium">{optionLabel}</span>
-            {isSelected && <Check size={14} className="text-green-700 dark:text-green-400" />}
-          </button>
-        )
-      })}
-
-      {options.length === 0 && (
-        <div className="px-4 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
-          No options available
-        </div>
-      )}
-    </div>,
-    document.body
-  ) : null
-
+  // ─── Render ──────────────────────────────────────────────────────
   return (
-    <div className={`flex flex-col gap-2 relative ${className}`}>
+    <div className={`flex flex-col gap-2 ${className}`} ref={wrapperRef}>
       {label && (
         <label className="text-sm font-medium text-slate-900 dark:text-white">
           {label}
@@ -147,27 +110,75 @@ export default function DropdownField({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen ? close() : open())}
         className={`
-          premium-input
-          py-3 px-4
-          text-left
-          flex items-center justify-between gap-2
-          transition-all
+          premium-input w-full py-3 px-4
+          text-left flex items-center justify-between gap-2 transition-all
           ${value ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"}
           ${isOpen ? "border-green-500 ring-2 ring-green-500/20" : ""}
         `}
       >
-        <span className="truncate flex-1">
-          {selectedLabel || placeholder}
-        </span>
+        <span className="truncate flex-1">{selectedLabel || placeholder}</span>
         <ChevronDown
           size={18}
-          className={`shrink-0 text-slate-500 dark:text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-slate-500 dark:text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
-      {menu}
+      {/* Portal menu — absolute in document space, never repositioned */}
+      {isOpen && createPortal(
+        <div
+          ref={menuRef}
+          style={menuStyle}
+          className="overflow-y-auto overscroll-contain rounded-2xl bg-white dark:bg-[#1e293b] border border-black/10 dark:border-white/10 shadow-2xl"
+        >
+          {/* Placeholder / clear */}
+          {placeholder && (
+            <button
+              type="button"
+              onClick={() => handleSelect("")}
+              className={`
+                w-full px-4 py-3.5 text-left flex items-center justify-between transition-colors
+                ${!value
+                  ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                  : "text-slate-400 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5"}
+              `}
+            >
+              <span className="text-sm">{placeholder}</span>
+              {!value && <Check size={14} />}
+            </button>
+          )}
+
+          {options.map((option) => {
+            const optVal   = typeof option === "string" ? option : option.value
+            const optLabel = typeof option === "string" ? option : option.label
+            const selected = optVal === value
+            return (
+              <button
+                key={optVal}
+                type="button"
+                onClick={() => handleSelect(optVal)}
+                className={`
+                  w-full px-4 py-3.5 text-left flex items-center justify-between transition-colors
+                  ${selected
+                    ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                    : "text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5"}
+                `}
+              >
+                <span className="text-sm font-medium">{optLabel}</span>
+                {selected && <Check size={14} />}
+              </button>
+            )
+          })}
+
+          {options.length === 0 && (
+            <div className="px-4 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+              No options available
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

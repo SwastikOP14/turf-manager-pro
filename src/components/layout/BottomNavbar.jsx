@@ -15,13 +15,16 @@ export default function BottomNavbar() {
   ]
 
   return (
-    <div className="
-      fixed bottom-0 left-1/2 -translate-x-1/2
-      w-full max-w-md
-      border-t border-black/10 dark:border-white/10
-      bg-white/95 dark:bg-[#0B1120]/95
-      backdrop-blur-xl z-40
-    ">
+    <div
+      className="
+        fixed bottom-0 left-1/2 -translate-x-1/2
+        w-full max-w-md
+        border-t border-black/10 dark:border-white/10
+        bg-white/95 dark:bg-[#0B1120]/95
+        backdrop-blur-xl z-40
+      "
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
       <div className="max-w-md mx-auto flex justify-around py-3 px-2">
         {navItems.map((item) => {
           const Icon = item.icon

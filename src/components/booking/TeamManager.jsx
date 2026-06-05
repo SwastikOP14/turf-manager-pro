@@ -4,6 +4,7 @@ import { X, ChevronDown, Plus, Search, UserPlus } from "lucide-react"
 import GlassCard from "../common/GlassCard"
 import AddPlayerModal from "./AddPlayerModal"
 import { searchPlayers } from "../../utils/players"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 // ─── Portal wrapper ────────────────────────────────────────────────────────
 function Portal({ children }) {
@@ -45,6 +46,8 @@ function AddTeamModal({ allPlayers, usedPlayerIds, onSave, onClose, editTeam }) 
     setSelectedIds((prev) => [...prev, newPlayer.id])
     setQuery("")
   }
+
+  useModalBackHandler(onClose)
 
   const handleSave = () => {
     if (!teamName.trim()) {

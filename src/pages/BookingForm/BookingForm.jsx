@@ -17,6 +17,7 @@ import TeamManager from "../../components/booking/TeamManager"
 import TeamCostDisplay from "../../components/booking/TeamCostDisplay"
 import AddPlayerModal from "../../components/booking/AddPlayerModal"
 import { useApp } from "../../context/useApp"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 import {
   toDateKey,
   timeTo24,
@@ -36,6 +37,8 @@ function ModalBlurWrapper({ onClose, children }) {
     document.body.classList.add("modal-open")
     return () => document.body.classList.remove("modal-open")
   }, [])
+
+  useModalBackHandler(onClose)
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.25rem", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
@@ -351,7 +354,9 @@ export default function BookingForm() {
             ) : (
               <span className="text-slate-400 dark:text-slate-500">Select player</span>
             )}
-            <span className="text-base shrink-0">👤</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
           </button>
 
           {paidByPlayerId && (
@@ -523,8 +528,11 @@ export default function BookingForm() {
       {/* ── Paid By Modal ──────────────────────────────– */}
       {paidByModalOpen && (
         <ModalBlurWrapper onClose={() => setPaidByModalOpen(false)}>
-          <div className="flex items-center mb-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">👤 Paid By</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Paid By</h2>
           </div>
 
           <div className="relative mb-3">
@@ -580,7 +588,13 @@ export default function BookingForm() {
       {playersModalOpen && (
         <ModalBlurWrapper onClose={() => setPlayersModalOpen(false)}>
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">👥 Select Players</h2>
+            <div className="flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Select Players</h2>
+            </div>
             <span className="text-sm text-slate-500 dark:text-gray-400">{playerIds.length} selected</span>
           </div>
 

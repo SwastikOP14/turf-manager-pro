@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 export default function Modal({ open, onClose, children }) {
   useEffect(() => {
@@ -7,6 +8,8 @@ export default function Modal({ open, onClose, children }) {
     document.body.classList.add("modal-open")
     return () => document.body.classList.remove("modal-open")
   }, [open])
+
+  useModalBackHandler(open ? onClose : null)
 
   if (!open) return null
 

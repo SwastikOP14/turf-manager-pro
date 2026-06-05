@@ -25,7 +25,10 @@ export default function MobileLayout({
       ">
         <Header />
 
-        <main className="pb-32 overflow-visible scroll-smooth">
+        <main
+          className="overflow-visible scroll-smooth"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
+        >
           {children}
         </main>
 

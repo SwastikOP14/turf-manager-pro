@@ -8,12 +8,13 @@ export default function Header() {
   return (
     <header
       className="
-        sticky top-0 z-50
+        sticky top-0
         backdrop-blur-xl
         bg-white/80 dark:bg-[#0B1120]/80
         border-b border-black/5 dark:border-white/10
         shadow-sm
       "
+      style={{ zIndex: 100000, paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="max-w-md mx-auto flex items-center justify-between px-5 py-3">
 

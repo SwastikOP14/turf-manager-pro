@@ -99,6 +99,7 @@ export function AppProvider({ children }) {
       ...prev,
       players: prev.players.filter((player) => player.id !== id)
     }))
+    return { ok: true }
   }
 
   const addTurf = (turf) => {

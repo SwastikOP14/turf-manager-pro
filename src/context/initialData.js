@@ -160,7 +160,8 @@ export function createEmptyPlayer() {
     address: "",
     balance: 0,
     preferredPayment: "UPI",
-    photo: null, // Base64 encoded photo
+    photo: null,
+    sportPreferences: [], // Array of sport pref objects, order = priority
     history: []
   }
 }

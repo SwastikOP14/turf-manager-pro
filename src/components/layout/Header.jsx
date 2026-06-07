@@ -6,60 +6,140 @@ export default function Header() {
   const { darkMode, toggleTheme } = useTheme()
 
   return (
-    <header
-      className="
-        sticky top-0
-        backdrop-blur-xl
-        bg-white/80 dark:bg-[#0B1120]/80
-        border-b border-black/5 dark:border-white/10
-        shadow-sm
-      "
-      style={{ zIndex: 100000, paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div className="max-w-md mx-auto flex items-center justify-between px-5 py-3">
-
-        <div className="flex items-center gap-3.5">
-          {/* Logo */}
-          <div
-            className="w-11 h-11 rounded-2xl shrink-0 overflow-hidden"
-            style={{
-              background: darkMode
-                ? "linear-gradient(145deg, #1e2d3d, #0d1a26)"
-                : "linear-gradient(145deg, #ffffff, #e8ecf2)",
-              boxShadow: darkMode
-                ? "4px 4px 10px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)"
-                : "4px 4px 10px rgba(0,0,0,0.18), -2px -2px 8px rgba(255,255,255,0.9), inset 0 1px 0 rgba(255,255,255,1)",
-              border: darkMode
-                ? "1px solid rgba(255,255,255,0.08)"
-                : "1px solid rgba(0,0,0,0.08)",
-            }}
-          >
-            <img
-              src={appLogo}
-              alt="Turf Manager"
-              className="w-full h-full object-contain p-1"
-            />
-          </div>
-
-          <div>
-            <h1 className="text-[17px] font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
-              Turf Manager
-            </h1>
-            <p className="text-[11px] font-bold tracking-[0.18em] text-green-700 dark:text-green-400 uppercase">
-              Pro
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          className="w-10 h-10 rounded-2xl shrink-0 bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center text-slate-900 dark:text-white transition hover:scale-95"
+    <>
+      {/*
+        ── True fixed app bar ──────────────────────────────────────────
+        Spans the full viewport width so it looks like a real Android
+        top app bar, not a floating card.
+        paddingTop = safe-area-inset-top so it covers the status bar
+        on edge-to-edge devices (notch / punch-hole / dynamic island).
+      */}
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100000,
+          // Comfortable gap below status bar — not crowded, not floaty
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 10px)",
+          background: darkMode ? "#0B1120" : "#ffffff",
+          borderBottom: darkMode
+            ? "1px solid rgba(255,255,255,0.08)"
+            : "1px solid rgba(15,23,42,0.10)",
+          boxShadow: darkMode
+            ? "0 1px 0 rgba(255,255,255,0.04), 0 2px 12px rgba(0,0,0,0.4)"
+            : "0 1px 0 rgba(15,23,42,0.06), 0 2px 12px rgba(15,23,42,0.08)",
+        }}
+      >
+        {/* Inner row — capped at max-w-md and centred on wide screens */}
+        <div
+          style={{
+            maxWidth: "28rem",
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0.625rem 1.25rem",
+            height: "3.5rem",          // 56 dp — standard Android app bar height
+          }}
         >
-          {darkMode ? <Sun size={19} /> : <Moon size={19} />}
-        </button>
+          {/* ── Left: logo + wordmark ─────────────────────── */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div
+              style={{
+                width: "2.5rem",
+                height: "2.5rem",
+                borderRadius: "0.75rem",
+                overflow: "hidden",
+                flexShrink: 0,
+                background: darkMode
+                  ? "linear-gradient(145deg,#1e2d3d,#0d1a26)"
+                  : "linear-gradient(145deg,#f8fafc,#e8ecf2)",
+                border: darkMode
+                  ? "1px solid rgba(255,255,255,0.10)"
+                  : "1px solid rgba(15,23,42,0.10)",
+                boxShadow: darkMode
+                  ? "0 2px 8px rgba(0,0,0,0.5)"
+                  : "0 2px 8px rgba(15,23,42,0.12)",
+              }}
+            >
+              <img
+                src={appLogo}
+                alt="Turf Manager"
+                style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
+              />
+            </div>
 
-      </div>
-    </header>
+            <div>
+              <p
+                style={{
+                  fontSize: "1.0625rem",
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.01em",
+                  color: darkMode ? "#ffffff" : "#0f172a",
+                  margin: 0,
+                }}
+              >
+                Turf Manager
+              </p>
+              <p
+                style={{
+                  fontSize: "0.6875rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: darkMode ? "#4ade80" : "#15803d",
+                  margin: 0,
+                }}
+              >
+                Pro
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right: theme toggle ───────────────────────── */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            style={{
+              width: "2.5rem",
+              height: "2.5rem",
+              borderRadius: "0.75rem",
+              border: darkMode
+                ? "1px solid rgba(255,255,255,0.10)"
+                : "1px solid rgba(15,23,42,0.10)",
+              background: darkMode ? "rgba(255,255,255,0.05)" : "#f1f5f9",
+              color: darkMode ? "#ffffff" : "#0f172a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              cursor: "pointer",
+              transition: "transform 0.15s ease, background 0.2s ease",
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.93)")}
+            onMouseUp={(e)   => (e.currentTarget.style.transform = "scale(1)")}
+            onTouchStart={(e) => (e.currentTarget.style.transform = "scale(0.93)")}
+            onTouchEnd={(e)   => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
+      </header>
+
+      {/*
+        Spacer = bar row (56px) + 10px top padding + safe-area.
+        Flex column: <main> starts immediately below this.
+      */}
+      <div
+        aria-hidden="true"
+        style={{
+          height: "calc(3.5rem + 10px + env(safe-area-inset-top, 0px))",
+          flexShrink: 0,
+        }}
+      />
+    </>
   )
 }

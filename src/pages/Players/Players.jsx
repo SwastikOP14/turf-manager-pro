@@ -76,7 +76,7 @@ export default function Players() {
 
   return (
     <MobileLayout onFabClick={() => setShowAddModal(true)}>
-      <div className="p-5 space-y-5 animate-fade-in-up">
+      <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Players</h1>
           <p className="text-[14px] text-slate-500 dark:text-gray-400 mt-1.5">

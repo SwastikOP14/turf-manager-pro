@@ -2,6 +2,14 @@ import { getInitialData } from "./initialData"
 
 const STORAGE_KEY = "turf-manager-pro-data"
 
+// Ensure every player has all required fields (migration for older stored data)
+function migratePlayers(players = []) {
+  return players.map((p) => ({
+    sportPreferences: [],   // added in v1.1 — default for old records
+    ...p,
+  }))
+}
+
 export function loadAppData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -15,6 +23,7 @@ export function loadAppData() {
     return {
       ...getInitialData(),
       ...parsed,
+      players: migratePlayers(parsed.players || []),
       settings: {
         ...getInitialData().settings,
         ...parsed.settings

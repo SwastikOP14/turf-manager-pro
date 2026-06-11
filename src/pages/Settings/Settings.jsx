@@ -472,8 +472,23 @@ export default function Settings() {
                   // Match turf/sport names → IDs, payer name → playerId
                   const normalise = (s) => String(s || "").trim().toLowerCase()
 
+                  // Build a set of "date|startTime" keys from existing bookings
+                  // to detect duplicates — skip if BOTH date AND time match
+                  const existingKeys = new Set(
+                    bookings.map((b) => `${b.date}|${b.startTime || ""}`)
+                  )
+
                   let imported = 0
+                  let skipped  = 0
+
                   importRows.forEach((row) => {
+                    // Duplicate check — date + startTime both match → skip
+                    const rowKey = `${row.date}|${row.startTime || ""}`
+                    if (existingKeys.has(rowKey) && row.date) {
+                      skipped++
+                      return
+                    }
+
                     // Find turf by name (fuzzy)
                     const turf = turfs.find(t =>
                       normalise(t.name) === normalise(row.turfName) ||
@@ -495,23 +510,29 @@ export default function Settings() {
                     const status = statusMap[normalise(row.status)] || "Pending"
 
                     addBooking({
-                      turfId:          turf?.id  || "",
-                      sportId:         sport?.id || "",
-                      date:            row.date  || "",
-                      startTime:       "",
-                      endTime:         "",
-                      amount:          Number(row.amount)     || 0,
-                      paidAmount:      Number(row.paidAmount) || 0,
+                      turfId:         turf?.id  || "",
+                      sportId:        sport?.id || "",
+                      date:           row.date  || "",
+                      startTime:      row.startTime || "",
+                      endTime:        row.endTime   || "",
+                      amount:         Number(row.amount)     || 0,
+                      paidAmount:     Number(row.paidAmount) || 0,
                       status,
-                      paidByPlayerId:  payer?.id || "",
-                      bookingType:     "Individual",
-                      playerIds:       payer?.id ? [payer.id] : [],
+                      paidByPlayerId: payer?.id || "",
+                      bookingType:    "Individual",
+                      playerIds:      payer?.id ? [payer.id] : [],
                     })
+                    // Add key so subsequent rows in same batch don't duplicate either
+                    existingKeys.add(rowKey)
                     imported++
                   })
 
+                  const msg = skipped > 0
+                    ? `${imported} imported, ${skipped} skipped (duplicate date & time)`
+                    : `${imported} booking${imported !== 1 ? "s" : ""} imported successfully`
+
                   setImportStatus("done")
-                  setImportMsg(`${imported} booking${imported !== 1 ? "s" : ""} imported successfully`)
+                  setImportMsg(msg)
                   setImportPreview(false)
                   setImportRows([])
                 }}

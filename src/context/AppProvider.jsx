@@ -170,21 +170,26 @@ export function AppProvider({ children }) {
     let created = null
 
     setData((prev) => {
+      const { id, nextCounter } = createBookingId(prev.bookings, prev.bookingCounter)
+
       const entry = {
-        id: createBookingId(prev.bookings),
+        id,
         paidAmount:
           booking.status === "Paid"
             ? booking.amount
             : booking.status === "Partial"
               ? Number(booking.paidAmount) || 0
               : 0,
-        ...booking
+        ...booking,
+        // id must win over anything in booking payload
+        id,
       }
 
       created = entry
 
       return {
         ...prev,
+        bookingCounter: nextCounter,   // ← persist high-water mark
         bookings: [...prev.bookings, entry],
         players: applySharesToPlayers(prev.players, entry)
       }

@@ -24,6 +24,8 @@ export function loadAppData() {
       ...getInitialData(),
       ...parsed,
       players: migratePlayers(parsed.players || []),
+      // Preserve the high-water booking counter so IDs never repeat
+      bookingCounter: typeof parsed.bookingCounter === "number" ? parsed.bookingCounter : 0,
       settings: {
         ...getInitialData().settings,
         ...parsed.settings

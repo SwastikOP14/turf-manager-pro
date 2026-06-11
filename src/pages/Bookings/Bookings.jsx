@@ -5,16 +5,25 @@ import MobileLayout from "../../components/layout/MobileLayout"
 import BookingPeriodTabs from "../../components/booking/BookingPeriodTabs"
 import BookingFilterMenu from "../../components/booking/BookingFilterMenu"
 import BookingCard from "../../components/booking/BookingCard"
+import BookingCalendar from "../../components/booking/BookingCalendar"
 import DateRangeModal from "../../components/booking/DateRangeModal"
 import { useApp } from "../../context/useApp"
 import { filterBookingsByPeriod } from "../../utils/dates"
 import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
 const PERIODS = ["All", "This Week", "This Month", "This Year", "Custom"]
+const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+
+function fmtSelectedDate(key) {
+  if (!key) return null
+  const [, m, d] = key.split("-")
+  return `${d} ${MONTH_SHORT[Number(m) - 1]}`
+}
 
 export default function Bookings() {
   const { bookings, getTurfById, getSportById, deleteBooking } = useApp()
 
+  // ── List mode state ────────────────────────────────────────────────────
   const [period, setPeriod]               = useState("All")
   const [statusFilters, setStatusFilters] = useState([])
   const [customRange, setCustomRange]     = useState({ start: null, end: null })
@@ -22,14 +31,18 @@ export default function Bookings() {
   const [draftStart, setDraftStart]       = useState(null)
   const [draftEnd, setDraftEnd]           = useState(null)
 
-  // ── Multi-select ─────────────────────────────────────────────────────────
+  // ── Calendar date selection ────────────────────────────────────────────
+  const [selectedDate, setSelectedDate]   = useState(null)
+
+  // ── Multi-select ────────────────────────────────────────────────────────
   const [selectMode, setSelectMode]       = useState(false)
   const [selectedIds, setSelectedIds]     = useState(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   useModalBackHandler(selectMode ? exitSelectMode : null)
 
-  // ── Counts + filtered list ────────────────────────────────────────────────
+  // ── Derived data ────────────────────────────────────────────────────────
+
   const counts = useMemo(() => {
     const result = {}
     PERIODS.forEach((item) => {
@@ -42,18 +55,22 @@ export default function Bookings() {
 
   const filteredBookings = useMemo(() => {
     let list = filterBookingsByPeriod(bookings, period, customRange)
-    if (statusFilters.length) {
-      list = list.filter((b) => statusFilters.includes(b.status))
-    }
+    if (statusFilters.length) list = list.filter((b) => statusFilters.includes(b.status))
     return [...list].sort((a, b) => new Date(b.date) - new Date(a.date))
   }, [bookings, period, customRange, statusFilters])
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  const toggleStatus = (status) => {
-    setStatusFilters((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
-    )
-  }
+  // Bookings on the selected calendar date
+  const calendarDayBookings = useMemo(() => {
+    if (!selectedDate) return []
+    return bookings
+      .filter((b) => b.date === selectedDate)
+      .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
+  }, [bookings, selectedDate])
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
+  const toggleStatus = (s) =>
+    setStatusFilters((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
 
   function exitSelectMode() {
     setSelectMode(false)
@@ -61,10 +78,7 @@ export default function Bookings() {
     setConfirmDelete(false)
   }
 
-  const enterSelectMode = (id) => {
-    setSelectMode(true)
-    setSelectedIds(new Set([id]))
-  }
+  const enterSelectMode = (id) => { setSelectMode(true); setSelectedIds(new Set([id])) }
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
@@ -75,22 +89,41 @@ export default function Bookings() {
   }
 
   const selectAll = () => setSelectedIds(new Set(filteredBookings.map((b) => b.id)))
-
-  const allSelected =
-    filteredBookings.length > 0 &&
-    filteredBookings.every((b) => selectedIds.has(b.id))
+  const allSelected = filteredBookings.length > 0 && filteredBookings.every((b) => selectedIds.has(b.id))
 
   const handleDeleteConfirmed = () => {
     selectedIds.forEach((id) => deleteBooking(id))
     exitSelectMode()
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render helpers ───────────────────────────────────────────────────────
+
+  const renderBookingCard = (booking) => {
+    const turf  = getTurfById(booking.turfId)
+    const sport = getSportById(booking.sportId)
+    return (
+      <BookingCard
+        key={booking.id}
+        booking={booking}
+        turfName={turf?.name || "Unknown Turf"}
+        sportName={sport?.name || "Sport"}
+        sportId={sport?.id}
+        sport={sport}
+        selectMode={selectMode}
+        selected={selectedIds.has(booking.id)}
+        onSelect={toggleSelect}
+        onLongPress={enterSelectMode}
+      />
+    )
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+
   return (
     <MobileLayout>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
 
-        {/* Title */}
+        {/* ── Header ──────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Bookings</h1>
@@ -103,41 +136,51 @@ export default function Bookings() {
           )}
         </div>
 
-        <BookingPeriodTabs
-          activePeriod={period}
-          onChange={setPeriod}
-          counts={counts}
-          onCustomClick={() => {
-            setDraftStart(customRange.start)
-            setDraftEnd(customRange.end)
-            setRangeModalOpen(true)
-          }}
+        {/* ── Collapsible calendar dropdown ────────────────────────────── */}
+        <BookingCalendar
+          bookings={bookings}
+          selected={selectedDate}
+          onSelect={setSelectedDate}
         />
 
-        {/* Booking list */}
-        <div className="space-y-3.5">
-          {filteredBookings.map((booking) => {
-            const turf  = getTurfById(booking.turfId)
-            const sport = getSportById(booking.sportId)
-            return (
-              <BookingCard
-                key={booking.id}
-                booking={booking}
-                turfName={turf?.name || "Unknown Turf"}
-                sportName={sport?.name || "Sport"}
-                sportId={sport?.id}
-                sport={sport}
-                selectMode={selectMode}
-                selected={selectedIds.has(booking.id)}
-                onSelect={toggleSelect}
-                onLongPress={enterSelectMode}
-              />
-            )
-          })}
+        {/* ── Selected date heading (always visible) ────────────────────── */}
+        {selectedDate ? (
+          <div className="flex items-center justify-between px-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {fmtSelectedDate(selectedDate)}
+              <span className="ml-2 text-green-600 dark:text-green-400">
+                — {calendarDayBookings.length} booking{calendarDayBookings.length !== 1 ? "s" : ""}
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-white font-medium"
+            >
+              Clear ×
+            </button>
+          </div>
+        ) : (
+          /* Period tabs — shown when no calendar date selected */
+          <BookingPeriodTabs
+            activePeriod={period}
+            onChange={setPeriod}
+            counts={counts}
+            onCustomClick={() => {
+              setDraftStart(customRange.start)
+              setDraftEnd(customRange.end)
+              setRangeModalOpen(true)
+            }}
+          />
+        )}
 
-          {!filteredBookings.length && (
+        {/* ── Booking list ─────────────────────────────────────────────── */}
+        <div className="space-y-3.5">
+          {(selectedDate ? calendarDayBookings : filteredBookings).map(renderBookingCard)}
+
+          {(selectedDate ? calendarDayBookings : filteredBookings).length === 0 && (
             <div className="premium-card p-8 text-center text-slate-500 dark:text-gray-400">
-              No bookings found for this filter.
+              {selectedDate ? "No bookings on this date." : "No bookings found for this filter."}
             </div>
           )}
         </div>
@@ -158,55 +201,39 @@ export default function Bookings() {
         }}
       />
 
-      {/* ── Floating select-mode action bar ─────────────────────────────────
-           Sits fixed above the bottom nav bar so it's always reachable.
-      ─────────────────────────────────────────────────────────────────────── */}
+      {/* ── Floating select-mode bar ──────────────────────────────────────── */}
       {selectMode && (
         <div
-          className="fixed left-0 right-0 z-99998 flex items-center justify-center px-5"
+          className="fixed left-0 right-0 z-[99998] flex items-center justify-center px-5"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
           <div
             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
             style={{
-              background:    "rgba(10,16,30,0.96)",
-              backdropFilter:"blur(18px)",
-              border:        "1px solid rgba(255,255,255,0.12)",
-              maxWidth:      "28rem",
+              background:     "rgba(10,16,30,0.96)",
+              backdropFilter: "blur(18px)",
+              border:         "1px solid rgba(255,255,255,0.12)",
+              maxWidth:       "28rem",
             }}
           >
-            {/* Cancel */}
-            <button
-              type="button"
-              onClick={exitSelectMode}
-              className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 active:scale-95"
-            >
+            <button type="button" onClick={exitSelectMode}
+              className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 active:scale-95">
               <X size={17} className="text-white" />
             </button>
-
-            {/* Count */}
             <span className="text-white font-bold text-[15px] flex-1 select-none">
               {selectedIds.size} selected
             </span>
-
-            {/* Select all / none */}
-            <button
-              type="button"
+            <button type="button"
               onClick={allSelected ? () => setSelectedIds(new Set()) : selectAll}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 text-white text-xs font-semibold shrink-0 active:scale-95"
-            >
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 text-white text-xs font-semibold shrink-0 active:scale-95">
               <CheckSquare size={13} />
               {allSelected ? "None" : "All"}
             </button>
-
-            {/* Delete */}
-            <button
-              type="button"
+            <button type="button"
               onClick={() => selectedIds.size > 0 && setConfirmDelete(true)}
               disabled={selectedIds.size === 0}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm shrink-0 active:scale-95 transition-all disabled:opacity-40"
-              style={{ background: "#ef4444", color: "#fff" }}
-            >
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm shrink-0 active:scale-95 disabled:opacity-40"
+              style={{ background: "#ef4444", color: "#fff" }}>
               <Trash2 size={15} />
               Delete
             </button>
@@ -214,10 +241,10 @@ export default function Bookings() {
         </div>
       )}
 
-      {/* ── Delete confirmation bottom sheet ─────────────────────────────── */}
+      {/* ── Delete confirmation sheet ─────────────────────────────────────── */}
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-99999 flex items-end"
+          className="fixed inset-0 z-[99999] flex items-end"
           style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
           onClick={() => setConfirmDelete(false)}
         >
@@ -226,7 +253,6 @@ export default function Bookings() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto" />
-
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-red-500/15 flex items-center justify-center shrink-0">
                 <Trash2 size={20} className="text-red-500" />
@@ -240,20 +266,13 @@ export default function Bookings() {
                 </p>
               </div>
             </div>
-
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]"
-              >
+              <button type="button" onClick={() => setConfirmDelete(false)}
+                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]">
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirmed}
-                className="flex-1 py-3.5 rounded-2xl bg-red-500 text-white font-bold text-[15px] flex items-center justify-center gap-2"
-              >
+              <button type="button" onClick={handleDeleteConfirmed}
+                className="flex-1 py-3.5 rounded-2xl bg-red-500 text-white font-bold text-[15px] flex items-center justify-center gap-2">
                 <Trash2 size={16} />
                 Delete
               </button>

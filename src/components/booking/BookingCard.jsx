@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 
 import GlassCard from "../common/GlassCard"
 import SportIcon from "../common/SportIcon"
-import { CalendarIcon } from "../common/AppIcons"
+import { Calendar, Clock, Users } from "lucide-react"
 import { formatCurrency, formatDisplayDate, formatTimeRange } from "../../utils/format"
 
 export default function BookingCard({
@@ -15,21 +15,21 @@ export default function BookingCard({
   const navigate = useNavigate()
 
   const statusConfig = {
-    Paid:    { color: "text-green-700 dark:text-green-400",  dot: "bg-green-500",  label: "Paid" },
-    Partial: { color: "text-orange-500 dark:text-orange-400", dot: "bg-orange-400", label: "Partial" },
-    Pending: { color: "text-red-600 dark:text-red-500",      dot: "bg-red-500",    label: "Pending" },
+    Paid:    { bg: "bg-[rgba(52,211,153,0.15)] text-[#34D399] dark:text-[#34D399]", text: "text-[#34D399] dark:text-[#34D399]", label: "Paid", accent: "#34D399", accentLight: "rgba(52,211,153,0.18)" },
+    Partial: { bg: "bg-[rgba(245,158,11,0.15)] text-[#F59E0B] dark:text-[#F59E0B]", text: "text-[#F59E0B] dark:text-[#F59E0B]", label: "Partial", accent: "#F59E0B", accentLight: "rgba(245,158,11,0.18)" },
+    Pending: { bg: "bg-[rgba(251,113,133,0.15)] text-[#FB7185] dark:text-[#FB7185]", text: "text-[#FB7185] dark:text-[#FB7185]", label: "Pending", accent: "#FB7185", accentLight: "rgba(251,113,133,0.18)" },
   }
 
   const status = statusConfig[booking.status] ?? statusConfig.Pending
-  const paidAmt      = Number(booking.paidAmount || 0)
-  const totalAmt     = Number(booking.amount)
-  const remaining    = Math.max(0, totalAmt - paidAmt)
-  const displayAmount = booking.status === "Partial" ? remaining : totalAmt
+  const paidAmt = Number(booking.paidAmount || 0)
+  const totalAmt = Number(booking.amount)
+  const remaining = Math.max(0, totalAmt - paidAmt)
 
-  // Count players across both individual and team bookings
+  const sportLabel = sportName || sport?.name || "Sport"
+
   const playerCount = (() => {
     if (booking.bookingType === "Team" || booking.teams?.length) {
-      return booking.teams?.reduce((s, t) => s + (t.playerIds?.length || 0), 0) || 0
+      return booking.teams?.reduce((sum, team) => sum + (team.playerIds?.length || 0), 0) || 0
     }
     return booking.playerIds?.length || 0
   })()
@@ -37,92 +37,57 @@ export default function BookingCard({
   return (
     <GlassCard
       onClick={() => navigate(`/booking/${booking.id}/edit`)}
-      className="p-5 space-y-4"
+      className="p-3 relative overflow-hidden"
     >
-      {/* ── Main body ── */}
-      <div className="flex items-start gap-3">
+      <div
+        className="absolute left-0 top-3 bottom-3 w-1.25 rounded-r-full shadow-[0_0_18px_rgba(0,0,0,0.08)]"
+        style={{ backgroundColor: status.accent }}
+      />
+      <div
+        className="absolute left-1.25 top-4 bottom-4 w-[2.5px] rounded-r-full"
+        style={{ backgroundColor: status.accentLight }}
+      />
 
-        {/* Sport icon — same size as text, not dominant */}
-        <div className="shrink-0 mt-0.5">
-          <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={28} />
+      <div className="relative space-y-2 pl-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-100">
+            <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={14} />
+            {sportLabel}
+          </div>
+          <p className={`text-base font-semibold tracking-tight ${status.text}`}>
+            {formatCurrency(totalAmt)}
+          </p>
         </div>
 
-        {/* Two-column */}
-        <div className="flex-1 min-w-0 flex justify-between gap-2">
-
-          {/* Left: Name / Date / Time */}
-          <div className="min-w-0 space-y-1.5 flex-1">
-            <p className="font-bold text-[16px] text-slate-900 dark:text-white leading-snug">
-              {turfName}
-            </p>
-            <div className="flex items-center gap-2">
-              <CalendarIcon size={14} className="shrink-0" />
-              <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
-                {formatDisplayDate(booking.date)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <p className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
-                {formatTimeRange(booking.startTime, booking.endTime)}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Amount / ID / Players — compact, doesn't steal width */}
-          <div className="text-right shrink-0 space-y-1.5">
-            <p className={`font-bold text-[17px] leading-tight ${status.color}`}>
-              {formatCurrency(displayAmount)}
-            </p>
-            <p className="text-[12px] font-semibold text-slate-500 dark:text-gray-400 tracking-wide">
-              #{booking.id}
-            </p>
-            <p className="text-[12px] font-semibold text-slate-600 dark:text-gray-300 flex items-center gap-1 justify-end">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              {playerCount}
-            </p>
-          </div>
-
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+            {turfName}
+          </h3>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+            {booking.id?.startsWith("#") ? booking.id : `#${booking.id}`}
+          </p>
         </div>
-      </div>
 
-      {/* ── Bottom status bar ── */}
-      <div className="flex items-center justify-between pt-3.5 border-t border-black/10 dark:border-white/15">
-
-        {booking.status === "Partial" ? (
-          <>
-            <span className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
-              Total {formatCurrency(totalAmt)}
-            </span>
-            <span className="text-[13px] font-semibold text-green-700 dark:text-green-400">
-              Paid {formatCurrency(paidAmt)}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-              <span className={`text-[13px] font-bold ${status.color}`}>
-                To Pay
-              </span>
+        <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+          <div className="flex items-center gap-2">
+            <Calendar size={14} className="text-emerald-500 dark:text-emerald-300" />
+            <span>{formatDisplayDate(booking.date)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-emerald-500 dark:text-emerald-300" />
+            <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Users size={14} className="text-emerald-500 dark:text-emerald-300" />
+              <span>{playerCount} players</span>
             </div>
-          </>
-        ) : (
-          <>
-            <span className="text-[13px] font-semibold text-slate-500 dark:text-gray-400">
-              Total {formatCurrency(totalAmt)}
+            <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-semibold ${status.bg}`}>
+              <span className="h-2 w-2 rounded-full bg-current" />
+              {status.label}
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-              <span className={`text-[13px] font-bold ${status.color}`}>
-                {status.label}
-              </span>
-            </div>
-          </>
-        )}
-
+          </div>
+        </div>
       </div>
     </GlassCard>
   )

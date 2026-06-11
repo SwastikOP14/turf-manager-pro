@@ -283,6 +283,21 @@ export function AppProvider({ children }) {
     }))
   }
 
+  const importAppData = (payload) => {
+    setData(() => ({
+      ...getInitialData(),
+      ...payload,
+      players: Array.isArray(payload.players) ? payload.players : getInitialData().players,
+      turfs: Array.isArray(payload.turfs) ? payload.turfs : getInitialData().turfs,
+      sports: Array.isArray(payload.sports) ? payload.sports : getInitialData().sports,
+      bookings: Array.isArray(payload.bookings) ? payload.bookings : getInitialData().bookings,
+      settings: {
+        ...getInitialData().settings,
+        ...(payload.settings || {})
+      }
+    }))
+  }
+
   const value = {
       players,
       turfs,
@@ -305,7 +320,8 @@ export function AppProvider({ children }) {
       updateBooking,
       deleteBooking,
       addBalance,
-      updateSettings
+      updateSettings,
+      importAppData
     }
 
   return (

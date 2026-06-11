@@ -90,7 +90,7 @@ export default function Players() {
             {filteredPlayers.length} Players
           </div>
 
-          <div className="h-11 px-3.5 rounded-2xl bg-[var(--color-card)] border border-[var(--color-card-border)] flex items-center gap-2 shadow-[var(--shadow-card)]">
+          <div className="h-11 px-3.5 rounded-2xl bg-(--color-card) border border-(--color-card-border) flex items-center gap-2 shadow-(--shadow-card)">
             <Search size={16} className="text-slate-500 shrink-0" />
             <input
               type="text"
@@ -115,7 +115,7 @@ export default function Players() {
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setSortOpen(!sortOpen)}
-              className="h-11 px-4 rounded-2xl bg-[var(--color-card)] border border-[var(--color-card-border)] flex items-center gap-1.5 text-slate-900 dark:text-white text-[14px] font-semibold shadow-[var(--shadow-card)] whitespace-nowrap"
+              className="h-11 px-4 rounded-2xl bg-(--color-card) border-(--color-card-border) flex items-center gap-1.5 text-slate-900 dark:text-white text-[14px] font-semibold shadow-(--shadow-card) whitespace-nowrap"
             >
               Sort
               <ChevronDown size={15} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />

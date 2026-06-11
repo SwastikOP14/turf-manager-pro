@@ -1,39 +1,113 @@
-import { useState } from "react"
-import { Moon, Sun, ChevronDown, Trash2 } from "lucide-react"
+import { useRef, useState } from "react"
+import { Moon, Sun, ChevronDown, Trash2, X, Download, Upload, Check } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import SettingItem from "../../components/common/SettingItem"
-import PrimaryButton from "../../components/common/PrimaryButton"
 import DropdownField from "../../components/common/DropdownField"
 import AddTurfModal from "../../components/turf/AddTurfModal"
 import AddSportModal from "../../components/sport/AddSportModal"
 import { useTheme } from "../../context/useTheme"
 import { useApp } from "../../context/useApp"
+import { exportToXlsx, parseImportFile } from "../../utils/dataBackup"
+
+// Small helper for import preview rows
+function Cell({ label, value, accent }) {
+  return (
+    <div>
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className={`font-medium text-sm truncate ${accent ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+        {value || "—"}
+      </p>
+    </div>
+  )
+}
 
 export default function Settings() {
   const { darkMode, toggleTheme } = useTheme()
-  const { 
-    settings, updateSettings, 
-    turfs, sports, 
-    addTurf, addSport, deleteTurf, deleteSport 
+  const {
+    settings, updateSettings,
+    turfs, sports,
+    bookings, players,
+    addTurf, addSport, deleteTurf, deleteSport,
+    addBooking,
   } = useApp()
 
+  // ── UI state ───────────────────────────────────────────────────────────────
   const [turfDropdownOpen, setTurfDropdownOpen] = useState(false)
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false)
   const [addTurfModalOpen, setAddTurfModalOpen] = useState(false)
   const [addSportModalOpen, setAddSportModalOpen] = useState(false)
 
-  const handleDeleteTurf = (turf) => {
-    if (window.confirm(`Are you sure you want to delete "${turf.name}"? This action cannot be undone.`)) {
-      deleteTurf(turf.id)
+  // ── Export state ───────────────────────────────────────────────────────────
+  const [exportModalOpen,  setExportModalOpen]  = useState(false)
+  const [exportFilename,   setExportFilename]   = useState("turf-bookings")
+  const [exportStatus,     setExportStatus]     = useState("idle") // idle | loading | done | error
+  const [exportMsg,        setExportMsg]        = useState("")
+
+  // ── Import state ───────────────────────────────────────────────────────────
+  const fileInputRef = useRef(null)
+  const [importRows,    setImportRows]    = useState([])
+  const [importPreview, setImportPreview] = useState(false)
+  const [importStatus,  setImportStatus]  = useState("idle") // idle | loading | done | error
+  const [importMsg,     setImportMsg]     = useState("")
+  // ── Export handlers ────────────────────────────────────────────────────────
+
+  const handleExportClick = () => {
+    setExportStatus("idle")
+    setExportMsg("")
+    setExportModalOpen(true)
+  }
+
+  const handleConfirmExport = async () => {
+    if (!exportFilename.trim()) { setExportMsg("Please enter a filename"); return }
+    setExportStatus("loading")
+    setExportMsg("")
+    try {
+      const res = await exportToXlsx(
+        { bookings, turfs, sports, players },
+        exportFilename.trim()
+      )
+      setExportStatus("done")
+      setExportMsg(res.message)
+    } catch (err) {
+      setExportStatus("error")
+      setExportMsg(err.message || "Export failed")
     }
   }
 
-  const handleDeleteSport = (sport) => {
-    if (window.confirm(`Are you sure you want to delete "${sport.name}"? This action cannot be undone.`)) {
-      deleteSport(sport.id)
+  // ── Import handlers ────────────────────────────────────────────────────────
+
+  const handleImportClick = () => {
+    setImportStatus("idle")
+    setImportMsg("")
+    fileInputRef.current.value = ""
+    fileInputRef.current.click()
+  }
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportStatus("loading")
+    setImportMsg("")
+    try {
+      const rows = await parseImportFile(file)
+      setImportRows(rows)
+      setImportStatus("idle")
+      setImportPreview(true)
+    } catch (err) {
+      setImportStatus("error")
+      setImportMsg(err.message || "Failed to read file")
     }
+  }
+
+  // ── Delete handlers ────────────────────────────────────────────────────────
+
+  const handleDeleteTurf = (turf) => {
+    if (window.confirm(`Delete "${turf.name}"? This cannot be undone.`)) deleteTurf(turf.id)
+  }
+  const handleDeleteSport = (sport) => {
+    if (window.confirm(`Delete "${sport.name}"? This cannot be undone.`)) deleteSport(sport.id)
   }
 
   return (
@@ -52,7 +126,7 @@ export default function Settings() {
           <img
             src="/app-logo.png"
             alt="Turf Manager Pro"
-            className="h-20 w-auto max-w-[220px] object-contain"
+            className="h-20 w-auto max-w-55 object-contain"
           />
           <p className="text-sm text-slate-500 dark:text-gray-400">
             Professional Turf Booking App
@@ -270,19 +344,46 @@ export default function Settings() {
           </button>
         </GlassCard>
 
-        <GlassCard className="space-y-4">
+        {/* ── Data Management ───────────────────────────────────────────── */}
+        <GlassCard className="space-y-3">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Data Management
           </h2>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
-            Backup to Google Drive
+
+          {/* Export */}
+          <button
+            type="button"
+            onClick={handleExportClick}
+            className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            <Download size={16} />
+            Export Bookings (.xlsx)
           </button>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
-            Import Excel
+
+          {/* Import */}
+          <button
+            type="button"
+            onClick={handleImportClick}
+            disabled={importStatus === "loading"}
+            className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 font-semibold hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+          >
+            <Upload size={16} />
+            {importStatus === "loading" ? "Reading file…" : "Import Bookings (.xlsx / .csv)"}
           </button>
-          <button className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
-            Export Excel
-          </button>
+
+          {/* Hidden real file input — no form tag */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {/* Import error */}
+          {importStatus === "error" && (
+            <p className="text-sm text-red-500 px-1">{importMsg}</p>
+          )}
         </GlassCard>
 
         <GlassCard>
@@ -309,6 +410,199 @@ export default function Settings() {
           addSport(form)
         }}
       />
+
+      {/* Import Preview Modal */}
+      {importPreview && (
+        <div
+          className="fixed inset-0 z-99999 flex items-end"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+        >
+          <div className="w-full bg-white dark:bg-[#0f172a] rounded-t-3xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-black/5 dark:border-white/8 shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Import Preview
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {importRows.length} row{importRows.length !== 1 ? "s" : ""} found — review before importing
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setImportPreview(false); setImportRows([]) }}
+                className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Row list */}
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+              {importRows.map((row, i) => (
+                <div
+                  key={i}
+                  className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/8"
+                >
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    {row.bookingId && <Cell label="ID"     value={row.bookingId} />}
+                    {row.date      && <Cell label="Date"   value={row.date} />}
+                    {row.sport     && <Cell label="Sport"  value={row.sport} />}
+                    {row.turfName  && <Cell label="Turf"   value={row.turfName} />}
+                    {row.paidBy    && <Cell label="Paid By" value={row.paidBy} />}
+                    <Cell label="Amount"  value={`₹${row.amount}`} />
+                    <Cell label="Status"  value={row.status} accent />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="px-5 pb-6 pt-3 flex gap-3 shrink-0 border-t border-black/5 dark:border-white/8">
+              <button
+                type="button"
+                onClick={() => { setImportPreview(false); setImportRows([]) }}
+                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Match turf/sport names → IDs, payer name → playerId
+                  const normalise = (s) => String(s || "").trim().toLowerCase()
+
+                  let imported = 0
+                  importRows.forEach((row) => {
+                    // Find turf by name (fuzzy)
+                    const turf = turfs.find(t =>
+                      normalise(t.name) === normalise(row.turfName) ||
+                      normalise(t.name).includes(normalise(row.turfName)) ||
+                      normalise(row.turfName).includes(normalise(t.name))
+                    )
+                    // Find sport by name (fuzzy)
+                    const sport = sports.find(s =>
+                      normalise(s.name) === normalise(row.sport) ||
+                      normalise(s.id) === normalise(row.sport)
+                    )
+                    // Find payer by name (fuzzy)
+                    const payer = players.find(p =>
+                      normalise(p.name) === normalise(row.paidBy) ||
+                      normalise(p.name).includes(normalise(row.paidBy))
+                    )
+
+                    const statusMap = { paid: "Paid", partial: "Partial", pending: "Pending" }
+                    const status = statusMap[normalise(row.status)] || "Pending"
+
+                    addBooking({
+                      turfId:          turf?.id  || "",
+                      sportId:         sport?.id || "",
+                      date:            row.date  || "",
+                      startTime:       "",
+                      endTime:         "",
+                      amount:          Number(row.amount)     || 0,
+                      paidAmount:      Number(row.paidAmount) || 0,
+                      status,
+                      paidByPlayerId:  payer?.id || "",
+                      bookingType:     "Individual",
+                      playerIds:       payer?.id ? [payer.id] : [],
+                    })
+                    imported++
+                  })
+
+                  setImportStatus("done")
+                  setImportMsg(`${imported} booking${imported !== 1 ? "s" : ""} imported successfully`)
+                  setImportPreview(false)
+                  setImportRows([])
+                }}
+                className="flex-1 py-3.5 rounded-2xl bg-green-500 text-black font-bold flex items-center justify-center gap-2"
+              >
+                <Check size={16} />
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import done/error toast */}
+      {importStatus === "done" && importMsg && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-99999x-5 py-3 rounded-2xl bg-green-500 text-black text-sm font-semibold shadow-xl max-w-xs text-center"
+          onClick={() => { setImportStatus("idle"); setImportMsg("") }}>
+          ✓ {importMsg}
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {exportModalOpen && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-5"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+        >
+          <div className="w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-2xl p-5 space-y-4 border border-black/8 dark:border-white/8 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Export Bookings</h2>
+              <button
+                type="button"
+                onClick={() => setExportModalOpen(false)}
+                className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1.5">
+                File name
+              </label>
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                <input
+                  type="text"
+                  value={exportFilename}
+                  onChange={(e) => setExportFilename(e.target.value)}
+                  placeholder="turf-bookings"
+                  className="flex-1 bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400"
+                />
+                <span className="text-sm text-slate-400 shrink-0">.xlsx</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-1">
+                On Android you'll get a share sheet to save anywhere (Downloads, Drive, etc.)
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-xs text-slate-500 dark:text-slate-400 space-y-1">
+              <p>📊 <strong className="text-slate-700 dark:text-slate-300">{bookings.length}</strong> bookings will be exported</p>
+              <p>👤 Includes player names, turf, amount & status</p>
+            </div>
+
+            {exportMsg && (
+              <p className={`text-sm px-1 ${exportStatus === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+                {exportStatus === "done" ? "✓ " : "✗ "}{exportMsg}
+              </p>
+            )}
+
+            {exportStatus === "done" ? (
+              <button
+                type="button"
+                onClick={() => { setExportModalOpen(false); setExportStatus("idle"); setExportMsg("") }}
+                className="w-full py-3.5 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white font-semibold"
+              >
+                Close
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleConfirmExport}
+                disabled={exportStatus === "loading"}
+                className="w-full py-3.5 rounded-2xl bg-green-500 text-black font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <Download size={16} />
+                {exportStatus === "loading" ? "Exporting…" : "Export Now"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </MobileLayout>
   )
 }

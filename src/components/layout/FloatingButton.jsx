@@ -28,7 +28,7 @@ export default function FloatingButton({ onClick }) {
         w-16 h-16 rounded-full
         bg-green-500 text-black
         flex items-center justify-center
-        shadow-[var(--shadow-glow)]
+        shadow-var(--shadow-glow)
         z-50
         transition hover:scale-90 hover:bg-green-600 active:scale-95
       "

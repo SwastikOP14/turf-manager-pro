@@ -35,7 +35,7 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-5">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center p-5">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
 

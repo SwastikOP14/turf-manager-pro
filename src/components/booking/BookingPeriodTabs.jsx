@@ -48,8 +48,8 @@ export default function BookingPeriodTabs({
               whitespace-nowrap text-sm font-semibold
               flex items-center gap-1.5
               ${active
-                ? "bg-green-500 text-black border-green-500 shadow-[var(--shadow-glow)]"
-                : "bg-[var(--color-card)] text-slate-900 dark:text-white border-[var(--color-card-border)]"
+                ? "bg-green-500 text-black border-green-500 shadow-(--shadow-glow)"
+                : "bg-(--color-card) text-slate-900 dark:text-white border-(--color-card-border)"
               }
             `}
           >

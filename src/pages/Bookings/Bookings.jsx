@@ -163,7 +163,7 @@ export default function Bookings() {
       ─────────────────────────────────────────────────────────────────────── */}
       {selectMode && (
         <div
-          className="fixed left-0 right-0 z-[99998] flex items-center justify-center px-5"
+          className="fixed left-0 right-0 z-99998 flex items-center justify-center px-5"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
           <div
@@ -217,7 +217,7 @@ export default function Bookings() {
       {/* ── Delete confirmation bottom sheet ─────────────────────────────── */}
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-[99999] flex items-end"
+          className="fixed inset-0 z-99999 flex items-end"
           style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
           onClick={() => setConfirmDelete(false)}
         >

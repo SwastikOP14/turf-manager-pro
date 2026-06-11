@@ -210,9 +210,9 @@ export default function BookingCard({
   const pressTimer = useRef(null)
 
   const statusConfig = {
-    Paid:    { bg: "bg-[rgba(52,211,153,0.15)] text-[#34D399]", text: "text-[#34D399]", label: "Paid",    accent: "#34D399",  accentLight: "rgba(52,211,153,0.18)"  },
-    Partial: { bg: "bg-[rgba(245,158,11,0.15)] text-[#F59E0B]", text: "text-[#F59E0B]", label: "Partial", accent: "#F59E0B",  accentLight: "rgba(245,158,11,0.18)"  },
-    Pending: { bg: "bg-[rgba(251,113,133,0.15)] text-[#FB7185]", text: "text-[#FB7185]", label: "Pending",accent: "#FB7185",  accentLight: "rgba(251,113,133,0.18)" },
+    Paid:    { accent: "var(--status-paid)",    bg: "rgba(16,185,129,0.07)",  label: "Paid",    badgeClass: "badge badge-paid"    },
+    Partial: { accent: "var(--status-partial)", bg: "rgba(245,158,11,0.07)", label: "To Pay",  badgeClass: "badge badge-partial" },
+    Pending: { accent: "var(--status-pending)", bg: "rgba(239,68,68,0.07)",  label: "Pending", badgeClass: "badge badge-pending" },
   }
 
   const status     = statusConfig[booking.status] ?? statusConfig.Pending
@@ -263,70 +263,83 @@ export default function BookingCard({
         onClick={handleClick}
       >
         <GlassCard
-          className="p-3 relative overflow-hidden cursor-pointer transition-all duration-150"
+          className="relative overflow-hidden cursor-pointer transition-all duration-150"
           style={{
-            outline:    selected ? "2px solid #22c55e" : "none",
+            padding: "14px 14px 14px 18px",
+            outline:    selected ? "2px solid var(--brand)" : "none",
             outlineOffset: "2px",
-            background: selected ? "rgba(34,197,94,0.12)" : undefined,
+            background: selected ? "var(--brand-subtle)" : status.bg,
           }}
         >
-          {/* Status accent bar */}
-          <div
-            className="absolute left-0 top-3 bottom-3 w-1.25 rounded-r-full"
-            style={{ backgroundColor: status.accent }}
-          />
-          <div
-            className="absolute left-1.25 top-4 bottom-4 w-[2.5px] rounded-r-full"
-            style={{ backgroundColor: status.accentLight }}
-          />
+          {/* Status left bar */}
+          <div style={{
+            position: "absolute", left: 0, top: "10px", bottom: "10px",
+            width: "4px", borderRadius: "0 4px 4px 0",
+            background: status.accent,
+          }} />
 
-          <div className="relative space-y-2 pl-3">
-            {/* Sport + amount row */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-100">
-                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={14} />
-                {sportLabel}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {/* Row 1: sport pill + amount */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                background: "var(--bg-elevated)", borderRadius: "99px",
+                padding: "4px 10px", border: "1px solid var(--bg-border)",
+              }}>
+                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={13} />
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>
+                  {sportLabel}
+                </span>
               </div>
-              <div className="text-right">
-                <p className={`text-base font-semibold tracking-tight ${status.text}`}>
+              <div style={{ textAlign: "right" }}>
+                <p style={{
+                  fontSize: "17px", fontWeight: 800, color: status.accent,
+                  margin: 0, fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em",
+                }}>
                   {formatCurrency(totalAmt)}
                 </p>
-                {/* Subtle misc indicator — just a tiny dot, no text */}
                 {hasMisc && (
-                  <p className="text-[9px] text-orange-400 font-medium leading-none mt-0.5">
-                    +misc
-                  </p>
+                  <p style={{ fontSize: "9px", color: "var(--status-partial)", margin: 0, fontWeight: 600 }}>+misc</p>
                 )}
               </div>
             </div>
 
-            {/* Turf + ID */}
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+            {/* Row 2: turf + booking ID */}
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
+              <h3 style={{
+                fontSize: "15px", fontWeight: 700, color: "var(--text-primary)",
+                margin: 0, letterSpacing: "-0.01em",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+              }}>
                 {turfName}
               </h3>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+              <span style={{
+                fontSize: "10px", fontWeight: 600, color: "var(--text-muted)",
+                textTransform: "uppercase", letterSpacing: "0.12em", flexShrink: 0,
+              }}>
                 {booking.id?.startsWith("#") ? booking.id : `#${booking.id}`}
-              </p>
+              </span>
             </div>
 
-            {/* Meta */}
-            <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-2">
-                <Calendar size={14} className="text-emerald-500 dark:text-emerald-300" />
-                <span>{formatDisplayDate(booking.date)}</span>
+            {/* Row 3: date / time / players / status */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4px" }}>
+              <div style={{ display: "flex", items: "center", gap: "10px" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
+                  <Calendar size={12} style={{ color: "var(--brand)", flexShrink: 0 }} />
+                  {formatDisplayDate(booking.date)}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500, marginLeft: "8px" }}>
+                  <Clock size={12} style={{ color: "var(--brand)", flexShrink: 0 }} />
+                  {formatTimeRange(booking.startTime, booking.endTime)}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock size={14} className="text-emerald-500 dark:text-emerald-300" />
-                <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2">
-                  <Users size={14} className="text-emerald-500 dark:text-emerald-300" />
-                  <span>{playerCount} players</span>
-                </div>
-                <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-semibold ${status.bg}`}>
-                  <span className="h-2 w-2 rounded-full bg-current" />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)" }}>
+                  <Users size={12} style={{ color: "var(--brand)" }} />
+                  {playerCount}
+                </span>
+                <span className={status.badgeClass} style={{ fontSize: "10px" }}>
+                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />
                   {status.label}
                 </span>
               </div>

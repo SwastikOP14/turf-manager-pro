@@ -78,20 +78,26 @@ export default function Players() {
     <MobileLayout onFabClick={() => setShowAddModal(true)}>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Players</h1>
-          <p className="text-[14px] text-slate-500 dark:text-gray-400 mt-1.5">
-            Manage balances, track dues &amp; add players
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: 0 }}>Players</h1>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+            {players.length} total · Manage balances &amp; dues
           </p>
         </div>
 
-        {/* Search bar row */}
-        <div className="grid grid-cols-[auto_1fr_auto] gap-2.5 items-center">
-          <div className="px-4 h-11 rounded-2xl bg-green-500 text-black font-bold flex items-center justify-center whitespace-nowrap text-[14px]">
-            {filteredPlayers.length} Players
-          </div>
-
-          <div className="h-11 px-3.5 rounded-2xl bg-(--color-card) border border-(--color-card-border) flex items-center gap-2 shadow-(--shadow-card)">
-            <Search size={16} className="text-slate-500 shrink-0" />
+        {/* Search + sort row */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "var(--bg-card)",
+            border: "1.5px solid var(--bg-border)",
+            borderRadius: "12px",
+            padding: "0 14px",
+            height: "46px",
+          }}>
+            <Search size={16} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
             <input
               type="text"
               value={search}
@@ -99,14 +105,14 @@ export default function Players() {
               placeholder="Search players..."
               autoComplete="off"
               spellCheck="false"
-              className="bg-transparent outline-none w-full text-slate-900 dark:text-white text-[14px] placeholder-slate-400 dark:placeholder-slate-500"
+              style={{
+                flex: 1, background: "transparent", outline: "none",
+                fontSize: "14px", color: "var(--text-primary)", border: "none",
+              }}
             />
             {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white shrink-0 text-lg leading-none"
-              >
+              <button type="button" onClick={() => setSearch("")}
+                style={{ color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>
                 ×
               </button>
             )}
@@ -115,23 +121,45 @@ export default function Players() {
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setSortOpen(!sortOpen)}
-              className="h-11 px-4 rounded-2xl bg-(--color-card) border-(--color-card-border) flex items-center gap-1.5 text-slate-900 dark:text-white text-[14px] font-semibold shadow-(--shadow-card) whitespace-nowrap"
+              style={{
+                height: "46px",
+                padding: "0 14px",
+                borderRadius: "12px",
+                background: "var(--bg-card)",
+                border: "1.5px solid var(--bg-border)",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "var(--text-primary)",
+                fontSize: "13px",
+                fontWeight: 600,
+                fontFamily: "inherit",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
             >
               Sort
-              <ChevronDown size={15} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+              <ChevronDown size={14} style={{ transition: "transform 0.2s", transform: sortOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
             </button>
 
             {sortOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] w-52 z-50 rounded-2xl overflow-hidden bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10 shadow-xl">
+              <div style={{
+                position: "absolute", right: 0, top: "calc(100% + 8px)", width: "180px", zIndex: 50,
+                borderRadius: "14px", overflow: "hidden",
+                background: "var(--bg-card)", border: "1px solid var(--bg-border)",
+                boxShadow: "var(--shadow-elevated)",
+              }}>
                 {SORT_OPTIONS.map((option) => (
                   <button
                     key={option}
                     onClick={() => { setSortType(option); setSortOpen(false) }}
-                    className={`w-full px-4 py-3.5 text-left text-[14px] font-medium transition-colors
-                      ${sortType === option
-                        ? "bg-green-500 text-black"
-                        : "text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
+                    style={{
+                      width: "100%", padding: "12px 16px", textAlign: "left",
+                      fontSize: "13px", fontWeight: 500, fontFamily: "inherit",
+                      background: sortType === option ? "var(--brand)" : "transparent",
+                      color: sortType === option ? "#000" : "var(--text-primary)",
+                      border: "none", cursor: "pointer",
+                    }}
                   >
                     {option}
                   </button>

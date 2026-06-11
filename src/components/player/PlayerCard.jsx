@@ -1,49 +1,97 @@
 import { useNavigate } from "react-router-dom"
-
-import GlassCard from "../common/GlassCard"
 import { formatCurrency } from "../../utils/format"
 import { formatPhoneDisplay } from "../../utils/phone"
-import { getInitials, getBalanceTone } from "../../utils/players"
+import { getInitials } from "../../utils/players"
+
+// Generate a stable gradient from a string
+function avatarGradient(name = "") {
+  const hue = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+  return `linear-gradient(135deg, hsl(${hue},60%,50%), hsl(${(hue+40)%360},70%,40%))`
+}
 
 export default function PlayerCard({ player }) {
-  const navigate = useNavigate()
-  const tone = getBalanceTone(player.balance)
+  const navigate  = useNavigate()
+  const isNeg     = player.balance < 0
+  const isLow     = !isNeg && player.balance < 300
 
-  const balanceClass = {
-    positive: "text-green-700 dark:text-green-400",
-    low:      "text-orange-500 dark:text-orange-400",
-    negative: "text-red-600 dark:text-red-500"
-  }[tone]
+  const balanceColor = isNeg ? "var(--status-pending)"
+    : isLow ? "var(--status-partial)"
+    : "var(--status-paid)"
+
+  const prefix = isNeg ? "↓" : "↑"
 
   return (
-    <GlassCard
+    <div
       onClick={() => navigate(`/player/${player.id}`)}
-      className="flex items-center justify-between gap-4 py-4 px-4"
+      className="premium-card interactive cursor-pointer overflow-hidden"
+      style={{
+        borderLeft: `3px solid ${balanceColor}`,
+        padding: "14px 16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
+      }}
     >
-      <div className="flex items-center gap-4 min-w-0">
-        {/* Avatar — bigger, more presence */}
-        <div className="w-14 h-14 rounded-full shrink-0 overflow-hidden bg-green-500 text-black font-bold text-lg flex items-center justify-center">
-          {player.photo ? (
-            <img src={player.photo} alt={player.name} className="w-full h-full object-cover" />
-          ) : (
-            getInitials(player.name)
-          )}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
+        {/* Avatar */}
+        <div
+          style={{
+            width: "46px",
+            height: "46px",
+            borderRadius: "50%",
+            flexShrink: 0,
+            overflow: "hidden",
+            background: player.photo ? "transparent" : avatarGradient(player.name),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: "16px",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {player.photo
+            ? <img src={player.photo} alt={player.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : getInitials(player.name)
+          }
         </div>
 
-        <div className="min-w-0 space-y-0.5">
-          <h3 className="font-bold text-[16px] text-slate-900 dark:text-white truncate leading-snug">
+        <div style={{ minWidth: 0 }}>
+          <p style={{
+            fontWeight: 700,
+            fontSize: "15px",
+            color: "var(--text-primary)",
+            letterSpacing: "-0.01em",
+            margin: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}>
             {player.name}
-          </h3>
-          <p className="text-[13px] text-slate-500 dark:text-gray-400">
+          </p>
+          <p style={{
+            fontSize: "12px",
+            color: "var(--text-muted)",
+            margin: "2px 0 0",
+          }}>
             {formatPhoneDisplay(player.phone)}
           </p>
         </div>
       </div>
 
       {/* Balance */}
-      <p className={`text-[20px] font-extrabold shrink-0 ${balanceClass}`}>
-        {formatCurrency(player.balance)}
+      <p style={{
+        fontSize: "17px",
+        fontWeight: 800,
+        color: balanceColor,
+        flexShrink: 0,
+        fontFeatureSettings: '"tnum" 1',
+        letterSpacing: "-0.02em",
+      }}>
+        {prefix} {formatCurrency(Math.abs(player.balance))}
       </p>
-    </GlassCard>
+    </div>
   )
 }

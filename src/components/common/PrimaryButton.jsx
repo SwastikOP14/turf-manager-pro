@@ -1,32 +1,13 @@
-export default function PrimaryButton({
-  text,
-  onClick
-}) {
-
+export default function PrimaryButton({ text, onClick, disabled, icon: Icon }) {
   return (
-
     <button
+      type="button"
       onClick={onClick}
-
-      className="
-        w-full
-        py-4
-
-        rounded-2xl
-
-        bg-green-500
-
-        text-black
-        font-semibold
-
-        active:scale-[0.98]
-        transition
-      "
+      disabled={disabled}
+      className="btn-primary w-full"
     >
-
+      {Icon && <Icon size={18} />}
       {text}
-
     </button>
-
   )
 }

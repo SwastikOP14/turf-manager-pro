@@ -1,17 +1,11 @@
-export default function GlassCard({
-  children,
-  className = "",
-  onClick
-}) {
+export default function GlassCard({ children, className = "", onClick, style }) {
   return (
     <div
       onClick={onClick}
+      style={style}
       className={`
-        premium-card
-        p-5
-        animate-fade-in-up
-        transition-all duration-200 ease-out
-        ${onClick ? "cursor-pointer active:scale-[0.98] hover:-translate-y-0.5" : ""}
+        premium-card p-5 animate-fade-in-up
+        ${onClick ? "cursor-pointer interactive active:scale-[0.985] transition-transform" : ""}
         ${className}
       `}
     >

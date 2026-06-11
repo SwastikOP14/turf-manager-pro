@@ -1,55 +1,39 @@
 export default function InputField({
-  label,
-  placeholder,
-  type = "text",
-  value,
-  onChange,
-  centered = false,
-  readOnly = false,
-  prefix,
-  rightElement
+  label, placeholder, type = "text",
+  value, onChange, centered = false,
+  readOnly = false, prefix, rightElement
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-medium text-slate-900 dark:text-white">
+        <label
+          className="text-xs font-600 uppercase tracking-wider"
+          style={{ color: "var(--text-muted)", fontSize: "11px", letterSpacing: "0.05em" }}
+        >
           {label}
         </label>
       )}
 
-      <div className="relative">
+      <div className="relative flex items-center">
         {prefix ? (
-          <div className="
-            premium-input
-            py-3
-            flex items-center
-            gap-2
-            px-4
-          ">
-            <span className="shrink-0 text-slate-500 dark:text-slate-300 font-medium">
+          <div
+            className="premium-input flex items-center gap-2 px-4"
+            style={{ height: "48px", padding: "0 1rem" }}
+          >
+            <span style={{ color: "var(--text-muted)", fontWeight: 500, flexShrink: 0 }}>
               {prefix}
             </span>
-
             <input
               type={type}
               value={value}
               readOnly={readOnly}
               onChange={onChange}
               placeholder={placeholder}
-              style={{
-                textAlign: centered ? "center" : "left"
-              }}
-              className="
-                flex-1 min-w-0
-                bg-transparent outline-none
-                text-slate-900 dark:text-white
-                placeholder:text-slate-400
-              "
+              style={{ textAlign: centered ? "center" : "left" }}
+              className="flex-1 min-w-0 bg-transparent outline-none"
+              style={{ color: "var(--text-primary)", background: "transparent", textAlign: centered ? "center" : "left" }}
             />
-
-            {rightElement && (
-              <span className="shrink-0">{rightElement}</span>
-            )}
+            {rightElement && <span style={{ flexShrink: 0 }}>{rightElement}</span>}
           </div>
         ) : (
           <>
@@ -59,15 +43,9 @@ export default function InputField({
               readOnly={readOnly}
               onChange={onChange}
               placeholder={placeholder}
-              style={{
-                textAlign: centered ? "center" : "left"
-              }}
-              className={`
-                premium-input
-                ${rightElement ? "pr-12" : ""}
-              `}
+              className={`premium-input ${rightElement ? "pr-12" : ""}`}
+              style={{ textAlign: centered ? "center" : "left" }}
             />
-
             {rightElement && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {rightElement}

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { Moon, Sun, ChevronDown, Trash2, X, Download, Upload, Check } from "lucide-react"
+import { ChevronDown, Trash2, X, Download, Upload, Check, Sun, Monitor, Moon } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
@@ -24,7 +24,7 @@ function Cell({ label, value, accent }) {
 }
 
 export default function Settings() {
-  const { darkMode, toggleTheme } = useTheme()
+  const { darkMode, theme, setThemeMode } = useTheme()
   const {
     settings, updateSettings,
     turfs, sports,
@@ -34,8 +34,6 @@ export default function Settings() {
   } = useApp()
 
   // ── UI state ───────────────────────────────────────────────────────────────
-  const [turfDropdownOpen, setTurfDropdownOpen] = useState(false)
-  const [sportDropdownOpen, setSportDropdownOpen] = useState(false)
   const [addTurfModalOpen, setAddTurfModalOpen] = useState(false)
   const [addSportModalOpen, setAddSportModalOpen] = useState(false)
 
@@ -113,285 +111,237 @@ export default function Settings() {
   return (
     <MobileLayout>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            Settings
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
-            Manage your app preferences
-          </p>
+
+        {/* ── Profile / Business Card ──────────────────────────── */}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "4px 0" }}>
+          <div style={{
+            width: "52px", height: "52px", borderRadius: "14px", overflow: "hidden", flexShrink: 0,
+            background: "linear-gradient(135deg, var(--brand), #00B4D8)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <img src="/app-logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-primary)", margin: 0, letterSpacing: "-0.02em" }}>
+              Turf Manager
+            </p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "2px 0 0", fontWeight: 500 }}>
+              Professional Turf Booking App · v1.0.0
+            </p>
+          </div>
         </div>
 
-        <GlassCard className="flex items-center gap-4">
-          <img
-            src="/app-logo.png"
-            alt="Turf Manager Pro"
-            className="h-20 w-auto max-w-55 object-contain"
-          />
-          <p className="text-sm text-slate-500 dark:text-gray-400">
-            Professional Turf Booking App
-          </p>
-        </GlassCard>
+        {/* ── APPEARANCE ───────────────────────────────────────── */}
+        <div>
+          <p className="section-label">Appearance</p>
+          <GlassCard className="space-y-4">
 
-        <GlassCard className="space-y-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-            App Preferences
-          </h2>
-
-          <DropdownField
-            label="Language"
-            value={settings.language}
-            onChange={(e) =>
-              updateSettings({ language: e.target.value })
-            }
-            options={["English", "Hindi"]}
-          />
-
-          <SettingItem
-            title="Theme"
-            subtitle={darkMode ? "Dark mode enabled" : "Light mode enabled"}
-            rightElement={
-              <button
-                onClick={toggleTheme}
-                className="
-                  w-11 h-11 rounded-2xl
-                  bg-slate-100 dark:bg-white/5
-                  border border-black/10 dark:border-white/10
-                  flex items-center justify-center
-                "
-              >
-                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-            }
-          />
-        </GlassCard>
-
-        <GlassCard className="space-y-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-            Notifications
-          </h2>
-
-          {[
-            ["negativeBalance", "Negative balance reminders"],
-            ["booking", "Booking reminders"],
-            ["payment", "Payment reminders"]
-          ].map(([key, label]) => (
-            <SettingItem
-              key={key}
-              title={label}
-              rightElement={
-                <button
-                  onClick={() =>
-                    updateSettings({
-                      notifications: {
-                        [key]: !settings.notifications[key]
-                      }
-                    })
-                  }
-                  className={`
-                    w-14 h-8 rounded-full relative transition
-                    ${settings.notifications[key]
-                      ? "bg-green-500"
-                      : "bg-slate-400"
-                    }
-                  `}
-                >
-                  <div className={`
-                    absolute top-1 w-6 h-6 rounded-full bg-white transition
-                    ${settings.notifications[key] ? "right-1" : "left-1"}
-                  `} />
-                </button>
-              }
-            />
-          ))}
-        </GlassCard>
-
-        {/* Turf Management */}
-        <GlassCard className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Turf Management ({turfs.length})
-            </h2>
-            <button
-              onClick={() => setTurfDropdownOpen(!turfDropdownOpen)}
-              className="
-                flex items-center gap-2 px-3 py-2 rounded-xl
-                bg-slate-100 dark:bg-white/5
-                border border-black/10 dark:border-white/10
-                text-slate-600 dark:text-slate-400
-                hover:bg-slate-200 dark:hover:bg-white/10
-                transition-colors text-sm
-              "
-            >
-              View All
-              <ChevronDown 
-                size={14} 
-                className={`transition-transform ${turfDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          </div>
-
-          {turfDropdownOpen && (
-            <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
-              {turfs.length > 0 ? (
-                turfs.map((turf) => (
-                  <div 
-                    key={turf.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white text-sm">
-                        {turf.name}
-                      </p>
-                      {turf.location && (
-                        <p className="text-xs text-slate-500 dark:text-gray-400">
-                          {turf.location}
-                        </p>
+            {/* Three-way theme selector */}
+            <div>
+              <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "10px" }}>Theme</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                {[
+                  { id: "light",  label: "Light",  Icon: Sun },
+                  { id: "system", label: "System", Icon: Monitor },
+                  { id: "dark",   label: "Dark",   Icon: Moon },
+                ].map(({ id, label, Icon }) => {
+                  const active = theme === id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setThemeMode(id)}
+                      style={{
+                        padding: "10px 8px",
+                        borderRadius: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "6px",
+                        border: active ? `2px solid var(--brand)` : "2px solid var(--bg-border)",
+                        background: active ? "var(--brand-subtle)" : "var(--bg-elevated)",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        position: "relative",
+                      }}
+                    >
+                      <Icon size={18} style={{ color: active ? "var(--brand)" : "var(--text-muted)" }} />
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: active ? "var(--brand)" : "var(--text-muted)" }}>
+                        {label}
+                      </span>
+                      {active && (
+                        <div style={{
+                          position: "absolute", top: "4px", right: "4px",
+                          width: "14px", height: "14px", borderRadius: "50%",
+                          background: "var(--brand)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <Check size={9} color="#000" strokeWidth={3} />
+                        </div>
                       )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteTurf(turf)}
-                      className="
-                        p-2 rounded-lg
-                        text-slate-400 hover:text-red-500 hover:bg-red-500/10
-                        transition-colors
-                      "
-                    >
-                      <Trash2 size={14} />
                     </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">
-                  No turfs added yet
-                </p>
-              )}
+                  )
+                })}
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={() => setAddTurfModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
-          >
-            Add Turf/Ground
-          </button>
-        </GlassCard>
+            <div style={{ height: "1px", background: "var(--bg-border)", margin: "0 -4px" }} />
 
-        {/* Sport Management */}
-        <GlassCard className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Sport Management ({sports.length})
-            </h2>
-            <button
-              onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
-              className="
-                flex items-center gap-2 px-3 py-2 rounded-xl
-                bg-slate-100 dark:bg-white/5
-                border border-black/10 dark:border-white/10
-                text-slate-600 dark:text-slate-400
-                hover:bg-slate-200 dark:hover:bg-white/10
-                transition-colors text-sm
-              "
-            >
-              View All
-              <ChevronDown 
-                size={14} 
-                className={`transition-transform ${sportDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          </div>
+            <DropdownField
+              label="Language"
+              value={settings.language}
+              onChange={(e) => updateSettings({ language: e.target.value })}
+              options={["English", "Hindi"]}
+            />
+          </GlassCard>
+        </div>
 
-          {sportDropdownOpen && (
-            <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
-              {sports.length > 0 ? (
-                sports.map((sport) => (
-                  <div 
-                    key={sport.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
+        {/* ── NOTIFICATIONS ────────────────────────────────────── */}
+        <div>
+          <p className="section-label">Notifications</p>
+          <GlassCard>
+            {[
+              { key: "negativeBalance", label: "Negative Balance Alerts", sub: "Alert when a player goes into dues" },
+              { key: "booking",         label: "Booking Reminders",        sub: "Get notified before sessions" },
+              { key: "payment",         label: "Payment Reminders",        sub: "Remind players about dues" },
+            ].map(({ key, label, sub }, i, arr) => (
+              <div key={key}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
+                  <div>
+                    <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>{label}</p>
+                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "2px 0 0" }}>{sub}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateSettings({ notifications: { [key]: !settings.notifications[key] } })}
+                    style={{
+                      width: "46px", height: "26px", borderRadius: "13px", flexShrink: 0,
+                      background: settings.notifications[key] ? "var(--brand)" : "var(--bg-elevated)",
+                      border: "1px solid var(--bg-border)",
+                      position: "relative", cursor: "pointer",
+                      transition: "background 0.2s ease",
+                    }}
                   >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{sport.icon || "🏅"}</span>
-                    <p className="font-medium text-slate-900 dark:text-white text-sm">
-                      {sport.name}
-                    </p>
-                  </div>
-                    <button
-                      onClick={() => handleDeleteSport(sport)}
-                      className="
-                        p-2 rounded-lg
-                        text-slate-400 hover:text-red-500 hover:bg-red-500/10
-                        transition-colors
-                      "
-                    >
-                      <Trash2 size={14} />
+                    <div style={{
+                      position: "absolute", top: "3px",
+                      width: "20px", height: "20px", borderRadius: "50%", background: "#fff",
+                      transition: "left 0.2s ease",
+                      left: settings.notifications[key] ? "23px" : "3px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+                    }} />
+                  </button>
+                </div>
+                {i < arr.length - 1 && <div style={{ height: "1px", background: "var(--bg-border)" }} />}
+              </div>
+            ))}
+          </GlassCard>
+        </div>
+
+        {/* ── TURF MANAGEMENT ──────────────────────────────────── */}
+        <div>
+          <p className="section-label">Turf Management</p>
+          <GlassCard className="space-y-3">
+            {/* Horizontal chips */}
+            {turfs.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {turfs.map((turf) => (
+                  <div key={turf.id} style={{
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    padding: "6px 12px", borderRadius: "99px",
+                    background: "var(--bg-elevated)", border: "1px solid var(--bg-border)",
+                    fontSize: "12px", fontWeight: 600, color: "var(--text-primary)",
+                  }}>
+                    {turf.name}
+                    <button type="button" onClick={() => handleDeleteTurf(turf)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--status-pending)", display: "flex", padding: 0, lineHeight: 1 }}>
+                      <X size={12} />
                     </button>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">
-                  No sports added yet
-                </p>
-              )}
+                ))}
+              </div>
+            )}
+            <button type="button" onClick={() => setAddTurfModalOpen(true)} className="btn-outline w-full">
+              + Add Turf / Ground
+            </button>
+          </GlassCard>
+        </div>
+
+        {/* ── SPORT MANAGEMENT ─────────────────────────────────── */}
+        <div>
+          <p className="section-label">Sport Management</p>
+          <GlassCard className="space-y-3">
+            {sports.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {sports.map((sport) => (
+                  <div key={sport.id} style={{
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    padding: "6px 12px", borderRadius: "99px",
+                    background: "var(--brand-subtle)", border: "1px solid var(--brand)",
+                    fontSize: "12px", fontWeight: 600, color: "var(--brand)",
+                  }}>
+                    <span>{sport.icon || "🏅"}</span>
+                    {sport.name}
+                    <button type="button" onClick={() => handleDeleteSport(sport)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--status-pending)", display: "flex", padding: 0, lineHeight: 1 }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button type="button" onClick={() => setAddSportModalOpen(true)} className="btn-outline w-full">
+              + Add Sport / Game
+            </button>
+          </GlassCard>
+        </div>
+
+        {/* ── DATA MANAGEMENT ──────────────────────────────────── */}
+        <div>
+          <p className="section-label">Data Management</p>
+          <GlassCard className="space-y-3">
+            <button type="button" onClick={handleExportClick}
+              className="btn-outline w-full" style={{ gap: "8px" }}>
+              <Download size={16} />
+              Export Bookings (.xlsx)
+            </button>
+            <button type="button" onClick={handleImportClick}
+              disabled={importStatus === "loading"}
+              style={{
+                width: "100%", height: "48px", borderRadius: "12px",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                border: "1.5px solid var(--secondary)", color: "var(--secondary)",
+                background: "transparent", fontWeight: 600, fontSize: "14px",
+                fontFamily: "inherit", cursor: "pointer", opacity: importStatus === "loading" ? 0.5 : 1,
+              }}
+            >
+              <Upload size={16} />
+              {importStatus === "loading" ? "Reading file…" : "Import Bookings (.xlsx / .csv)"}
+            </button>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileChange} />
+            {importStatus === "error" && (
+              <p style={{ fontSize: "12px", color: "var(--status-pending)" }}>{importMsg}</p>
+            )}
+          </GlassCard>
+        </div>
+
+        {/* ── APP INFO ─────────────────────────────────────────── */}
+        <div>
+          <p className="section-label">App Info</p>
+          <GlassCard>
+            <SettingItem title="Version" subtitle="Turf Manager Pro v1.0.0" />
+            <div style={{ height: "1px", background: "var(--bg-border)", margin: "0 -4px" }} />
+            <div style={{ paddingTop: "12px" }}>
+              <button
+                type="button"
+                className="btn-danger w-full"
+                style={{ marginTop: "4px" }}
+              >
+                Logout
+              </button>
             </div>
-          )}
+          </GlassCard>
+        </div>
 
-          <button
-            onClick={() => setAddSportModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
-          >
-            Add Sport/Game
-          </button>
-        </GlassCard>
-
-        {/* ── Data Management ───────────────────────────────────────────── */}
-        <GlassCard className="space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Data Management
-          </h2>
-
-          {/* Export */}
-          <button
-            type="button"
-            onClick={handleExportClick}
-            className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
-          >
-            <Download size={16} />
-            Export Bookings (.xlsx)
-          </button>
-
-          {/* Import */}
-          <button
-            type="button"
-            onClick={handleImportClick}
-            disabled={importStatus === "loading"}
-            className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 font-semibold hover:bg-blue-500/20 transition-colors disabled:opacity-50"
-          >
-            <Upload size={16} />
-            {importStatus === "loading" ? "Reading file…" : "Import Bookings (.xlsx / .csv)"}
-          </button>
-
-          {/* Hidden real file input — no form tag */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-
-          {/* Import error */}
-          {importStatus === "error" && (
-            <p className="text-sm text-red-500 px-1">{importMsg}</p>
-          )}
-        </GlassCard>
-
-        <GlassCard>
-          <SettingItem title="App Version" subtitle="Turf Manager Pro v1.0.0" />
-          <button className="w-full py-3 mt-2 rounded-2xl text-red-400 border border-red-500/30 font-semibold">
-            Logout
-          </button>
-        </GlassCard>
       </div>
 
       {/* Modals */}

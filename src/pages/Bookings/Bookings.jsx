@@ -126,9 +126,14 @@ export default function Bookings() {
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Bookings</h1>
-            <p className="text-[14px] text-slate-500 dark:text-gray-400 mt-1.5">
-              Premium turf booking dashboard
+            <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--brand)", letterSpacing: "0.05em", textTransform: "uppercase", margin: 0 }}>
+              {new Date().toLocaleDateString("en-IN", { weekday: "long" })}
+            </p>
+            <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: "2px 0 0", lineHeight: 1.1 }}>
+              {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+            </h1>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+              Premium turf dashboard
             </p>
           </div>
           {!selectMode && (

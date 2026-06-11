@@ -57,7 +57,7 @@ export default function AddPlayer() {
   return (
     <MobileLayout hideFab>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: 0 }}>
           Add Player
         </h1>
 

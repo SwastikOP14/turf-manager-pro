@@ -1,44 +1,53 @@
-import { useEffect, useState } from "react"
-
+import { useEffect, useState, useCallback } from "react"
 import { ThemeContext } from "./ThemeContextInstance"
 
+// theme: "light" | "dark" | "system"
+function resolveMode(theme) {
+  if (theme === "dark")  return true
+  if (theme === "light") return false
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+}
+
+function applyDark(isDark) {
+  document.documentElement.classList.toggle("dark", isDark)
+}
+
 export function ThemeProvider({ children }) {
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem("theme")
-
-    const isDark = stored
-      ? stored === "dark"
-      : window.matchMedia("(prefers-color-scheme: dark)").matches
-
-    document.documentElement.classList.toggle("dark", isDark)
-
-    return isDark
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem("theme") || "system"
+    const isDark = resolveMode(stored)
+    applyDark(isDark)
+    return stored
   })
 
+  const darkMode = resolveMode(theme)
+
+  // Track system preference changes when in "system" mode
   useEffect(() => {
+    if (theme !== "system") return
+    const mq = window.matchMedia("(prefers-color-scheme: dark)")
+    const handler = (e) => applyDark(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [theme])
 
-    if (darkMode) {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-    }
+  // Apply + persist whenever theme changes
+  useEffect(() => {
+    applyDark(resolveMode(theme))
+    localStorage.setItem("theme", theme)
+  }, [theme])
 
-  }, [darkMode])
+  // Legacy toggleTheme (light ↔ dark, skips system)
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => (resolveMode(t) ? "light" : "dark"))
+  }, [])
 
-  const toggleTheme = () => {
-    setDarkMode(!darkMode)
-  }
+  const setThemeMode = useCallback((mode) => {
+    setTheme(mode)
+  }, [])
 
   return (
-    <ThemeContext.Provider
-      value={{
-        darkMode,
-        toggleTheme
-      }}
-    >
+    <ThemeContext.Provider value={{ theme, darkMode, toggleTheme, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   )

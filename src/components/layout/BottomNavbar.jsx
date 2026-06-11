@@ -1,52 +1,102 @@
-import {
-  CalendarDays,
-  Users,
-  BarChart3,
-  Settings
-} from "lucide-react"
+import { CalendarDays, Users, BarChart3, Settings } from "lucide-react"
 import { NavLink } from "react-router-dom"
+import { useTheme } from "../../context/useTheme"
+
+const NAV_ITEMS = [
+  { name: "Bookings", icon: CalendarDays, path: "/" },
+  { name: "Players",  icon: Users,        path: "/players" },
+  { name: "Stats",    icon: BarChart3,    path: "/stats" },
+  { name: "Settings", icon: Settings,     path: "/settings" },
+]
 
 export default function BottomNavbar() {
-  const navItems = [
-    { name: "Bookings", icon: CalendarDays, path: "/" },
-    { name: "Players", icon: Users, path: "/players" },
-    { name: "Stats", icon: BarChart3, path: "/stats" },
-    { name: "Settings", icon: Settings, path: "/settings" }
-  ]
+  const { darkMode } = useTheme()
 
   return (
     <div
-      className="
-        fixed bottom-0 left-1/2 -translate-x-1/2
-        w-full max-w-md
-        border-t border-black/10 dark:border-white/10
-        bg-white/95 dark:bg-[#0B1120]/95
-        backdrop-blur-xl z-40
-      "
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="fixed left-0 right-0 flex justify-center"
+      style={{
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+        zIndex: 50000,
+        padding: "0 16px",
+      }}
     >
-      <div className="max-w-md mx-auto flex justify-around py-3 px-2">
-        {navItems.map((item) => {
-          const Icon = item.icon
-
-          return (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) => `
-                flex flex-col items-center gap-1 text-xs font-medium transition
-                ${isActive
-                  ? "text-green-700 dark:text-green-400"
-                  : "text-slate-500 dark:text-gray-400"
-                }
-              `}
-            >
-              <Icon size={20} />
-              <span>{item.name}</span>
-            </NavLink>
-          )
-        })}
-      </div>
+      <nav
+        style={{
+          width: "100%",
+          maxWidth: "28rem",
+          borderRadius: "24px",
+          padding: "8px 8px",
+          display: "flex",
+          justifyContent: "space-around",
+          alignItems: "center",
+          background: darkMode
+            ? "rgba(17,24,39,0.88)"
+            : "rgba(255,255,255,0.88)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow: "0 -4px 30px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.12)",
+          border: darkMode
+            ? "1px solid rgba(255,255,255,0.08)"
+            : "1px solid rgba(15,23,42,0.08)",
+        }}
+      >
+        {NAV_ITEMS.map(({ name, icon: Icon, path }) => (
+          <NavLink
+            key={name}
+            to={path}
+            className="flex flex-col items-center"
+            style={{ textDecoration: "none", flex: 1 }}
+          >
+            {({ isActive }) => (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "2px",
+                  padding: "6px 12px",
+                  borderRadius: "16px",
+                  background: isActive ? "var(--brand-subtle)" : "transparent",
+                  transition: "background 0.2s ease",
+                  minWidth: 0,
+                }}
+              >
+                <Icon
+                  size={22}
+                  strokeWidth={isActive ? 2 : 1.5}
+                  style={{
+                    color: isActive ? "var(--brand)" : "var(--text-muted)",
+                    transition: "color 0.2s ease",
+                  }}
+                />
+                {isActive && (
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      color: "var(--brand)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {name}
+                  </span>
+                )}
+                {isActive && (
+                  <div
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "2px",
+                      background: "var(--brand)",
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }

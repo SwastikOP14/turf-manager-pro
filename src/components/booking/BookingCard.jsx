@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import { Check } from "lucide-react"
 
 import GlassCard from "../common/GlassCard"
 import SportIcon from "../common/SportIcon"
@@ -10,7 +11,12 @@ export default function BookingCard({
   turfName,
   sportName,
   sportId,
-  sport
+  sport,
+  // multi-select props
+  selectMode = false,
+  selected   = false,
+  onSelect,        // (id) => void — called in select mode on tap
+  onLongPress,     // (id) => void — called on long press to enter select mode
 }) {
   const navigate = useNavigate()
 
@@ -20,75 +26,127 @@ export default function BookingCard({
     Pending: { bg: "bg-[rgba(251,113,133,0.15)] text-[#FB7185] dark:text-[#FB7185]", text: "text-[#FB7185] dark:text-[#FB7185]", label: "Pending", accent: "#FB7185", accentLight: "rgba(251,113,133,0.18)" },
   }
 
-  const status = statusConfig[booking.status] ?? statusConfig.Pending
-  const paidAmt = Number(booking.paidAmount || 0)
-  const totalAmt = Number(booking.amount)
-  const remaining = Math.max(0, totalAmt - paidAmt)
-
+  const status     = statusConfig[booking.status] ?? statusConfig.Pending
+  const totalAmt   = Number(booking.amount)
   const sportLabel = sportName || sport?.name || "Sport"
 
   const playerCount = (() => {
     if (booking.bookingType === "Team" || booking.teams?.length) {
-      return booking.teams?.reduce((sum, team) => sum + (team.playerIds?.length || 0), 0) || 0
+      return booking.teams?.reduce((sum, t) => sum + (t.playerIds?.length || 0), 0) || 0
     }
     return booking.playerIds?.length || 0
   })()
 
+  // ── Long-press detection ────────────────────────────────────────────────
+  let pressTimer = null
+
+  const handlePressStart = () => {
+    if (selectMode) return
+    pressTimer = setTimeout(() => {
+      onLongPress?.(booking.id)
+    }, 500)
+  }
+
+  const handlePressEnd = () => {
+    clearTimeout(pressTimer)
+  }
+
+  const handleClick = () => {
+    if (selectMode) {
+      onSelect?.(booking.id)
+    } else {
+      navigate(`/booking/${booking.id}/edit`)
+    }
+  }
+
   return (
-    <GlassCard
-      onClick={() => navigate(`/booking/${booking.id}/edit`)}
-      className="p-3 relative overflow-hidden"
+    <div
+      className="relative"
+      style={{ userSelect: "none", WebkitUserSelect: "none" }}
+      onMouseDown={handlePressStart}
+      onMouseUp={handlePressEnd}
+      onMouseLeave={handlePressEnd}
+      onTouchStart={handlePressStart}
+      onTouchEnd={handlePressEnd}
+      onTouchCancel={handlePressEnd}
+      onClick={handleClick}
     >
-      <div
-        className="absolute left-0 top-3 bottom-3 w-1.25 rounded-r-full shadow-[0_0_18px_rgba(0,0,0,0.08)]"
-        style={{ backgroundColor: status.accent }}
-      />
-      <div
-        className="absolute left-1.25 top-4 bottom-4 w-[2.5px] rounded-r-full"
-        style={{ backgroundColor: status.accentLight }}
-      />
+      <GlassCard
+        className="p-3 relative overflow-hidden cursor-pointer transition-all duration-150"
+        style={{
+          outline: selected ? "2px solid #22c55e" : "none",
+          outlineOffset: "2px",
+          background: selected
+            ? "rgba(34,197,94,0.12)"
+            : undefined,
+        }}
+      >
+        {/* Status accent bar */}
+        <div
+          className="absolute left-0 top-3 bottom-3 w-1.25 rounded-r-full"
+          style={{ backgroundColor: status.accent }}
+        />
+        <div
+          className="absolute left-1.25 top-4 bottom-4 w-[2.5px] rounded-r-full"
+          style={{ backgroundColor: status.accentLight }}
+        />
 
-      <div className="relative space-y-2 pl-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-100">
-            <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={14} />
-            {sportLabel}
-          </div>
-          <p className={`text-base font-semibold tracking-tight ${status.text}`}>
-            {formatCurrency(totalAmt)}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
-            {turfName}
-          </h3>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-            {booking.id?.startsWith("#") ? booking.id : `#${booking.id}`}
-          </p>
-        </div>
-
-        <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-          <div className="flex items-center gap-2">
-            <Calendar size={14} className="text-emerald-500 dark:text-emerald-300" />
-            <span>{formatDisplayDate(booking.date)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-emerald-500 dark:text-emerald-300" />
-            <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <div className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
-              <Users size={14} className="text-emerald-500 dark:text-emerald-300" />
-              <span>{playerCount} players</span>
+        <div className="relative space-y-2 pl-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 dark:bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-100">
+              <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={14} />
+              {sportLabel}
             </div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-semibold ${status.bg}`}>
-              <span className="h-2 w-2 rounded-full bg-current" />
-              {status.label}
-            </span>
+            <p className={`text-base font-semibold tracking-tight ${status.text}`}>
+              {formatCurrency(totalAmt)}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+              {turfName}
+            </h3>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+              {booking.id?.startsWith("#") ? booking.id : `#${booking.id}`}
+            </p>
+          </div>
+
+          <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-2">
+              <Calendar size={14} className="text-emerald-500 dark:text-emerald-300" />
+              <span>{formatDisplayDate(booking.date)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-emerald-500 dark:text-emerald-300" />
+              <span>{formatTimeRange(booking.startTime, booking.endTime)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-2">
+                <Users size={14} className="text-emerald-500 dark:text-emerald-300" />
+                <span>{playerCount} players</span>
+              </div>
+              <span className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-semibold ${status.bg}`}>
+                <span className="h-2 w-2 rounded-full bg-current" />
+                {status.label}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    </GlassCard>
+      </GlassCard>
+
+      {/* Checkbox overlay — shown in select mode */}
+      {selectMode && (
+        <div
+          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center transition-all"
+          style={{
+            background:  selected ? "#22c55e" : "rgba(255,255,255,0.15)",
+            border:      selected ? "none"    : "2px solid rgba(255,255,255,0.35)",
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          {selected && <Check size={13} strokeWidth={3} className="text-black" />}
+        </div>
+      )}
+    </div>
   )
 }

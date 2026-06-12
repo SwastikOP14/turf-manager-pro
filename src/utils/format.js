@@ -1,7 +1,10 @@
 export function formatCurrency(amount = 0) {
   const value = Number(amount) || 0
-
-  return `₹${value.toLocaleString("en-IN")}`
+  // Always show exactly 2 decimal places, use Indian locale for commas
+  const fixed = value.toFixed(2)
+  const [intPart, decPart] = fixed.split(".")
+  const intFormatted = Number(intPart).toLocaleString("en-IN")
+  return `₹${intFormatted}.${decPart}`
 }
 
 export function formatDisplayDate(dateInput) {

@@ -176,14 +176,18 @@ export default function Players() {
               <PlayerCard key={player.id} player={player} />
             ))
           ) : (
-            <div className="py-12 flex flex-col items-center gap-3 text-center">
-              <span className="text-4xl">🔍</span>
-              <p className="text-[15px] font-semibold text-slate-700 dark:text-white">
-                No player found
-              </p>
-              <p className="text-[13px] text-slate-500 dark:text-gray-400">
-                No match for "<span className="font-semibold">{search}</span>"
-              </p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "48px 24px", gap: "14px" }}>
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <circle cx="36" cy="28" r="16" fill="var(--brand-subtle)" />
+                <circle cx="36" cy="28" r="10" fill="var(--brand)" opacity="0.3" />
+                <path d="M16 56c0-11 8.954-20 20-20s20 9 20 20" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.5" />
+              </svg>
+              <div>
+                <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>No players yet</p>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "6px 0 0" }}>
+                  {search ? `No match for "${search}"` : "Tap + to add your first player"}
+                </p>
+              </div>
             </div>
           )}
         </div>

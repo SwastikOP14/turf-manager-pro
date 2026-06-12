@@ -184,8 +184,33 @@ export default function Bookings() {
           {(selectedDate ? calendarDayBookings : filteredBookings).map(renderBookingCard)}
 
           {(selectedDate ? calendarDayBookings : filteredBookings).length === 0 && (
-            <div className="premium-card p-8 text-center text-slate-500 dark:text-gray-400">
-              {selectedDate ? "No bookings on this date." : "No bookings found for this filter."}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "48px 24px", gap: "14px" }}>
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <rect x="12" y="8" width="48" height="56" rx="10" fill="var(--brand-subtle)" />
+                <rect x="20" y="20" width="32" height="4" rx="2" fill="var(--brand)" opacity="0.5" />
+                <rect x="20" y="30" width="24" height="4" rx="2" fill="var(--brand)" opacity="0.35" />
+                <rect x="20" y="40" width="28" height="4" rx="2" fill="var(--brand)" opacity="0.25" />
+                <circle cx="52" cy="54" r="12" fill="var(--bg-card)" stroke="var(--bg-border)" strokeWidth="1.5" />
+                <text x="52" y="59" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--text-muted)">?</text>
+              </svg>
+              <div>
+                <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                  {selectedDate ? "No bookings on this date" : "No bookings yet"}
+                </p>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "6px 0 0" }}>
+                  {selectedDate ? "Try selecting a different date" : "Tap + to add your first booking"}
+                </p>
+              </div>
+              {!selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => {}}
+                  className="btn-primary"
+                  style={{ width: "auto", padding: "0 24px", fontSize: "13px" }}
+                >
+                  Add Booking
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -209,7 +234,7 @@ export default function Bookings() {
       {/* ── Floating select-mode bar ──────────────────────────────────────── */}
       {selectMode && (
         <div
-          className="fixed left-0 right-0 z-[99998] flex items-center justify-center px-5"
+          className="fixed left-0 right-0 z-99998 flex items-center justify-center px-5"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
           <div
@@ -249,7 +274,7 @@ export default function Bookings() {
       {/* ── Delete confirmation sheet ─────────────────────────────────────── */}
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-[99999] flex items-end"
+          className="fixed inset-0 z-99999 flex items-end"
           style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
           onClick={() => setConfirmDelete(false)}
         >

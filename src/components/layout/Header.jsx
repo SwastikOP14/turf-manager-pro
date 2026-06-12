@@ -1,8 +1,29 @@
+import { Sun, Moon, Bell, Monitor } from "lucide-react"
 import { useTheme } from "../../context/useTheme"
 import appLogo from "../../assets/app logo.png"
 
 export default function Header() {
-  const { darkMode } = useTheme()
+  const { darkMode, theme, setThemeMode } = useTheme()
+
+  const cycleTheme = () => {
+    const order = ["light", "system", "dark"]
+    const idx   = order.indexOf(theme)
+    setThemeMode(order[(idx + 1) % order.length])
+  }
+
+  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor
+
+  const iconBtnStyle = {
+    width: "36px", height: "36px",
+    borderRadius: "10px",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    background: darkMode ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.05)",
+    border: `1px solid var(--bg-border)`,
+    cursor: "pointer",
+    color: "var(--text-secondary)",
+    flexShrink: 0,
+    transition: "background 0.15s ease, transform 0.1s ease",
+  }
 
   return (
     <>
@@ -26,61 +47,71 @@ export default function Header() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0.625rem 1.25rem",
+            padding: "0.5rem 1.25rem",
             height: "3.5rem",
           }}
         >
-          {/* Logo + wordmark */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div
+          {/* ── Left: logo + wordmark ──────────────────── */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <img
+              src={appLogo}
+              alt="Turf Manager"
               style={{
-                width: "2.25rem",
-                height: "2.25rem",
-                borderRadius: "10px",
-                overflow: "hidden",
+                width: "32px", height: "32px",
+                objectFit: "contain",
+                borderRadius: "8px",
                 flexShrink: 0,
-                background: darkMode
-                  ? "linear-gradient(145deg,#1a2540,#0d1828)"
-                  : "linear-gradient(145deg,#f8fafc,#e8ecf2)",
-                border: `1px solid var(--bg-border)`,
-                boxShadow: darkMode
-                  ? "0 2px 8px rgba(0,0,0,0.5)"
-                  : "0 2px 8px rgba(15,23,42,0.10)",
               }}
-            >
-              <img
-                src={appLogo}
-                alt="Turf Manager"
-                style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }}
-              />
-            </div>
-            <div>
-              <p style={{
-                fontSize: "16px",
-                fontWeight: 700,
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
+            />
+            <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+              <span style={{
+                fontSize: "16px", fontWeight: 800,
                 color: "var(--text-primary)",
-                margin: 0,
+                letterSpacing: "-0.02em",
               }}>
                 Turf Manager
-              </p>
-              <p style={{
-                fontSize: "9px",
-                fontWeight: 700,
-                letterSpacing: "0.22em",
+              </span>
+              {/* PRO badge pill */}
+              <span style={{
+                fontSize: "9px", fontWeight: 700,
+                background: "var(--brand)",
+                color: "#000",
+                padding: "1px 6px",
+                borderRadius: "4px",
+                letterSpacing: "0.06em",
                 textTransform: "uppercase",
-                color: "var(--brand)",
-                margin: 0,
+                lineHeight: "16px",
               }}>
-                Pro
-              </p>
+                PRO
+              </span>
             </div>
+          </div>
+
+          {/* ── Right: theme toggle + bell ─────────────── */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={cycleTheme}
+              aria-label="Toggle theme"
+              style={iconBtnStyle}
+              onTouchStart={(e) => (e.currentTarget.style.transform = "scale(0.90)")}
+              onTouchEnd={(e)   => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              <ThemeIcon size={16} />
+            </button>
+
+            <button
+              aria-label="Notifications"
+              style={iconBtnStyle}
+              onTouchStart={(e) => (e.currentTarget.style.transform = "scale(0.90)")}
+              onTouchEnd={(e)   => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              <Bell size={16} />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Spacer */}
+      {/* Spacer — same height as header */}
       <div
         aria-hidden="true"
         style={{

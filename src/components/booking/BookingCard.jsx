@@ -52,7 +52,7 @@ function MiscCostSheet({ booking, onClose, onEnterSelect }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-end"
+      className="fixed inset-0 z-99999 flex items-end"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >
@@ -210,9 +210,33 @@ export default function BookingCard({
   const pressTimer = useRef(null)
 
   const statusConfig = {
-    Paid:    { accent: "var(--status-paid)",    bg: "rgba(16,185,129,0.07)",  label: "Paid",    badgeClass: "badge badge-paid"    },
-    Partial: { accent: "var(--status-partial)", bg: "rgba(245,158,11,0.07)", label: "To Pay",  badgeClass: "badge badge-partial" },
-    Pending: { accent: "var(--status-pending)", bg: "rgba(239,68,68,0.07)",  label: "Pending", badgeClass: "badge badge-pending" },
+    Paid:    {
+      accent: "var(--status-paid)",
+      bg: "rgba(16,185,129,0.04)",
+      pillBg: "rgba(16,185,129,0.12)",
+      pillColor: "#065f46",
+      pillColorDark: "#6ee7b7",
+      label: "Paid",
+      badgeClass: "badge badge-paid",
+    },
+    Partial: {
+      accent: "var(--status-partial)",
+      bg: "rgba(245,158,11,0.04)",
+      pillBg: "rgba(245,158,11,0.12)",
+      pillColor: "#92400e",
+      pillColorDark: "#fcd34d",
+      label: "To Pay",
+      badgeClass: "badge badge-partial",
+    },
+    Pending: {
+      accent: "var(--status-pending)",
+      bg: "rgba(239,68,68,0.04)",
+      pillBg: "rgba(239,68,68,0.10)",
+      pillColor: "#991b1b",
+      pillColorDark: "#fca5a5",
+      label: "Unpaid",
+      badgeClass: "badge badge-pending",
+    },
   }
 
   const status     = statusConfig[booking.status] ?? statusConfig.Pending
@@ -265,36 +289,49 @@ export default function BookingCard({
         <GlassCard
           className="relative overflow-hidden cursor-pointer transition-all duration-150"
           style={{
-            padding: "14px 14px 14px 18px",
-            outline:    selected ? "2px solid var(--brand)" : "none",
-            outlineOffset: "2px",
-            background: selected ? "var(--brand-subtle)" : status.bg,
+            padding: "14px 14px 14px 20px",
+            outline:    selected ? "2px solid #3b82f6" : "none",
+            outlineOffset: "1px",
+            background: selected
+              ? "rgba(59,130,246,0.08)"   /* light blue for multi-select */
+              : status.bg,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}
         >
-          {/* Status left bar */}
+          {/* Status accent bar — full card height, flush left */}
           <div style={{
-            position: "absolute", left: 0, top: "10px", bottom: "10px",
-            width: "4px", borderRadius: "0 4px 4px 0",
-            background: status.accent,
+            position: "absolute", left: 0, top: 0, bottom: 0,
+            width: "4px",
+            background: selected ? "#3b82f6" : status.accent,
+            borderRadius: "0",
           }} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {/* Row 1: sport pill + amount */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+              {/* Sport pill — colored bg */}
               <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                background: "var(--bg-elevated)", borderRadius: "99px",
-                padding: "4px 10px", border: "1px solid var(--bg-border)",
+                display: "inline-flex", alignItems: "center", gap: "5px",
+                background: status.pillBg,
+                borderRadius: "99px",
+                padding: "4px 10px",
               }}>
-                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={13} />
-                <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>
+                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={12} />
+                <span style={{
+                  fontSize: "11px", fontWeight: 700,
+                  color: document.documentElement.classList.contains("dark")
+                    ? status.pillColorDark
+                    : status.pillColor,
+                }}>
                   {sportLabel}
                 </span>
               </div>
+              {/* Amount — 20px bold */}
               <div style={{ textAlign: "right" }}>
                 <p style={{
-                  fontSize: "17px", fontWeight: 800, color: status.accent,
-                  margin: 0, fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.02em",
+                  fontSize: "20px", fontWeight: 700,
+                  color: selected ? "#3b82f6" : status.accent,
+                  margin: 0, fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.03em",
                 }}>
                   {formatCurrency(totalAmt)}
                 </p>
@@ -321,25 +358,25 @@ export default function BookingCard({
               </span>
             </div>
 
-            {/* Row 3: date / time / players / status */}
+            {/* Row 3: date / time / players / status badge */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4px" }}>
-              <div style={{ display: "flex", items: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
-                  <Calendar size={12} style={{ color: "var(--brand)", flexShrink: 0 }} />
+                  <Calendar size={11} style={{ color: "var(--brand)", flexShrink: 0 }} />
                   {formatDisplayDate(booking.date)}
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500, marginLeft: "8px" }}>
-                  <Clock size={12} style={{ color: "var(--brand)", flexShrink: 0 }} />
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
+                  <Clock size={11} style={{ color: "var(--brand)", flexShrink: 0 }} />
                   {formatTimeRange(booking.startTime, booking.endTime)}
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)" }}>
-                  <Users size={12} style={{ color: "var(--brand)" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "var(--text-muted)" }}>
+                  <Users size={11} style={{ color: "var(--brand)" }} />
                   {playerCount}
                 </span>
                 <span className={status.badgeClass} style={{ fontSize: "10px" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />
+                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
                   {status.label}
                 </span>
               </div>

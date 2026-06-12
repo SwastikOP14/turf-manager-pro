@@ -14,7 +14,7 @@ export default function Modal({ open, onClose, children }) {
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md px-5">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 backdrop-blur-md px-5">
       {/* Backdrop */}
       <div className="absolute inset-0" onClick={onClose} />
 

@@ -30,10 +30,10 @@ export default function BookingFilterMenu({
         onClick={() => setOpen((prev) => !prev)}
         className={`
           w-11 h-11 rounded-2xl
-          bg-[var(--color-card)]
-          border border-[var(--color-card-border)]
+          bg-(--color-card)
+          border border-(--color-card-border)
           flex items-center justify-center
-          shadow-[var(--shadow-card)]
+          shadow-(--shadow-card)
           transition
           ${activeStatuses.length > 0
             ? "text-green-500"
@@ -56,7 +56,7 @@ export default function BookingFilterMenu({
           rounded-2xl overflow-hidden z-50
           bg-white dark:bg-[#111827]
           border border-black/10 dark:border-white/10
-          shadow-[var(--shadow-card)]
+          shadow-(--shadow-card)
         ">
           {STATUS_OPTIONS.map((status) => {
             const active = activeStatuses.includes(status)

@@ -78,7 +78,7 @@ export default function BookingForm() {
   // Team booking states
   const [bookingType, setBookingType] = useState(existing?.bookingType || (existing?.teams?.length ? "Team" : "Individual"))
   const [teams, setTeams] = useState(existing?.teams || [])
-  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Team")
+  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
   
   const [turfModalOpen, setTurfModalOpen] = useState(false)
   const [paidByModalOpen, setPaidByModalOpen] = useState(false)

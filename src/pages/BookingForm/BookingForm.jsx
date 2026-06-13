@@ -163,38 +163,45 @@ export default function BookingForm() {
   const canUseTeamWiseSplit = isTeamWiseSplitAvailable(teams)
 
   const handleSave = () => {
-    if (!sportId) { 
+    // Validate sport
+    if (!sportId || sportId === "") { 
       setError("Please select sport/game")
       return 
     }
-    if (!turfId) { 
+    // Validate turf
+    if (!turfId || turfId === "") { 
       setError("Please select turf/ground") 
       return 
     }
+    // Validate date
     if (!date) { 
       setError("Please select a booking date") 
       return 
     }
-    if (!amount) { 
+    // Validate amount
+    if (!amount || amount === "0" || amount === "") { 
       setError("Please enter total amount") 
       return 
     }
+    // Validate time
     if (!startHour || !startMinute || !endHour || !endMinute) { 
       setError("Please select start and end time") 
       return 
     }
-    if (!paidByPlayerId) { 
+    // Validate paid by
+    if (!paidByPlayerId || paidByPlayerId === "") { 
       setError("Please select who paid the turf owner") 
       return 
     }
     
+    // Validate players/teams
     if (bookingType === "Individual") {
-      if (!playerIds.length) { 
+      if (!playerIds || playerIds.length === 0) { 
         setError("Please add at least one player") 
         return 
       }
     } else {
-      if (!teams.length) { 
+      if (!teams || teams.length === 0) { 
         setError("Please add at least one team") 
         return 
       }
@@ -214,7 +221,8 @@ export default function BookingForm() {
     }
 
     const payload = {
-      sportId, turfId,
+      sportId, 
+      turfId,
       date: toDateKey(date),
       startTime: timeTo24(startHour, startMinute, startPeriod),
       endTime: timeTo24(endHour, endMinute, endPeriod),

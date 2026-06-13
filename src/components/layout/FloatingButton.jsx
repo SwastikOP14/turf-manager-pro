@@ -13,6 +13,11 @@ export default function FloatingButton({ onClick }) {
     }
     navigate("/booking/new")
   }
+  
+  // Only show on Bookings and Players pages
+  const shouldShow = location.pathname === "/" || location.pathname.startsWith("/players")
+  
+  if (!shouldShow) return null
 
   return (
     <button
@@ -20,11 +25,11 @@ export default function FloatingButton({ onClick }) {
       aria-label="Add new"
       style={{
         position: "fixed",
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 42px)",
         left: "50%",
         transform: "translateX(-50%)",
-        width: "56px",
-        height: "56px",
+        width: "60px",
+        height: "60px",
         borderRadius: "50%",
         background: "linear-gradient(135deg, var(--brand), #00B4D8)",
         color: "#000",
@@ -33,8 +38,8 @@ export default function FloatingButton({ onClick }) {
         justifyContent: "center",
         border: "none",
         cursor: "pointer",
-        boxShadow: "0 4px 20px rgba(0,212,160,0.45)",
-        zIndex: 49999,
+        boxShadow: "0 6px 24px rgba(0,212,160,0.5), 0 2px 8px rgba(0,0,0,0.15)",
+        zIndex: 50001,
         transition: "transform 0.1s ease, box-shadow 0.1s ease",
       }}
       onTouchStart={(e) => {
@@ -44,7 +49,7 @@ export default function FloatingButton({ onClick }) {
         e.currentTarget.style.transform = "translateX(-50%) scale(1)"
       }}
     >
-      <Plus size={26} strokeWidth={2.5} />
+      <Plus size={28} strokeWidth={2.5} />
     </button>
   )
 }

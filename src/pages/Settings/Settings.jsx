@@ -1,9 +1,10 @@
 import { useRef, useState } from "react"
-import { ChevronDown, Trash2, X, Download, Upload, Check, Sun, Monitor, Moon } from "lucide-react"
+import { Moon, Sun, ChevronDown, Trash2 } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import SettingItem from "../../components/common/SettingItem"
+import PrimaryButton from "../../components/common/PrimaryButton"
 import DropdownField from "../../components/common/DropdownField"
 import AddTurfModal from "../../components/turf/AddTurfModal"
 import AddSportModal from "../../components/sport/AddSportModal"
@@ -11,337 +12,434 @@ import { useTheme } from "../../context/useTheme"
 import { useApp } from "../../context/useApp"
 import { exportToXlsx, parseImportFile } from "../../utils/dataBackup"
 
-// Small helper for import preview rows
-function Cell({ label, value, accent }) {
-  return (
-    <div>
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className={`font-medium text-sm truncate ${accent ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-        {value || "—"}
-      </p>
-    </div>
-  )
-}
-
 export default function Settings() {
-  const { darkMode, theme, setThemeMode } = useTheme()
-  const {
-    settings, updateSettings,
-    turfs, sports,
+  const { darkMode, toggleTheme } = useTheme()
+  const { 
+    settings, updateSettings, 
+    turfs, sports, 
     bookings, players,
     addTurf, addSport, deleteTurf, deleteSport,
     addBooking,
+    importAppData
   } = useApp()
 
-  // ── UI state ───────────────────────────────────────────────────────────────
+  const [turfDropdownOpen, setTurfDropdownOpen] = useState(false)
+  const [sportDropdownOpen, setSportDropdownOpen] = useState(false)
   const [addTurfModalOpen, setAddTurfModalOpen] = useState(false)
   const [addSportModalOpen, setAddSportModalOpen] = useState(false)
-
-  // ── Export state ───────────────────────────────────────────────────────────
-  const [exportModalOpen,  setExportModalOpen]  = useState(false)
-  const [exportFilename,   setExportFilename]   = useState("turf-bookings")
-  const [exportStatus,     setExportStatus]     = useState("idle") // idle | loading | done | error
-  const [exportMsg,        setExportMsg]        = useState("")
-
-  // ── Import state ───────────────────────────────────────────────────────────
+  const [importMessage, setImportMessage] = useState("")
+  const [backupMessage, setBackupMessage] = useState("")
+  const [importPreviewOpen, setImportPreviewOpen] = useState(false)
+  const [previewBookings, setPreviewBookings] = useState([])
+  const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [exportFilename, setExportFilename] = useState("turf-bookings")
   const fileInputRef = useRef(null)
-  const [importRows,    setImportRows]    = useState([])
-  const [importPreview, setImportPreview] = useState(false)
-  const [importStatus,  setImportStatus]  = useState("idle") // idle | loading | done | error
-  const [importMsg,     setImportMsg]     = useState("")
-  // ── Export handlers ────────────────────────────────────────────────────────
 
-  const handleExportClick = () => {
-    setExportStatus("idle")
-    setExportMsg("")
+  const handleExportXlsx = () => {
     setExportModalOpen(true)
   }
 
   const handleConfirmExport = async () => {
-    if (!exportFilename.trim()) { setExportMsg("Please enter a filename"); return }
-    setExportStatus("loading")
-    setExportMsg("")
+    if (!exportFilename.trim()) {
+      setImportMessage("Please enter a filename")
+      return
+    }
+
     try {
-      const res = await exportToXlsx(
+      setImportMessage("Exporting...")
+      const filename = exportFilename.trim()
+
+      const result = await exportToXlsx(
         { bookings, turfs, sports, players },
-        exportFilename.trim()
+        filename
       )
-      setExportStatus("done")
-      setExportMsg(res.message)
-    } catch (err) {
-      setExportStatus("error")
-      setExportMsg(err.message || "Export failed")
+
+      setBackupMessage(result.message)
+      setImportMessage("")
+      setExportModalOpen(false)
+    } catch (error) {
+      setImportMessage(`Export failed: ${error.message}`)
     }
   }
 
-  // ── Import handlers ────────────────────────────────────────────────────────
+  const handleBackupToGoogleDrive = () => {
+    handleExportXlsx()
+    window.open("https://drive.google.com/drive/my-drive", "_blank")
+  }
 
   const handleImportClick = () => {
-    setImportStatus("idle")
-    setImportMsg("")
-    fileInputRef.current.value = ""
-    fileInputRef.current.click()
+    setImportMessage("")
+    fileInputRef.current?.click()
   }
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImportStatus("loading")
-    setImportMsg("")
+  const handleImportFile = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
     try {
-      const rows = await parseImportFile(file)
-      setImportRows(rows)
-      setImportStatus("idle")
-      setImportPreview(true)
-    } catch (err) {
-      setImportStatus("error")
-      setImportMsg(err.message || "Failed to read file")
+      setImportMessage("")
+      const parsedBookings = await parseImportFile(file)
+      
+      // Transform parsed data to match app's booking format
+      const bookings = parsedBookings.map((b) => ({
+        id: b.bookingId || `booking-${Date.now()}-${Math.random()}`,
+        date: b.date,
+        location: b.location,
+        amount: b.amount,
+        totalAmount: b.amount,
+        paidAmount: b.paidAmount,
+        status: b.status.toLowerCase(),
+        paidBy: b.paidBy,
+        playerList: b.playerNames,
+        nosOfPlayers: b.numPlayers,
+        playerIds: [],
+        turfId: "",
+        sportId: "",
+        startTime: "",
+        endTime: ""
+      }))
+      
+      setPreviewBookings(bookings)
+      setImportPreviewOpen(true)
+    } catch (error) {
+      setImportMessage(`Import failed: ${error.message}`)
+    } finally {
+      event.target.value = ""
     }
   }
 
-  // ── Delete handlers ────────────────────────────────────────────────────────
+  const handleConfirmImport = () => {
+    if (previewBookings.length === 0) {
+      setImportMessage("No bookings to import")
+      return
+    }
+    
+    const newBookings = previewBookings.map((b) => ({
+      id: b.id,
+      date: b.date,
+      location: b.location,
+      amount: b.amount,
+      totalAmount: b.totalAmount,
+      status: b.status,
+      paidBy: b.paidBy,
+      playerList: b.playerList,
+      nosOfPlayers: b.nosOfPlayers,
+      playerIds: [],
+      turfId: "",
+      sportId: "",
+      startTime: "",
+      endTime: ""
+    }))
+
+    newBookings.forEach(booking => addBooking(booking))
+    setImportMessage(`Imported ${previewBookings.length} bookings successfully!`)
+    setImportPreviewOpen(false)
+    setPreviewBookings([])
+  }
 
   const handleDeleteTurf = (turf) => {
-    if (window.confirm(`Delete "${turf.name}"? This cannot be undone.`)) deleteTurf(turf.id)
+    if (window.confirm(`Are you sure you want to delete "${turf.name}"? This action cannot be undone.`)) {
+      deleteTurf(turf.id)
+    }
   }
+
   const handleDeleteSport = (sport) => {
-    if (window.confirm(`Delete "${sport.name}"? This cannot be undone.`)) deleteSport(sport.id)
+    if (window.confirm(`Are you sure you want to delete "${sport.name}"? This action cannot be undone.`)) {
+      deleteSport(sport.id)
+    }
   }
 
   return (
     <MobileLayout>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-
-        {/* ── Profile / Business Card ──────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "4px 0" }}>
-          <div style={{
-            width: "52px", height: "52px", borderRadius: "14px", overflow: "hidden", flexShrink: 0,
-            background: "linear-gradient(135deg, var(--brand), #00B4D8)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <img src="/app-logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-primary)", margin: 0, letterSpacing: "-0.02em" }}>
-              Turf Manager
-            </p>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "2px 0 0", fontWeight: 500 }}>
-              Professional Turf Booking App · v1.0.0
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            Settings
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+            Manage your app preferences
+          </p>
         </div>
 
-        {/* ── APPEARANCE ───────────────────────────────────────── */}
-        <div>
-          <p className="section-label">Appearance</p>
-          <GlassCard className="space-y-4">
+        <GlassCard className="flex items-center gap-4">
+          <img
+            src="/app-logo.png"
+            alt="Turf Manager Pro"
+            className="h-20 w-auto max-w-55 object-contain"
+          />
+          <p className="text-sm text-slate-500 dark:text-gray-400">
+            Professional Turf Booking App
+          </p>
+        </GlassCard>
 
-            {/* Three-way theme selector */}
-            <div>
-              <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "10px" }}>Theme</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                {[
-                  { id: "light",  label: "Light",  Icon: Sun },
-                  { id: "system", label: "System", Icon: Monitor },
-                  { id: "dark",   label: "Dark",   Icon: Moon },
-                ].map(({ id, label, Icon }) => {
-                  const active = theme === id
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setThemeMode(id)}
-                      style={{
-                        padding: "10px 8px",
-                        borderRadius: "12px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "6px",
-                        border: active ? `2px solid var(--brand)` : "2px solid var(--bg-border)",
-                        background: active ? "var(--brand-subtle)" : "var(--bg-elevated)",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        position: "relative",
-                      }}
-                    >
-                      <Icon size={18} style={{ color: active ? "var(--brand)" : "var(--text-muted)" }} />
-                      <span style={{ fontSize: "11px", fontWeight: 600, color: active ? "var(--brand)" : "var(--text-muted)" }}>
-                        {label}
-                      </span>
-                      {active && (
-                        <div style={{
-                          position: "absolute", top: "4px", right: "4px",
-                          width: "14px", height: "14px", borderRadius: "50%",
-                          background: "var(--brand)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <Check size={9} color="#000" strokeWidth={3} />
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+        <GlassCard className="space-y-1">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+            App Preferences
+          </h2>
 
-            <div style={{ height: "1px", background: "var(--bg-border)", margin: "0 -4px" }} />
+          <DropdownField
+            label="Language"
+            value={settings.language}
+            onChange={(e) =>
+              updateSettings({ language: e.target.value })
+            }
+            options={["English", "Hindi"]}
+          />
 
-            <DropdownField
-              label="Language"
-              value={settings.language}
-              onChange={(e) => updateSettings({ language: e.target.value })}
-              options={["English", "Hindi"]}
-            />
-          </GlassCard>
-        </div>
-
-        {/* ── NOTIFICATIONS ────────────────────────────────────── */}
-        <div>
-          <p className="section-label">Notifications</p>
-          <GlassCard>
-            {[
-              { key: "negativeBalance", label: "Negative Balance Alerts", sub: "Alert when a player goes into dues" },
-              { key: "booking",         label: "Booking Reminders",        sub: "Get notified before sessions" },
-              { key: "payment",         label: "Payment Reminders",        sub: "Remind players about dues" },
-            ].map(({ key, label, sub }, i, arr) => (
-              <div key={key}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
-                  <div>
-                    <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>{label}</p>
-                    <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: "2px 0 0" }}>{sub}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => updateSettings({ notifications: { [key]: !settings.notifications[key] } })}
-                    style={{
-                      width: "46px", height: "26px", borderRadius: "13px", flexShrink: 0,
-                      background: settings.notifications[key] ? "var(--brand)" : "var(--bg-elevated)",
-                      border: "1px solid var(--bg-border)",
-                      position: "relative", cursor: "pointer",
-                      transition: "background 0.2s ease",
-                    }}
-                  >
-                    <div style={{
-                      position: "absolute", top: "3px",
-                      width: "20px", height: "20px", borderRadius: "50%", background: "#fff",
-                      transition: "left 0.2s ease",
-                      left: settings.notifications[key] ? "23px" : "3px",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-                    }} />
-                  </button>
-                </div>
-                {i < arr.length - 1 && <div style={{ height: "1px", background: "var(--bg-border)" }} />}
-              </div>
-            ))}
-          </GlassCard>
-        </div>
-
-        {/* ── TURF MANAGEMENT ──────────────────────────────────── */}
-        <div>
-          <p className="section-label">Turf Management</p>
-          <GlassCard className="space-y-3">
-            {/* Horizontal chips */}
-            {turfs.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {turfs.map((turf) => (
-                  <div key={turf.id} style={{
-                    display: "inline-flex", alignItems: "center", gap: "6px",
-                    padding: "6px 12px", borderRadius: "99px",
-                    background: "var(--bg-elevated)", border: "1px solid var(--bg-border)",
-                    fontSize: "12px", fontWeight: 600, color: "var(--text-primary)",
-                  }}>
-                    {turf.name}
-                    <button type="button" onClick={() => handleDeleteTurf(turf)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--status-pending)", display: "flex", padding: 0, lineHeight: 1 }}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button type="button" onClick={() => setAddTurfModalOpen(true)} className="btn-outline w-full">
-              + Add Turf / Ground
-            </button>
-          </GlassCard>
-        </div>
-
-        {/* ── SPORT MANAGEMENT ─────────────────────────────────── */}
-        <div>
-          <p className="section-label">Sport Management</p>
-          <GlassCard className="space-y-3">
-            {sports.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {sports.map((sport) => (
-                  <div key={sport.id} style={{
-                    display: "inline-flex", alignItems: "center", gap: "6px",
-                    padding: "6px 12px", borderRadius: "99px",
-                    background: "var(--brand-subtle)", border: "1px solid var(--brand)",
-                    fontSize: "12px", fontWeight: 600, color: "var(--brand)",
-                  }}>
-                    <span>{sport.icon || "🏅"}</span>
-                    {sport.name}
-                    <button type="button" onClick={() => handleDeleteSport(sport)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--status-pending)", display: "flex", padding: 0, lineHeight: 1 }}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button type="button" onClick={() => setAddSportModalOpen(true)} className="btn-outline w-full">
-              + Add Sport / Game
-            </button>
-          </GlassCard>
-        </div>
-
-        {/* ── DATA MANAGEMENT ──────────────────────────────────── */}
-        <div>
-          <p className="section-label">Data Management</p>
-          <GlassCard className="space-y-3">
-            <button type="button" onClick={handleExportClick}
-              className="btn-outline w-full" style={{ gap: "8px" }}>
-              <Download size={16} />
-              Export Bookings (.xlsx)
-            </button>
-            <button type="button" onClick={handleImportClick}
-              disabled={importStatus === "loading"}
-              style={{
-                width: "100%", height: "48px", borderRadius: "12px",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                border: "1.5px solid var(--secondary)", color: "var(--secondary)",
-                background: "transparent", fontWeight: 600, fontSize: "14px",
-                fontFamily: "inherit", cursor: "pointer", opacity: importStatus === "loading" ? 0.5 : 1,
-              }}
-            >
-              <Upload size={16} />
-              {importStatus === "loading" ? "Reading file…" : "Import Bookings (.xlsx / .csv)"}
-            </button>
-            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileChange} />
-            {importStatus === "error" && (
-              <p style={{ fontSize: "12px", color: "var(--status-pending)" }}>{importMsg}</p>
-            )}
-          </GlassCard>
-        </div>
-
-        {/* ── APP INFO ─────────────────────────────────────────── */}
-        <div>
-          <p className="section-label">App Info</p>
-          <GlassCard>
-            <SettingItem title="Version" subtitle="Turf Manager Pro v1.0.0" />
-            <div style={{ height: "1px", background: "var(--bg-border)", margin: "0 -4px" }} />
-            <div style={{ paddingTop: "12px" }}>
+          <SettingItem
+            title="Theme"
+            subtitle={darkMode ? "Dark mode enabled" : "Light mode enabled"}
+            rightElement={
               <button
-                type="button"
-                className="btn-danger w-full"
-                style={{ marginTop: "4px" }}
+                onClick={toggleTheme}
+                className="
+                  w-11 h-11 rounded-2xl
+                  bg-slate-100 dark:bg-white/5
+                  border border-black/10 dark:border-white/10
+                  flex items-center justify-center
+                "
               >
-                Logout
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-            </div>
-          </GlassCard>
-        </div>
+            }
+          />
+        </GlassCard>
 
+        <GlassCard className="space-y-1">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+            Notifications
+          </h2>
+
+          {[
+            ["negativeBalance", "Negative balance reminders"],
+            ["booking", "Booking reminders"],
+            ["payment", "Payment reminders"]
+          ].map(([key, label]) => (
+            <SettingItem
+              key={key}
+              title={label}
+              rightElement={
+                <button
+                  onClick={() =>
+                    updateSettings({
+                      notifications: {
+                        [key]: !settings.notifications[key]
+                      }
+                    })
+                  }
+                  className={`
+                    w-14 h-8 rounded-full relative transition
+                    ${settings.notifications[key]
+                      ? "bg-green-500"
+                      : "bg-slate-400"
+                    }
+                  `}
+                >
+                  <div className={`
+                    absolute top-1 w-6 h-6 rounded-full bg-white transition
+                    ${settings.notifications[key] ? "right-1" : "left-1"}
+                  `} />
+                </button>
+              }
+            />
+          ))}
+        </GlassCard>
+
+        {/* Turf Management */}
+        <GlassCard className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Turf Management ({turfs.length})
+            </h2>
+            <button
+              onClick={() => setTurfDropdownOpen(!turfDropdownOpen)}
+              className="
+                flex items-center gap-2 px-3 py-2 rounded-xl
+                bg-slate-100 dark:bg-white/5
+                border border-black/10 dark:border-white/10
+                text-slate-600 dark:text-slate-400
+                hover:bg-slate-200 dark:hover:bg-white/10
+                transition-colors text-sm
+              "
+            >
+              View All
+              <ChevronDown 
+                size={14} 
+                className={`transition-transform ${turfDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+
+          {turfDropdownOpen && (
+            <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
+              {turfs.length > 0 ? (
+                turfs.map((turf) => (
+                  <div 
+                    key={turf.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
+                  >
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white text-sm">
+                        {turf.name}
+                      </p>
+                      {turf.location && (
+                        <p className="text-xs text-slate-500 dark:text-gray-400">
+                          {turf.location}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteTurf(turf)}
+                      className="
+                        p-2 rounded-lg
+                        text-slate-400 hover:text-red-500 hover:bg-red-500/10
+                        transition-colors
+                      "
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">
+                  No turfs added yet
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => setAddTurfModalOpen(true)}
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            Add Turf/Ground
+          </button>
+        </GlassCard>
+
+        {/* Sport Management */}
+        <GlassCard className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Sport Management ({sports.length})
+            </h2>
+            <button
+              onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
+              className="
+                flex items-center gap-2 px-3 py-2 rounded-xl
+                bg-slate-100 dark:bg-white/5
+                border border-black/10 dark:border-white/10
+                text-slate-600 dark:text-slate-400
+                hover:bg-slate-200 dark:hover:bg-white/10
+                transition-colors text-sm
+              "
+            >
+              View All
+              <ChevronDown 
+                size={14} 
+                className={`transition-transform ${sportDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+
+          {sportDropdownOpen && (
+            <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
+              {sports.length > 0 ? (
+                sports.map((sport) => (
+                  <div 
+                    key={sport.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
+                  >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{sport.icon || "🏅"}</span>
+                    <p className="font-medium text-slate-900 dark:text-white text-sm">
+                      {sport.name}
+                    </p>
+                  </div>
+                    <button
+                      onClick={() => handleDeleteSport(sport)}
+                      className="
+                        p-2 rounded-lg
+                        text-slate-400 hover:text-red-500 hover:bg-red-500/10
+                        transition-colors
+                      "
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">
+                  No sports added yet
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => setAddSportModalOpen(true)}
+            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            Add Sport/Game
+          </button>
+        </GlassCard>
+
+        <GlassCard className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            Data Management
+          </h2>
+
+          <button
+            type="button"
+            onClick={handleBackupToGoogleDrive}
+            className="w-full py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 font-semibold hover:bg-blue-500/20 transition-colors"
+          >
+            Backup to Google Drive
+          </button>
+
+          <button
+            type="button"
+            onClick={handleImportClick}
+            className="w-full py-3 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+          >
+            Import Bookings (Excel)
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportXlsx}
+            className="w-full py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 font-semibold hover:bg-purple-500/20 transition-colors"
+          >
+            Export Bookings (Excel)
+          </button>
+
+          {importMessage && (
+            <p className="text-sm text-green-600 dark:text-green-400 p-2 bg-green-500/10 rounded-lg">
+              {importMessage}
+            </p>
+          )}
+          {backupMessage && (
+            <p className="text-sm text-slate-500 dark:text-gray-400">
+              {backupMessage}
+            </p>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+        </GlassCard>
+
+        <GlassCard>
+          <SettingItem title="App Version" subtitle="Turf Manager Pro v1.0.0" />
+          <button className="w-full py-3 mt-2 rounded-2xl text-red-400 border border-red-500/30 font-semibold">
+            Logout
+          </button>
+        </GlassCard>
       </div>
 
       {/* Modals */}
@@ -362,215 +460,138 @@ export default function Settings() {
       />
 
       {/* Import Preview Modal */}
-      {importPreview && (
-        <div
-          className="fixed inset-0 z-99999 flex items-end"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
-        >
-          <div className="w-full bg-white dark:bg-[#0f172a] rounded-t-3xl max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-black/5 dark:border-white/8 shrink-0">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Import Preview
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {importRows.length} row{importRows.length !== 1 ? "s" : ""} found — review before importing
-                </p>
-              </div>
+      {importPreviewOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+          <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Import Preview ({previewBookings.length} bookings)
+              </h2>
               <button
-                type="button"
-                onClick={() => { setImportPreview(false); setImportRows([]) }}
-                className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center"
+                onClick={() => {
+                  setImportPreviewOpen(false)
+                  setPreviewBookings([])
+                }}
+                className="text-slate-500 hover:text-slate-900 dark:hover:text-white"
               >
-                <X size={18} />
+                ✕
               </button>
             </div>
 
-            {/* Row list */}
-            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
-              {importRows.map((row, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/8"
-                >
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                    {row.bookingId && <Cell label="ID"     value={row.bookingId} />}
-                    {row.date      && <Cell label="Date"   value={row.date} />}
-                    {row.sport     && <Cell label="Sport"  value={row.sport} />}
-                    {row.turfName  && <Cell label="Turf"   value={row.turfName} />}
-                    {row.paidBy    && <Cell label="Paid By" value={row.paidBy} />}
-                    <Cell label="Amount"  value={`₹${row.amount}`} />
-                    <Cell label="Status"  value={row.status} accent />
+            {previewBookings.length > 0 ? (
+              <div className="space-y-3">
+                {previewBookings.map((booking, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                  >
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Date</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Location</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Players</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.nosOfPlayers}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Amount</p>
+                        <p className="font-medium text-slate-900 dark:text-white">₹{booking.totalAmount}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Paid By</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.paidBy}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Status</p>
+                        <p className={`font-medium capitalize ${
+                          booking.status === "paid" ? "text-green-600" :
+                          booking.status === "partial" ? "text-yellow-600" :
+                          booking.status === "pending" ? "text-orange-600" :
+                          "text-red-600"
+                        }`}>
+                          {booking.status}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-slate-500 py-8">No bookings to import</p>
+            )}
 
-            {/* Actions */}
-            <div className="px-5 pb-6 pt-3 flex gap-3 shrink-0 border-t border-black/5 dark:border-white/8">
+            <div className="flex gap-3 mt-6">
               <button
-                type="button"
-                onClick={() => { setImportPreview(false); setImportRows([]) }}
-                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 font-semibold"
+                onClick={() => {
+                  setImportPreviewOpen(false)
+                  setPreviewBookings([])
+                }}
+                className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
               <button
-                type="button"
-                onClick={() => {
-                  // Match turf/sport names → IDs, payer name → playerId
-                  const normalise = (s) => String(s || "").trim().toLowerCase()
-
-                  // Build a set of "date|startTime" keys from existing bookings
-                  // to detect duplicates — skip if BOTH date AND time match
-                  const existingKeys = new Set(
-                    bookings.map((b) => `${b.date}|${b.startTime || ""}`)
-                  )
-
-                  let imported = 0
-                  let skipped  = 0
-
-                  importRows.forEach((row) => {
-                    // Duplicate check — date + startTime both match → skip
-                    const rowKey = `${row.date}|${row.startTime || ""}`
-                    if (existingKeys.has(rowKey) && row.date) {
-                      skipped++
-                      return
-                    }
-
-                    // Find turf by name (fuzzy)
-                    const turf = turfs.find(t =>
-                      normalise(t.name) === normalise(row.turfName) ||
-                      normalise(t.name).includes(normalise(row.turfName)) ||
-                      normalise(row.turfName).includes(normalise(t.name))
-                    )
-                    // Find sport by name (fuzzy)
-                    const sport = sports.find(s =>
-                      normalise(s.name) === normalise(row.sport) ||
-                      normalise(s.id) === normalise(row.sport)
-                    )
-                    // Find payer by name (fuzzy)
-                    const payer = players.find(p =>
-                      normalise(p.name) === normalise(row.paidBy) ||
-                      normalise(p.name).includes(normalise(row.paidBy))
-                    )
-
-                    const statusMap = { paid: "Paid", partial: "Partial", pending: "Pending" }
-                    const status = statusMap[normalise(row.status)] || "Pending"
-
-                    addBooking({
-                      turfId:         turf?.id  || "",
-                      sportId:        sport?.id || "",
-                      date:           row.date  || "",
-                      startTime:      row.startTime || "",
-                      endTime:        row.endTime   || "",
-                      amount:         Number(row.amount)     || 0,
-                      paidAmount:     Number(row.paidAmount) || 0,
-                      status,
-                      paidByPlayerId: payer?.id || "",
-                      bookingType:    "Individual",
-                      playerIds:      payer?.id ? [payer.id] : [],
-                    })
-                    // Add key so subsequent rows in same batch don't duplicate either
-                    existingKeys.add(rowKey)
-                    imported++
-                  })
-
-                  const msg = skipped > 0
-                    ? `${imported} imported, ${skipped} skipped (duplicate date & time)`
-                    : `${imported} booking${imported !== 1 ? "s" : ""} imported successfully`
-
-                  setImportStatus("done")
-                  setImportMsg(msg)
-                  setImportPreview(false)
-                  setImportRows([])
-                }}
-                className="flex-1 py-3.5 rounded-2xl bg-green-500 text-black font-bold flex items-center justify-center gap-2"
+                onClick={handleConfirmImport}
+                className="flex-1 py-3 rounded-2xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors"
               >
-                <Check size={16} />
-                Confirm
+                Confirm Import
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Import done/error toast */}
-      {importStatus === "done" && importMsg && (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-99999x-5 py-3 rounded-2xl bg-green-500 text-black text-sm font-semibold shadow-xl max-w-xs text-center"
-          onClick={() => { setImportStatus("idle"); setImportMsg("") }}>
-          ✓ {importMsg}
-        </div>
-      )}
-
-      {/* Export Modal */}
+      {/* Export Filename Modal */}
       {exportModalOpen && (
-        <div
-          className="fixed inset-0 flex items-center justify-center p-5"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
-        >
-          <div className="w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-2xl p-5 space-y-4 border border-black/8 dark:border-white/8 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Export Bookings</h2>
-              <button
-                type="button"
-                onClick={() => setExportModalOpen(false)}
-                className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center"
-              >
-                <X size={18} />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-6 space-y-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Export Bookings
+            </h2>
 
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1.5">
-                File name
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                File Name
               </label>
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                <input
-                  type="text"
-                  value={exportFilename}
-                  onChange={(e) => setExportFilename(e.target.value)}
-                  placeholder="turf-bookings"
-                  className="flex-1 bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400"
-                />
-                <span className="text-sm text-slate-400 shrink-0">.xlsx</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1 ml-1">
-                On Android you'll get a share sheet to save anywhere (Downloads, Drive, etc.)
+              <input
+                type="text"
+                value={exportFilename}
+                onChange={(e) => setExportFilename(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="e.g., turf-bookings-2024"
+              />
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                The file will be saved as: <span className="font-medium">{exportFilename.trim() || "filename"}.xlsx</span>
               </p>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-xs text-slate-500 dark:text-slate-400 space-y-1">
-              <p>📊 <strong className="text-slate-700 dark:text-slate-300">{bookings.length}</strong> bookings will be exported</p>
-              <p>👤 Includes player names, turf, amount & status</p>
+            <div className="text-sm text-slate-600 dark:text-slate-400 bg-blue-500/10 rounded-lg p-3">
+              <p>� On mobile, the file will be saved to your Documents folder.</p>
+              <p className="text-xs mt-1">You can find it in your device's Files app under Documents.</p>
             </div>
 
-            {exportMsg && (
-              <p className={`text-sm px-1 ${exportStatus === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
-                {exportStatus === "done" ? "✓ " : "✗ "}{exportMsg}
-              </p>
-            )}
-
-            {exportStatus === "done" ? (
+            <div className="flex gap-3">
               <button
-                type="button"
-                onClick={() => { setExportModalOpen(false); setExportStatus("idle"); setExportMsg("") }}
-                className="w-full py-3.5 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white font-semibold"
+                onClick={() => {
+                  setExportModalOpen(false)
+                  setExportFilename("turf-bookings")
+                }}
+                className="flex-1 py-3 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                Close
+                Cancel
               </button>
-            ) : (
               <button
-                type="button"
                 onClick={handleConfirmExport}
-                disabled={exportStatus === "loading"}
-                className="w-full py-3.5 rounded-2xl bg-green-500 text-black font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                className="flex-1 py-3 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition-colors"
               >
-                <Download size={16} />
-                {exportStatus === "loading" ? "Exporting…" : "Export Now"}
+                Export Now
               </button>
-            )}
+            </div>
           </div>
         </div>
       )}

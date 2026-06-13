@@ -1,14 +1,33 @@
-import { Sun, Moon, Bell, Monitor } from "lucide-react"
+import { Sun, Moon, Monitor, Smartphone } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useTheme } from "../../context/useTheme"
 import appLogo from "../../assets/app logo.png"
 
 export default function Header() {
   const { darkMode, theme, setThemeMode } = useTheme()
+  
+  // Haptics state — stored in localStorage
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => {
+    const stored = localStorage.getItem("hapticsEnabled")
+    return stored !== null ? stored === "true" : true
+  })
+
+  useEffect(() => {
+    localStorage.setItem("hapticsEnabled", String(hapticsEnabled))
+  }, [hapticsEnabled])
 
   const cycleTheme = () => {
     const order = ["light", "system", "dark"]
     const idx   = order.indexOf(theme)
     setThemeMode(order[(idx + 1) % order.length])
+  }
+
+  const toggleHaptics = () => {
+    setHapticsEnabled(prev => !prev)
+    // Provide haptic feedback if enabling
+    if (!hapticsEnabled && navigator.vibrate) {
+      navigator.vibrate(50)
+    }
   }
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor
@@ -87,7 +106,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* ── Right: theme toggle + bell ─────────────── */}
+          {/* ── Right: theme toggle + haptics ─────────────── */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <button
               onClick={cycleTheme}
@@ -100,12 +119,30 @@ export default function Header() {
             </button>
 
             <button
-              aria-label="Notifications"
-              style={iconBtnStyle}
+              onClick={toggleHaptics}
+              aria-label="Toggle haptics"
+              style={{
+                ...iconBtnStyle,
+                color: hapticsEnabled ? "var(--brand)" : "var(--text-muted)",
+                position: "relative"
+              }}
               onTouchStart={(e) => (e.currentTarget.style.transform = "scale(0.90)")}
               onTouchEnd={(e)   => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <Bell size={16} />
+              <Smartphone size={16} />
+              {!hapticsEnabled && (
+                <div style={{
+                  position: "absolute",
+                  width: "1.5px",
+                  height: "24px",
+                  background: "var(--text-muted)",
+                  transform: "rotate(-45deg)",
+                  top: "50%",
+                  left: "50%",
+                  marginLeft: "-0.75px",
+                  marginTop: "-12px"
+                }} />
+              )}
             </button>
           </div>
         </div>

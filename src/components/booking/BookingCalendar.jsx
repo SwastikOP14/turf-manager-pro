@@ -1,5 +1,5 @@
 /**
- * BookingCalendar — collapsible dropdown calendar
+ * BookingCalendar — always-expanded calendar (no dropdown)
  * ─────────────────────────────────────────────────
  * Props:
  *   bookings  – full bookings array
@@ -8,7 +8,7 @@
  */
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { ChevronLeft, ChevronRight, ChevronDown, CalendarDays } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react"
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
@@ -100,33 +100,11 @@ function DayCell({ date, inMonth = true, isToday, isSelected, dots, onTap }) {
 // ─── main ────────────────────────────────────────────────────────────────────
 
 export default function BookingCalendar({ bookings = [], selected, onSelect }) {
-  const [open,        setOpen]        = useState(false)
   const [view,        setView]        = useState("Weekly")
   const [anchor,      setAnchor]      = useState(() => startOfWeek(new Date()))
   const [monthAnchor, setMonthAnchor] = useState(() => {
     const n = new Date(); return { year: n.getFullYear(), month: n.getMonth() }
   })
-
-  // For smooth max-height animation
-  const bodyRef = useRef(null)
-  const [bodyH, setBodyH] = useState(0)
-
-  useEffect(() => {
-    if (!bodyRef.current) return
-    if (open) {
-      // Read natural height then set it so CSS can animate
-      setBodyH(bodyRef.current.scrollHeight)
-    } else {
-      setBodyH(0)
-    }
-  }, [open, view, anchor, monthAnchor])
-
-  // Recalculate when content changes (view switch, navigation)
-  useEffect(() => {
-    if (open && bodyRef.current) {
-      setBodyH(bodyRef.current.scrollHeight)
-    }
-  }, [open, view, anchor, monthAnchor])
 
   const today = toKey(new Date())
 
@@ -206,131 +184,83 @@ export default function BookingCalendar({ bookings = [], selected, onSelect }) {
   return (
     <div className="premium-card overflow-hidden">
 
-      {/* ── Collapsed header bar ──────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 select-none active:bg-black/5 dark:active:bg-white/5 transition-colors"
-      >
-        {/* Calendar icon */}
-        <div className="w-8 h-8 rounded-xl bg-green-500/15 flex items-center justify-center shrink-0">
-          <CalendarDays size={15} className="text-green-600 dark:text-green-400" />
+      {/* ── View toggle tabs + navigation ──────────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-3 space-y-3">
+
+        {/* View toggle tabs */}
+        <div className="flex rounded-2xl overflow-hidden bg-slate-100 dark:bg-white/5 p-1 gap-1">
+          {["Weekly", "Bi-Weekly", "Monthly"].map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => handleViewChange(t)}
+              className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+              style={{
+                background: view === t ? "#22c55e" : "transparent",
+                color:      view === t ? "#000"    : undefined,
+              }}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
-        {/* Label + preview dots */}
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-[14px] font-bold text-slate-900 dark:text-white leading-tight">
-            {headerLabel}
-          </p>
-          {/* Dot summary preview */}
-          <div className="flex items-center gap-2 mt-0.5">
-            {DOT_ORDER.map(s => headerSummary[s] > 0 && (
-              <div key={s} className="flex items-center gap-1">
-                <span className="w-[6px] h-[6px] rounded-full" style={{ background: DOT_COLOR[s] }} />
-                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                  {headerSummary[s]}
-                </span>
-              </div>
-            ))}
-            {DOT_ORDER.every(s => !headerSummary[s]) && (
-              <span className="text-[10px] text-slate-400">No bookings this period</span>
-            )}
-          </div>
+        {/* Period title + prev/next */}
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={() => navigate(-1)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/8 active:scale-95">
+            <ChevronLeft size={15} className="text-slate-600 dark:text-slate-300" />
+          </button>
+          <span className="text-[14px] font-bold text-slate-900 dark:text-white">{calTitle}</span>
+          <button type="button" onClick={() => navigate(1)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/8 active:scale-95">
+            <ChevronRight size={15} className="text-slate-600 dark:text-slate-300" />
+          </button>
         </div>
 
-        {/* Chevron */}
-        <ChevronDown
-          size={18}
-          className="shrink-0 text-slate-500 dark:text-slate-400 transition-transform duration-300"
-          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-        />
-      </button>
+        {/* Day labels */}
+        <div className="flex gap-1">
+          {DAY_LABELS.map(d => (
+            <span key={d} className="flex-1 text-center text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {d}
+            </span>
+          ))}
+        </div>
 
-      {/* ── Animated body ─────────────────────────────────────────────────── */}
-      <div
-        style={{
-          maxHeight: open ? `${bodyH}px` : "0px",
-          overflow:  "hidden",
-          transition: "max-height 300ms ease",
-        }}
-      >
-        <div ref={bodyRef} className="px-4 pb-4 space-y-3 border-t border-black/5 dark:border-white/8 pt-3">
+        {/* Calendar grid */}
+        <div className="space-y-1">
+          {weekRows.map((row, i) => (
+            <div key={i} className="flex gap-1">
+              {row.map(date => {
+                const key = toKey(date)
+                return (
+                  <DayCell
+                    key={key}
+                    date={date}
+                    inMonth={currentMonth === undefined || date.getMonth() === currentMonth}
+                    isToday={key === today}
+                    isSelected={key === selected}
+                    dots={dotMap[key] || []}
+                    onTap={handleDayTap}
+                  />
+                )
+              })}
+            </div>
+          ))}
+        </div>
 
-          {/* View toggle tabs */}
-          <div className="flex rounded-2xl overflow-hidden bg-slate-100 dark:bg-white/5 p-1 gap-1">
-            {["Weekly", "Bi-Weekly", "Monthly"].map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => handleViewChange(t)}
-                className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
-                style={{
-                  background: view === t ? "#22c55e" : "transparent",
-                  color:      view === t ? "#000"    : undefined,
-                }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {/* Period title + prev/next */}
-          <div className="flex items-center justify-between">
-            <button type="button" onClick={() => navigate(-1)}
-              className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/8 active:scale-95">
-              <ChevronLeft size={15} className="text-slate-600 dark:text-slate-300" />
-            </button>
-            <span className="text-[14px] font-bold text-slate-900 dark:text-white">{calTitle}</span>
-            <button type="button" onClick={() => navigate(1)}
-              className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/8 active:scale-95">
-              <ChevronRight size={15} className="text-slate-600 dark:text-slate-300" />
-            </button>
-          </div>
-
-          {/* Day labels */}
-          <div className="flex gap-1">
-            {DAY_LABELS.map(d => (
-              <span key={d} className="flex-1 text-center text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                {d}
+        {/* Legend */}
+        <div className="flex items-center justify-center gap-5 pt-0.5">
+          {DOT_ORDER.map(s => (
+            <div key={s} className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ background: DOT_COLOR[s] }} />
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                {s === "Pending" ? "Unpaid" : s}
               </span>
-            ))}
-          </div>
-
-          {/* Calendar grid */}
-          <div className="space-y-1">
-            {weekRows.map((row, i) => (
-              <div key={i} className="flex gap-1">
-                {row.map(date => {
-                  const key = toKey(date)
-                  return (
-                    <DayCell
-                      key={key}
-                      date={date}
-                      inMonth={currentMonth === undefined || date.getMonth() === currentMonth}
-                      isToday={key === today}
-                      isSelected={key === selected}
-                      dots={dotMap[key] || []}
-                      onTap={handleDayTap}
-                    />
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="flex items-center justify-center gap-5 pt-0.5">
-            {DOT_ORDER.map(s => (
-              <div key={s} className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: DOT_COLOR[s] }} />
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  {s === "Pending" ? "Unpaid" : s}
-                </span>
-              </div>
-            ))}
-          </div>
-
+            </div>
+          ))}
         </div>
+
       </div>
     </div>
   )

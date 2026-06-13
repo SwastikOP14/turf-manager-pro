@@ -123,23 +123,7 @@ export default function Bookings() {
     <MobileLayout>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
 
-        {/* ── Header ──────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--brand)", letterSpacing: "0.05em", textTransform: "uppercase", margin: 0 }}>
-              {new Date().toLocaleDateString("en-IN", { weekday: "long" })}
-            </p>
-            <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: "2px 0 0", lineHeight: 1.1 }}>
-              {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-            </h1>
-            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
-              Premium turf dashboard
-            </p>
-          </div>
-          {!selectMode && (
-            <BookingFilterMenu activeStatuses={statusFilters} onToggle={toggleStatus} />
-          )}
-        </div>
+        {/* ── Header removed - replaced with haptics toggle in global Header component ── */}
 
         {/* ── Collapsible calendar dropdown ────────────────────────────── */}
         <BookingCalendar
@@ -176,6 +160,11 @@ export default function Bookings() {
               setDraftEnd(customRange.end)
               setRangeModalOpen(true)
             }}
+            filterMenu={
+              !selectMode && (
+                <BookingFilterMenu activeStatuses={statusFilters} onToggle={toggleStatus} />
+              )
+            }
           />
         )}
 

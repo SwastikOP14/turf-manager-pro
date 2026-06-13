@@ -211,8 +211,8 @@ export default function BookingCard({
 
   const statusConfig = {
     Paid:    {
-      accent: "var(--status-paid)",
-      bg: "rgba(16,185,129,0.04)",
+      accent: "#10b981",        // Green
+      bg: "var(--bg-card)",     // Standard card background
       pillBg: "rgba(16,185,129,0.12)",
       pillColor: "#065f46",
       pillColorDark: "#6ee7b7",
@@ -220,8 +220,8 @@ export default function BookingCard({
       badgeClass: "badge badge-paid",
     },
     Partial: {
-      accent: "var(--status-partial)",
-      bg: "rgba(245,158,11,0.04)",
+      accent: "#f59e0b",        // Amber
+      bg: "var(--bg-card)",     // Standard card background
       pillBg: "rgba(245,158,11,0.12)",
       pillColor: "#92400e",
       pillColorDark: "#fcd34d",
@@ -229,8 +229,8 @@ export default function BookingCard({
       badgeClass: "badge badge-partial",
     },
     Pending: {
-      accent: "var(--status-pending)",
-      bg: "rgba(239,68,68,0.04)",
+      accent: "#ef4444",        // Red
+      bg: "var(--bg-card)",     // Standard card background
       pillBg: "rgba(239,68,68,0.10)",
       pillColor: "#991b1b",
       pillColorDark: "#fca5a5",
@@ -306,19 +306,19 @@ export default function BookingCard({
             borderRadius: "0",
           }} />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {/* Row 1: sport pill + amount */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* Row 1: sport pill (left) + amount colored by status (right) */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
               {/* Sport pill — colored bg */}
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: "5px",
                 background: status.pillBg,
                 borderRadius: "99px",
-                padding: "4px 10px",
+                padding: "5px 11px",
               }}>
-                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={12} />
+                <SportIcon sportId={sportId} sportName={sportName} sport={sport} size={13} />
                 <span style={{
-                  fontSize: "11px", fontWeight: 700,
+                  fontSize: "12px", fontWeight: 700,
                   color: document.documentElement.classList.contains("dark")
                     ? status.pillColorDark
                     : status.pillColor,
@@ -326,7 +326,7 @@ export default function BookingCard({
                   {sportLabel}
                 </span>
               </div>
-              {/* Amount — 20px bold */}
+              {/* Amount — bold, colored by status */}
               <div style={{ textAlign: "right" }}>
                 <p style={{
                   fontSize: "20px", fontWeight: 700,
@@ -336,15 +336,15 @@ export default function BookingCard({
                   {formatCurrency(totalAmt)}
                 </p>
                 {hasMisc && (
-                  <p style={{ fontSize: "9px", color: "var(--status-partial)", margin: 0, fontWeight: 600 }}>+misc</p>
+                  <p style={{ fontSize: "9px", color: "#f59e0b", margin: 0, fontWeight: 600 }}>+misc</p>
                 )}
               </div>
             </div>
 
-            {/* Row 2: turf + booking ID */}
+            {/* Row 2: turf/ground name (bold) + booking ID (top-right muted) */}
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
               <h3 style={{
-                fontSize: "15px", fontWeight: 700, color: "var(--text-primary)",
+                fontSize: "16px", fontWeight: 700, color: "var(--text-primary)",
                 margin: 0, letterSpacing: "-0.01em",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
               }}>
@@ -358,8 +358,8 @@ export default function BookingCard({
               </span>
             </div>
 
-            {/* Row 3: date / time / players / status badge */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "4px" }}>
+            {/* Row 3: date / time / players (left) + status badge (right) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
                   <Calendar size={11} style={{ color: "var(--brand)", flexShrink: 0 }} />
@@ -369,17 +369,16 @@ export default function BookingCard({
                   <Clock size={11} style={{ color: "var(--brand)", flexShrink: 0 }} />
                   {formatTimeRange(booking.startTime, booking.endTime)}
                 </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "var(--text-muted)" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
                   <Users size={11} style={{ color: "var(--brand)" }} />
                   {playerCount}
                 </span>
-                <span className={status.badgeClass} style={{ fontSize: "10px" }}>
-                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
-                  {status.label}
-                </span>
               </div>
+              {/* Status badge pill */}
+              <span className={status.badgeClass} style={{ fontSize: "10px", flexShrink: 0 }}>
+                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor", flexShrink: 0 }} />
+                {status.label}
+              </span>
             </div>
           </div>
         </GlassCard>

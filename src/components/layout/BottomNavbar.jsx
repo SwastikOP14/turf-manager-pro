@@ -1,5 +1,5 @@
 import { CalendarDays, Users, BarChart3, Settings } from "lucide-react"
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import { useTheme } from "../../context/useTheme"
 
 const NAV_ITEMS = [
@@ -11,34 +11,52 @@ const NAV_ITEMS = [
 
 export default function BottomNavbar() {
   const { darkMode } = useTheme()
+  const location = useLocation()
+  
+  // Only show notch on Bookings and Players pages
+  const showNotch = location.pathname === "/" || location.pathname.startsWith("/players")
+
+  const bgColor = darkMode
+    ? "rgba(17,24,39,0.95)"
+    : "rgba(255,255,255,0.95)"
+  
+  const borderColor = darkMode
+    ? "rgba(255,255,255,0.08)"
+    : "rgba(15,23,42,0.08)"
 
   return (
     <div
-      className="fixed left-0 right-0 flex justify-center"
+      className="fixed left-0 right-0 bottom-0"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
         zIndex: 50000,
-        padding: "0 16px",
       }}
     >
       <nav
         style={{
           width: "100%",
-          maxWidth: "28rem",
-          borderRadius: "24px",
-          padding: "8px 8px",
+          height: "70px",
+          position: "relative",
           display: "flex",
           justifyContent: "space-around",
           alignItems: "center",
-          background: darkMode
-            ? "rgba(17,24,39,0.88)"
-            : "rgba(255,255,255,0.88)",
+          paddingLeft: "12px",
+          paddingRight: "12px",
+          paddingTop: showNotch ? "12px" : "8px",
+          paddingBottom: "8px",
+          background: bgColor,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          boxShadow: "0 -4px 30px rgba(0,0,0,0.15), 0 4px 24px rgba(0,0,0,0.12)",
-          border: darkMode
-            ? "1px solid rgba(255,255,255,0.08)"
-            : "1px solid rgba(15,23,42,0.08)",
+          borderTop: `1px solid ${borderColor}`,
+          clipPath: showNotch 
+            ? "path('M 0,35 Q 0,20 10,10 L 140,10 Q 150,10 155,15 Q 160,20 160,25 Q 165,20 175,15 Q 185,10 200,10 Q 215,10 235,20 Q 250,28 250,35 Q 250,28 265,20 Q 285,10 300,10 Q 315,10 325,15 Q 330,20 335,25 Q 340,20 345,15 Q 355,10 365,10 L 600,10 Q 610,10 610,20 L 610,100 L 0,100 Z')"
+            : "none",
+          maskImage: showNotch
+            ? `radial-gradient(circle 40px at 50% -8px, transparent 39px, black 40px)`
+            : "none",
+          WebkitMaskImage: showNotch
+            ? `radial-gradient(circle 40px at 50% -8px, transparent 39px, black 40px)`
+            : "none",
         }}
       >
         {NAV_ITEMS.map(({ name, icon: Icon, path }) => (
@@ -46,7 +64,7 @@ export default function BottomNavbar() {
             key={name}
             to={path}
             className="flex flex-col items-center"
-            style={{ textDecoration: "none", flex: 1 }}
+            style={{ textDecoration: "none", flex: 1, position: "relative", zIndex: 1 }}
           >
             {({ isActive }) => (
               <div

@@ -10,6 +10,8 @@ import { AppProvider } from "./context/AppProvider"
 
 import { ThemeProvider } from "./context/ThemeProvider"
 
+import { HapticsProvider } from "./context/HapticsContext"
+
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
@@ -18,11 +20,15 @@ ReactDOM.createRoot(
 
     <ThemeProvider>
 
-      <AppProvider>
+      <HapticsProvider>
 
-        <App />
+        <AppProvider>
 
-      </AppProvider>
+          <App />
+
+        </AppProvider>
+
+      </HapticsProvider>
 
     </ThemeProvider>
 

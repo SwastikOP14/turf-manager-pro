@@ -126,7 +126,7 @@ export default function BookingCalendar({ bookings = [], selected, onSelect }) {
   // week rows
   const weekRows = useMemo(() => {
     if (view === "Weekly")    return [weekDates(anchor)]
-    if (view === "Bi-Weekly") return [weekDates(anchor), weekDates(addDays(anchor, 7))]
+    if (view === "2-Weeks") return [weekDates(anchor), weekDates(addDays(anchor, 7))]
     return monthGrid(monthAnchor.year, monthAnchor.month)
   }, [view, anchor, monthAnchor])
 
@@ -165,7 +165,7 @@ export default function BookingCalendar({ bookings = [], selected, onSelect }) {
         return { year: y, month: m }
       })
     } else {
-      setAnchor(a => addDays(a, dir * (view === "Bi-Weekly" ? 14 : 7)))
+      setAnchor(a => addDays(a, dir * (view === "2-Weeks" ? 14 : 7)))
     }
   }
 
@@ -189,7 +189,7 @@ export default function BookingCalendar({ bookings = [], selected, onSelect }) {
 
         {/* View toggle tabs */}
         <div className="flex rounded-2xl overflow-hidden bg-slate-100 dark:bg-white/5 p-1 gap-1">
-          {["Weekly", "Bi-Weekly", "Monthly"].map(t => (
+          {["Weekly", "2-Weeks", "Monthly"].map(t => (
             <button
               key={t}
               type="button"

@@ -1,4 +1,4 @@
-import { CalendarDays, Users, BarChart3, Settings } from "lucide-react"
+import { CalendarDays, Users, BarChart3, Settings, Plus } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 import { useTheme } from "../../context/useTheme"
 
@@ -9,62 +9,52 @@ const NAV_ITEMS = [
   { name: "Settings", icon: Settings,     path: "/settings" },
 ]
 
-export default function BottomNavbar() {
+export default function BottomNavbar({ onAddClick }) {
   const { darkMode } = useTheme()
   const location = useLocation()
-  
-  // Only show notch on Bookings and Players pages
-  const showNotch = location.pathname === "/" || location.pathname.startsWith("/players")
 
-  const bgColor = darkMode
-    ? "rgba(17,24,39,0.95)"
-    : "rgba(255,255,255,0.95)"
-  
+  const showAddButton =
+    location.pathname === "/" || location.pathname.startsWith("/players")
+
+  const bgColor = darkMode ? "#111827" : "#ffffff"
   const borderColor = darkMode
     ? "rgba(255,255,255,0.08)"
     : "rgba(15,23,42,0.08)"
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-0"
       style={{
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 50000,
       }}
     >
       <nav
         style={{
-          width: "100%",
-          height: "70px",
           position: "relative",
+          width: "100%",
+          height: "64px",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          background: bgColor,
+          borderTop: `1px solid ${borderColor}`,
+          boxShadow: darkMode
+            ? "0 -2px 16px rgba(0,0,0,0.4)"
+            : "0 -2px 16px rgba(15,23,42,0.06)",
           display: "flex",
           justifyContent: "space-around",
           alignItems: "center",
           paddingLeft: "12px",
           paddingRight: "12px",
-          paddingTop: showNotch ? "12px" : "8px",
-          paddingBottom: "8px",
-          background: bgColor,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderTop: `1px solid ${borderColor}`,
-          clipPath: showNotch 
-            ? "path('M 0,35 Q 0,20 10,10 L 140,10 Q 150,10 155,15 Q 160,20 160,25 Q 165,20 175,15 Q 185,10 200,10 Q 215,10 235,20 Q 250,28 250,35 Q 250,28 265,20 Q 285,10 300,10 Q 315,10 325,15 Q 330,20 335,25 Q 340,20 345,15 Q 355,10 365,10 L 600,10 Q 610,10 610,20 L 610,100 L 0,100 Z')"
-            : "none",
-          maskImage: showNotch
-            ? `radial-gradient(circle 40px at 50% -8px, transparent 39px, black 40px)`
-            : "none",
-          WebkitMaskImage: showNotch
-            ? `radial-gradient(circle 40px at 50% -8px, transparent 39px, black 40px)`
-            : "none",
+          boxSizing: "content-box",
         }}
       >
         {NAV_ITEMS.map(({ name, icon: Icon, path }) => (
           <NavLink
             key={name}
             to={path}
-            className="flex flex-col items-center"
-            style={{ textDecoration: "none", flex: 1, position: "relative", zIndex: 1 }}
+            style={{ textDecoration: "none", flex: 1 }}
           >
             {({ isActive }) => (
               <div
@@ -77,7 +67,6 @@ export default function BottomNavbar() {
                   borderRadius: "16px",
                   background: isActive ? "var(--brand-subtle)" : "transparent",
                   transition: "background 0.2s ease",
-                  minWidth: 0,
                 }}
               >
                 <Icon
@@ -115,6 +104,32 @@ export default function BottomNavbar() {
           </NavLink>
         ))}
       </nav>
+
+      {showAddButton && (
+        <button
+          onClick={onAddClick}
+          aria-label="Add"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "56px",
+            height: "56px",
+            borderRadius: "50%",
+            border: "none",
+            background: "linear-gradient(135deg, #00D4A0, #00B4D8)",
+            boxShadow: `0 0 0 4px ${bgColor}, 0 4px 20px rgba(0,212,160,0.45)`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 1,
+          }}
+        >
+          <Plus size={28} color="#fff" strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   )
 }

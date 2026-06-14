@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
-import { Trash2, X, CheckSquare } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { Trash2, X, Edit } from "lucide-react"
 
 import MobileLayout from "../../components/layout/MobileLayout"
 import BookingPeriodTabs from "../../components/booking/BookingPeriodTabs"
@@ -7,7 +8,9 @@ import BookingFilterMenu from "../../components/booking/BookingFilterMenu"
 import BookingCard from "../../components/booking/BookingCard"
 import BookingCalendar from "../../components/booking/BookingCalendar"
 import DateRangeModal from "../../components/booking/DateRangeModal"
+import EditBookingSheet from "../../components/booking/EditBookingSheet"
 import { useApp } from "../../context/useApp"
+import { useHaptics } from "../../context/HapticsContext"
 import { filterBookingsByPeriod } from "../../utils/dates"
 import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 
@@ -21,7 +24,9 @@ function fmtSelectedDate(key) {
 }
 
 export default function Bookings() {
-  const { bookings, getTurfById, getSportById, deleteBooking } = useApp()
+  const navigate = useNavigate()
+  const { bookings, getTurfById, getSportById, deleteBooking, updateBooking } = useApp()
+  const haptics = useHaptics()
 
   // ── List mode state ────────────────────────────────────────────────────
   const [period, setPeriod]               = useState("All")
@@ -38,6 +43,7 @@ export default function Bookings() {
   const [selectMode, setSelectMode]       = useState(false)
   const [selectedIds, setSelectedIds]     = useState(new Set())
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editMode, setEditMode]           = useState(false)
 
   useModalBackHandler(selectMode ? exitSelectMode : null)
 
@@ -76,11 +82,17 @@ export default function Bookings() {
     setSelectMode(false)
     setSelectedIds(new Set())
     setConfirmDelete(false)
+    setEditMode(false)
   }
 
-  const enterSelectMode = (id) => { setSelectMode(true); setSelectedIds(new Set([id])) }
+  const enterSelectMode = (id) => { 
+    haptics.trigger(8)
+    setSelectMode(true)
+    setSelectedIds(new Set([id]))
+  }
 
   const toggleSelect = (id) => {
+    haptics.trigger(8)
     setSelectedIds((prev) => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
@@ -92,8 +104,19 @@ export default function Bookings() {
   const allSelected = filteredBookings.length > 0 && filteredBookings.every((b) => selectedIds.has(b.id))
 
   const handleDeleteConfirmed = () => {
+    haptics.trigger([15, 50, 15])
     selectedIds.forEach((id) => deleteBooking(id))
     exitSelectMode()
+  }
+
+  const handleEditBooking = () => {
+    if (selectedIds.size !== 1) return
+    setEditMode(true)
+  }
+
+  const handleSaveEdit = (bookingId, updates) => {
+    updateBooking(bookingId, updates)
+    haptics.trigger([10, 30, 10])
   }
 
   // ── Render helpers ───────────────────────────────────────────────────────
@@ -120,7 +143,7 @@ export default function Bookings() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <MobileLayout>
+    <MobileLayout onFabClick={() => navigate("/booking/new")}>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
 
         {/* ── Header removed - replaced with haptics toggle in global Header component ── */}
@@ -224,10 +247,10 @@ export default function Bookings() {
       {selectMode && (
         <div
           className="fixed left-0 right-0 z-99998 flex items-center justify-center px-5"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
         >
           <div
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-2xl"
             style={{
               background:     "rgba(10,16,30,0.96)",
               backdropFilter: "blur(18px)",
@@ -240,14 +263,18 @@ export default function Bookings() {
               <X size={17} className="text-white" />
             </button>
             <span className="text-white font-bold text-[15px] flex-1 select-none">
-              {selectedIds.size} selected
+              {selectedIds.size} Selected
             </span>
-            <button type="button"
-              onClick={allSelected ? () => setSelectedIds(new Set()) : selectAll}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 text-white text-xs font-semibold shrink-0 active:scale-95">
-              <CheckSquare size={13} />
-              {allSelected ? "None" : "All"}
-            </button>
+            
+            {selectedIds.size === 1 && (
+              <button type="button"
+                onClick={handleEditBooking}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-white/30 text-white text-sm font-semibold shrink-0 active:scale-95">
+                <Edit size={14} />
+                Edit
+              </button>
+            )}
+            
             <button type="button"
               onClick={() => selectedIds.size > 0 && setConfirmDelete(true)}
               disabled={selectedIds.size === 0}
@@ -278,10 +305,10 @@ export default function Bookings() {
               </div>
               <div>
                 <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">
-                  Delete {selectedIds.size} booking{selectedIds.size !== 1 ? "s" : ""}?
+                  Delete Bookings?
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  This cannot be undone. Player balances will be recalculated.
+                <p className="text-sm text-red-500 dark:text-red-400 mt-0.5 font-medium">
+                  You are about to permanently delete {selectedIds.size} booking record{selectedIds.size !== 1 ? "s" : ""}.
                 </p>
               </div>
             </div>
@@ -298,6 +325,18 @@ export default function Bookings() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Edit Booking Sheet ────────────────────────────────────────────── */}
+      {editMode && selectedIds.size === 1 && (
+        <EditBookingSheet
+          booking={bookings.find(b => b.id === Array.from(selectedIds)[0])}
+          onSave={(updates) => {
+            handleSaveEdit(Array.from(selectedIds)[0], updates)
+            exitSelectMode()
+          }}
+          onClose={() => setEditMode(false)}
+        />
       )}
     </MobileLayout>
   )

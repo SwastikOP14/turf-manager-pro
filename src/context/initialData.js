@@ -136,11 +136,25 @@ export function getInitialData() {
     }
   ]
 
+  const squads = [
+    {
+      id: "sq1",
+      name: "Weekend Warriors",
+      memberPlayerIds: ["p1", "p2", "p3"]
+    },
+    {
+      id: "sq2",
+      name: "Morning Crew",
+      memberPlayerIds: ["p4", "p5", "p6"]
+    }
+  ]
+
   return {
     players,
     turfs,
     sports,
     bookings,
+    squads,
     settings: {
       language: "English",
       notifications: {

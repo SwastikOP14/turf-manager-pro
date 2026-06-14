@@ -19,11 +19,13 @@ export function AppProvider({ children }) {
   const turfs = data.turfs
   const sports = data.sports
   const bookings = data.bookings
+  const squads = data.squads || []
   const settings = data.settings
 
   const getPlayerById = (id) => players.find((p) => p.id === id)
   const getTurfById = (id) => turfs.find((t) => t.id === id)
   const getSportById = (id) => sports.find((s) => s.id === id)
+  const getSquadById = (id) => squads.find((sq) => sq.id === id)
 
   const addPlayer = (player) => {
     const name = player.name?.trim()
@@ -165,6 +167,49 @@ export function AppProvider({ children }) {
       sports: prev.sports.filter((sport) => sport.id !== id)
     }))
   }
+
+  // ── Squad operations ────────────────────────────────────────────────────
+
+  const addSquad = (squad) => {
+    const name = squad.name?.trim()
+    
+    if (!name) {
+      return { ok: false, error: "Squad name is required" }
+    }
+
+    const entry = {
+      id: createId("sq"),
+      name,
+      memberPlayerIds: squad.memberPlayerIds || []
+    }
+
+    setData((prev) => ({
+      ...prev,
+      squads: [...(prev.squads || []), entry]
+    }))
+
+    return { ok: true, squad: entry }
+  }
+
+  const updateSquad = (id, updates) => {
+    setData((prev) => ({
+      ...prev,
+      squads: (prev.squads || []).map((squad) =>
+        squad.id === id ? { ...squad, ...updates } : squad
+      )
+    }))
+    return { ok: true }
+  }
+
+  const deleteSquad = (id) => {
+    setData((prev) => ({
+      ...prev,
+      squads: (prev.squads || []).filter((squad) => squad.id !== id)
+    }))
+    return { ok: true }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
 
   const addBooking = (booking) => {
     let created = null
@@ -308,10 +353,12 @@ export function AppProvider({ children }) {
       turfs,
       sports,
       bookings,
+      squads,
       settings,
       getPlayerById,
       getTurfById,
       getSportById,
+      getSquadById,
       addPlayer,
       updatePlayer,
       deletePlayer,
@@ -321,6 +368,9 @@ export function AppProvider({ children }) {
       addSport,
       updateSport,
       deleteSport,
+      addSquad,
+      updateSquad,
+      deleteSquad,
       addBooking,
       updateBooking,
       deleteBooking,

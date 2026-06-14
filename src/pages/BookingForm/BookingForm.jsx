@@ -58,7 +58,7 @@ export default function BookingForm() {
   const isEdit = Boolean(id)
 
   const {
-    bookings, players, turfs, sports,
+    bookings, players, turfs, sports, squads,
     addBooking, updateBooking, deleteBooking, addTurf, getPlayerById
   } = useApp()
 
@@ -78,7 +78,9 @@ export default function BookingForm() {
   // Team booking states
   const [bookingType, setBookingType] = useState(existing?.bookingType || (existing?.teams?.length ? "Team" : "Individual"))
   const [teams, setTeams] = useState(existing?.teams || [])
-  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
+ const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
+  const [squadId, setSquadId] = useState(existing?.squadId || "")
+  const [squadPickerOpen, setSquadPickerOpen] = useState(false)
   
   const [turfModalOpen, setTurfModalOpen] = useState(false)
   const [paidByModalOpen, setPaidByModalOpen] = useState(false)
@@ -236,7 +238,7 @@ export default function BookingForm() {
       bookingType,
       ...(bookingType === "Individual" 
         ? { playerIds }
-        : { teams, splitMode }
+        : { teams, splitMode, squadId: squadId || null }
       )
     }
 
@@ -377,15 +379,29 @@ export default function BookingForm() {
         {/* ── Booking Type ─────────────────────────────────── */}
         <GlassCard className="space-y-3">
           <SectionTitle title="Booking Type" />
-          <SegmentedControl 
-            options={["Individual", "Team"]} 
-            value={bookingType} 
-            onChange={handleBookingTypeChange} 
-          />
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: "Individual", label: "Individual" },
+              { value: "Team", label: "Squad" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleBookingTypeChange(opt.value)}
+                className={`py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                  bookingType === opt.value
+                    ? "bg-green-500 text-black"
+                    : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <p className="text-xs text-slate-500 dark:text-gray-400">
             {bookingType === "Individual" 
               ? "Select individual players who participated"
-              : "Organize players into teams"
+              : "Pick a squad or organize players into teams"
             }
           </p>
         </GlassCard>
@@ -487,7 +503,18 @@ export default function BookingForm() {
         {bookingType === "Team" && (
           <>
             <GlassCard className="space-y-4">
-              <SectionTitle title={`Teams (${teams.length})`} />
+              <div className="flex items-center justify-between">
+                <SectionTitle title={`Squads (${teams.length})`} />
+                {squads.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSquadPickerOpen(true)}
+                    className="text-sm font-semibold text-green-600 dark:text-green-400 cursor-pointer"
+                  >
+                    + Add Squad
+                  </button>
+                )}
+              </div>
               <TeamManager
                 teams={teams}
                 allPlayers={localPlayers}
@@ -672,6 +699,45 @@ export default function BookingForm() {
               : "Done"
             }
           </button>
+        </ModalBlurWrapper>
+      )}
+
+      {/* ── Squad Picker Modal ─────────────────────────────– */}
+      {squadPickerOpen && (
+        <ModalBlurWrapper onClose={() => setSquadPickerOpen(false)}>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+            Select a Squad
+          </h2>
+          <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-hide">
+            {squads.map((squad) => (
+              <button
+                key={squad.id}
+                type="button"
+                onClick={() => {
+                  const newTeam = {
+                    id: `team_${Date.now()}`,
+                    name: squad.name,
+                    playerIds: squad.memberPlayerIds,
+                    squadId: squad.id,
+                  }
+                  setTeams((prev) => [...prev, newTeam])
+                  setSquadId(squad.id)
+                  setSquadPickerOpen(false)
+                }}
+                className="w-full flex items-center justify-between rounded-2xl p-3 border border-black/5 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:border-green-500/30 transition-all cursor-pointer text-left"
+              >
+                <div>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white">{squad.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                    {squad.memberPlayerIds.length} {squad.memberPlayerIds.length === 1 ? "member" : "members"}
+                  </p>
+                </div>
+              </button>
+            ))}
+            {squads.length === 0 && (
+              <p className="text-sm text-center text-slate-400 py-4">No squads created yet</p>
+            )}
+          </div>
         </ModalBlurWrapper>
       )}
 

@@ -1,24 +1,42 @@
-import { useState, useMemo } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Edit, Trash2, Users, TrendingUp, TrendingDown } from "lucide-react"
-import MobileLayout from "../../components/layout/MobileLayout"
-import GlassCard from "../../components/common/GlassCard"
-import BookingCard from "../../components/booking/BookingCard"
-import { useApp } from "../../context/useApp"
-import { useHaptics } from "../../context/HapticsContext"
-import { formatCurrency } from "../../utils/format"
-import { formatPhoneDisplay } from "../../utils/phone"
+import { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Users,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
+import MobileLayout from "../../components/layout/MobileLayout";
+import GlassCard from "../../components/common/GlassCard";
+import BookingCard from "../../components/booking/BookingCard";
+import { useApp } from "../../context/useApp";
+import { useHaptics } from "../../context/HapticsContext";
+import { formatCurrency } from "../../utils/format";
+import { formatPhoneDisplay } from "../../utils/phone";
 
 export default function SquadDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { squads, getSquadById, deleteSquad, getPlayerById, bookings, getTurfById, getSportById } = useApp()
-  const haptics = useHaptics()
-  
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showBookingHistory, setShowBookingHistory] = useState(false)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const {
+    squads,
+    getSquadById,
+    deleteSquad,
+    getPlayerById,
+    bookings,
+    getTurfById,
+    getSportById,
+  } = useApp();
+  const haptics = useHaptics();
 
-  const squad = getSquadById(id)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBookingHistory, setShowBookingHistory] = useState(false);
+  const [squadSearch, setSquadSearch] = useState("");
+  const [squadSortOpen, setSquadSortOpen] = useState(false);
+  const [squadSortType, setSquadSortType] = useState("Sort A-Z");
+  const squadSortRef = useRef(null);
+  const squad = getSquadById(id);
 
   if (!squad) {
     return (
@@ -27,33 +45,35 @@ export default function SquadDetail() {
           <p className="text-slate-500">Squad not found</p>
         </div>
       </MobileLayout>
-    )
+    );
   }
 
   // Calculate squad balance
   const squadBalance = squad.memberPlayerIds.reduce((total, playerId) => {
-    const player = getPlayerById(playerId)
-    return total + (player?.balance || 0)
-  }, 0)
+    const player = getPlayerById(playerId);
+    return total + (player?.balance || 0);
+  }, 0);
 
   // Get squad bookings
   const squadBookings = useMemo(() => {
     return bookings
-      .filter(booking => booking.squadId === squad.id)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-  }, [bookings, squad.id])
+      .filter((booking) => booking.squadId === squad.id)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [bookings, squad.id]);
 
   const handleDelete = () => {
-    haptics.trigger([15, 50, 15])
-    deleteSquad(squad.id)
-    navigate("/players")
-  }
+    haptics.trigger([15, 50, 15]);
+    deleteSquad(squad.id);
+    navigate("/players");
+  };
 
   const handleEdit = () => {
-    navigate(`/squad/${squad.id}/edit`)
-  }
+    navigate(`/squad/${squad.id}/edit`);
+  };
 
-  const displayedBookings = showBookingHistory ? squadBookings : squadBookings.slice(0, 3)
+  const displayedBookings = showBookingHistory
+    ? squadBookings
+    : squadBookings.slice(0, 3);
 
   return (
     <MobileLayout>
@@ -66,7 +86,7 @@ export default function SquadDetail() {
           >
             <ArrowLeft size={18} className="text-slate-700 dark:text-white" />
           </button>
-          
+
           <div className="flex gap-2">
             <button
               onClick={handleEdit}
@@ -86,63 +106,83 @@ export default function SquadDetail() {
         {/* Squad Info Card */}
         <GlassCard style={{ padding: "20px" }}>
           <div className="flex items-center gap-3 mb-4">
-            <div style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, var(--brand), #00B4D8)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, var(--brand), #00B4D8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Users size={28} style={{ color: "#000" }} strokeWidth={2.5} />
             </div>
             <div>
-              <h1 style={{
-                fontSize: "24px",
-                fontWeight: 800,
-                color: "var(--text-primary)",
-                margin: 0,
-                letterSpacing: "-0.02em"
-              }}>
+              <h1
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 800,
+                  color: "var(--text-primary)",
+                  margin: 0,
+                  letterSpacing: "-0.02em",
+                }}
+              >
                 {squad.name}
               </h1>
-              <p style={{
-                fontSize: "14px",
-                color: "var(--text-muted)",
-                margin: "4px 0 0",
-                fontWeight: 500
-              }}>
-                {squad.memberPlayerIds.length} {squad.memberPlayerIds.length === 1 ? "member" : "members"}
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "var(--text-muted)",
+                  margin: "4px 0 0",
+                  fontWeight: 500,
+                }}
+              >
+                {squad.memberPlayerIds.length}{" "}
+                {squad.memberPlayerIds.length === 1 ? "member" : "members"}
               </p>
             </div>
           </div>
 
           {/* Squad Balance */}
-          <div className="rounded-2xl p-4" style={{
-            background: squadBalance >= 0 ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-            border: squadBalance >= 0 ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(239,68,68,0.2)"
-          }}>
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background:
+                squadBalance >= 0
+                  ? "rgba(16,185,129,0.08)"
+                  : "rgba(239,68,68,0.08)",
+              border:
+                squadBalance >= 0
+                  ? "1px solid rgba(16,185,129,0.2)"
+                  : "1px solid rgba(239,68,68,0.2)",
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p style={{
-                  fontSize: "12px",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  margin: 0
-                }}>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-muted)",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    margin: 0,
+                  }}
+                >
                   Total Squad Balance
                 </p>
-                <p style={{
-                  fontSize: "28px",
-                  fontWeight: 800,
-                  color: squadBalance >= 0 ? "#10b981" : "#ef4444",
-                  margin: "4px 0 0",
-                  fontFeatureSettings: '"tnum" 1',
-                  letterSpacing: "-0.03em"
-                }}>
+                <p
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: 800,
+                    color: squadBalance >= 0 ? "#10b981" : "#ef4444",
+                    margin: "4px 0 0",
+                    fontFeatureSettings: '"tnum" 1',
+                    letterSpacing: "-0.03em",
+                  }}
+                >
                   {formatCurrency(Math.abs(squadBalance))}
                 </p>
               </div>
@@ -161,10 +201,10 @@ export default function SquadDetail() {
             Players ({squad.memberPlayerIds.length})
           </h2>
           <div className="space-y-2">
-            {squad.memberPlayerIds.map(playerId => {
-              const player = getPlayerById(playerId)
-              if (!player) return null
-              
+            {squad.memberPlayerIds.map((playerId) => {
+              const player = getPlayerById(playerId);
+              if (!player) return null;
+
               return (
                 <GlassCard
                   key={player.id}
@@ -185,13 +225,15 @@ export default function SquadDetail() {
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">
                         Balance
                       </p>
-                      <p className={`text-lg font-bold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                      <p
+                        className={`text-lg font-bold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
+                      >
                         {formatCurrency(player.balance)}
                       </p>
                     </div>
                   </div>
                 </GlassCard>
-              )
+              );
             })}
           </div>
         </div>
@@ -211,12 +253,12 @@ export default function SquadDetail() {
               </button>
             )}
           </div>
-          
+
           {squadBookings.length > 0 ? (
             <div className="space-y-3">
-              {displayedBookings.map(booking => {
-                const turf = getTurfById(booking.turfId)
-                const sport = getSportById(booking.sportId)
+              {displayedBookings.map((booking) => {
+                const turf = getTurfById(booking.turfId);
+                const sport = getSportById(booking.sportId);
                 return (
                   <BookingCard
                     key={booking.id}
@@ -228,7 +270,7 @@ export default function SquadDetail() {
                     selectMode={false}
                     selected={false}
                   />
-                )
+                );
               })}
               {showBookingHistory && squadBookings.length > 3 && (
                 <button
@@ -282,7 +324,8 @@ export default function SquadDetail() {
                   Delete Squad?
                 </h2>
                 <p className="text-sm text-red-500 dark:text-red-400 mt-0.5 font-medium">
-                  This will permanently delete "{squad.name}". Members won't be affected.
+                  This will permanently delete "{squad.name}". Members won't be
+                  affected.
                 </p>
               </div>
             </div>
@@ -307,5 +350,5 @@ export default function SquadDetail() {
         </div>
       )}
     </MobileLayout>
-  )
+  );
 }

@@ -13,8 +13,8 @@ import { useHaptics } from "../../context/HapticsContext"
 const SORT_OPTIONS = [
   "Sort A-Z",
   "Sort Z-A",
-  "Negative Balance",
-  "Positive Balance"
+  "Lowest Balance",
+  "Highest Balance"
 ]
 
 function filterAndSort(players, query, sortType) {
@@ -22,11 +22,11 @@ function filterAndSort(players, query, sortType) {
 
   let list = q
     ? players.filter((p) => {
-        const name = p.name.toLowerCase()
-        const phone = p.phone.replace(/\D/g, "")
-        const qDigits = q.replace(/\D/g, "")
-        return name.includes(q) || (qDigits && phone.includes(qDigits))
-      })
+      const name = p.name.toLowerCase()
+      const phone = p.phone.replace(/\D/g, "")
+      const qDigits = q.replace(/\D/g, "")
+      return name.includes(q) || (qDigits && phone.includes(qDigits))
+    })
     : [...players]
 
   if (q) {
@@ -43,17 +43,39 @@ function filterAndSort(players, query, sortType) {
       return list.sort((a, b) => a.name.localeCompare(b.name))
     case "Sort Z-A":
       return list.sort((a, b) => b.name.localeCompare(a.name))
-    case "Positive Balance":
+    case "Highest Balance":
       return list.sort((a, b) => b.balance - a.balance)
-    case "Negative Balance":
+    case "Lowest Balance":
       return list.sort((a, b) => a.balance - b.balance)
     default:
       return list
   }
 }
+function filterAndSortSquads(squads, query, sortType, getPlayerById) {
+  const q = query.trim().toLowerCase()
+  let list = q
+    ? squads.filter((s) => s.name.toLowerCase().includes(q))
+    : [...squads]
+
+  switch (sortType) {
+    case "Sort A-Z": return list.sort((a, b) => a.name.localeCompare(b.name))
+    case "Sort Z-A": return list.sort((a, b) => b.name.localeCompare(a.name))
+    case "Highest Balance": return list.sort((a, b) => {
+      const balA = a.memberPlayerIds.reduce((s, id) => s + (getPlayerById(id)?.balance || 0), 0)
+      const balB = b.memberPlayerIds.reduce((s, id) => s + (getPlayerById(id)?.balance || 0), 0)
+      return balB - balA
+    })
+    case "Lowest Balance": return list.sort((a, b) => {
+      const balA = a.memberPlayerIds.reduce((s, id) => s + (getPlayerById(id)?.balance || 0), 0)
+      const balB = b.memberPlayerIds.reduce((s, id) => s + (getPlayerById(id)?.balance || 0), 0)
+      return balA - balB
+    })
+    default: return list
+  }
+}
 
 export default function Players() {
-  const { players, squads } = useApp()
+  const { players, squads, getPlayerById } = useApp()
   const navigate = useNavigate()
   const haptics = useHaptics()
 
@@ -63,6 +85,10 @@ export default function Players() {
   const [sortType, setSortType] = useState("Sort A-Z")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showAddSquadModal, setShowAddSquadModal] = useState(false)
+  const [squadSearch, setSquadSearch] = useState("")
+  const [squadSortOpen, setSquadSortOpen] = useState(false)
+  const [squadSortType, setSquadSortType] = useState("Sort A-Z")
+  const squadSortRef = useRef(null)
   const sortRef = useRef(null)
 
   useEffect(() => {
@@ -76,7 +102,19 @@ export default function Players() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [sortOpen])
 
+  useEffect(() => {
+    if (!squadSortOpen) return
+    const handleClick = (e) => {
+      if (squadSortRef.current && !squadSortRef.current.contains(e.target)) {
+        setSquadSortOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [squadSortOpen])
+
   const filteredPlayers = filterAndSort(players, search, sortType)
+  const filteredSquads = filterAndSortSquads(squads, squadSearch, squadSortType, getPlayerById)
 
   const handleFabClick = () => {
     if (view === "players") setShowAddModal(true)
@@ -262,52 +300,98 @@ export default function Players() {
             </div>
           </>
         ) : (
-          /* Squads list */
-          <div className="space-y-3.5">
-            {squads.length > 0 ? (
-              squads.map((squad) => (
-                <SquadCard
-                  key={squad.id}
-                  squad={squad}
-                  onClick={() => {
-                    haptics.trigger(8)
-                    navigate(`/squad/${squad.id}`)
+          <>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div style={{
+                flex: 1, display: "flex", alignItems: "center", gap: "8px",
+                background: "var(--bg-card)", border: "1.5px solid var(--bg-border)",
+                borderRadius: "12px", padding: "0 14px", height: "46px",
+              }}>
+                <Search size={16} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+                <input
+                  type="text"
+                  value={squadSearch}
+                  onChange={(e) => setSquadSearch(e.target.value)}
+                  placeholder="Search squads..."
+                  autoComplete="off"
+                  style={{
+                    flex: 1, background: "transparent", outline: "none",
+                    fontSize: "14px", color: "var(--text-primary)", border: "none",
                   }}
                 />
-              ))
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "48px 24px", gap: "14px" }}>
-                <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                  <rect x="14" y="14" width="20" height="20" rx="6" fill="var(--brand-subtle)" />
-                  <rect x="38" y="14" width="20" height="20" rx="6" fill="var(--brand)" opacity="0.3" />
-                  <rect x="14" y="38" width="20" height="20" rx="6" fill="var(--brand)" opacity="0.3" />
-                  <rect x="38" y="38" width="20" height="20" rx="6" fill="var(--brand-subtle)" />
-                </svg>
-                <div>
-                  <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>No squads yet</p>
+                {squadSearch && (
+                  <button type="button" onClick={() => setSquadSearch("")}
+                    style={{ color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>
+                    ×
+                  </button>
+                )}
+              </div>
+
+              <div className="relative" ref={squadSortRef}>
+                <button
+                  onClick={() => setSquadSortOpen(!squadSortOpen)}
+                  style={{
+                    height: "46px", padding: "0 14px", borderRadius: "12px",
+                    background: "var(--bg-card)", border: "1.5px solid var(--bg-border)",
+                    display: "flex", alignItems: "center", gap: "6px",
+                    color: "var(--text-primary)", fontSize: "13px", fontWeight: 600,
+                    fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  Sort
+                  <ChevronDown size={14} style={{ transition: "transform 0.2s", transform: squadSortOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
+                </button>
+
+                {squadSortOpen && (
+                  <div style={{
+                    position: "absolute", right: 0, top: "calc(100% + 8px)", width: "180px", zIndex: 50,
+                    borderRadius: "14px", overflow: "hidden",
+                    background: "var(--bg-card)", border: "1px solid var(--bg-border)",
+                    boxShadow: "var(--shadow-elevated)",
+                  }}>
+                    {SORT_OPTIONS.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => { setSquadSortType(option); setSquadSortOpen(false) }}
+                        style={{
+                          width: "100%", padding: "12px 16px", textAlign: "left",
+                          fontSize: "13px", fontWeight: 500, fontFamily: "inherit",
+                          background: squadSortType === option ? "var(--brand)" : "transparent",
+                          color: squadSortType === option ? "#000" : "var(--text-primary)",
+                          border: "none", cursor: "pointer",
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3.5">
+              {filteredSquads.length > 0 ? (
+                filteredSquads.map((squad) => (
+                  <SquadCard
+                    key={squad.id}
+                    squad={squad}
+                    onClick={() => { haptics.trigger(8); navigate(`/squad/${squad.id}`) }}
+                  />
+                ))
+              ) : (
+                <div style={{ textAlign: "center", padding: "48px 24px" }}>
+                  <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                    {squadSearch ? `No match for "${squadSearch}"` : "No squads yet"}
+                  </p>
                   <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "6px 0 0" }}>
-                    Tap + to create your first squad
+                    {squadSearch ? "Try a different name" : "Tap + to create your first squad"}
                   </p>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         )}
-      </div>
-
-      {showAddModal && (
-        <AddPlayerModal
-          onClose={() => setShowAddModal(false)}
-          onPlayerAdded={() => setShowAddModal(false)}
-        />
-      )}
-
-      {showAddSquadModal && (
-        <AddSquadModal
-          onClose={() => setShowAddSquadModal(false)}
-          onSquadAdded={() => setShowAddSquadModal(false)}
-        />
-      )}
+        </div>
     </MobileLayout>
   )
 }

@@ -537,7 +537,7 @@ export default function BookingForm() {
                             </span>
                           </div>
 
-                          <h3 className="font-semibold text-sm text-slate-900 dark:text-white leading-tight truncate max-w-[100px]">
+                          <h3 className="font-semibold text-sm text-slate-900 dark:text-white leading-tight truncate max-w-100px">
                             {team.name}
                           </h3>
                         </div>

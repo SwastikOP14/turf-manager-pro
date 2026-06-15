@@ -14,13 +14,16 @@ export default function SquadCard({ squad, onClick }) {
   
   const memberCount = squad.memberPlayerIds.length
   
-  return (
-    <GlassCard
-      className="cursor-pointer transition-all duration-150 hover:shadow-lg active:scale-[0.98]"
-      style={{ padding: "16px" }}
+ return (
+    <div
       onClick={onClick}
+      className="cursor-pointer transition-all duration-150 active:scale-[0.98]"
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+      <GlassCard
+        className="hover:shadow-lg"
+        style={{ padding: "16px" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
         {/* Icon + Squad Name */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
           <div style={{
@@ -82,6 +85,7 @@ export default function SquadCard({ squad, onClick }) {
           </p>
         </div>
       </div>
-    </GlassCard>
+      </GlassCard>
+    </div>
   )
 }

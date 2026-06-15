@@ -85,16 +85,7 @@ export default function Players() {
 
   return (
     <MobileLayout onFabClick={handleFabClick}>
-      <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: 0 }}>Players</h1>
-          <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
-            {view === "players"
-              ? `${players.length} total · Manage balances & dues`
-              : `${squads.length} squad${squads.length === 1 ? "" : "s"} · Manage your teams`}
-          </p>
-        </div>
-
+      <div className="pt-4 px-5 pb-5 space-y-4 animate-fade-in-up">
         {/* Squads / Players toggle */}
         <div style={{
           display: "flex",
@@ -153,6 +144,12 @@ export default function Players() {
             Players
           </button>
         </div>
+
+        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+          {view === "players"
+            ? `${players.length} total · Manage balances & dues`
+            : `${squads.length} squad${squads.length === 1 ? "" : "s"} · Manage your teams`}
+        </p>
 
         {view === "players" ? (
           <>

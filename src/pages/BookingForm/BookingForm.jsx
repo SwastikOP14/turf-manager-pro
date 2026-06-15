@@ -74,14 +74,14 @@ export default function BookingForm() {
   const [paidAmount, setPaidAmount] = useState(existing ? String(existing.paidAmount || 0) : "")
   const [paidByPlayerId, setPaidByPlayerId] = useState(existing?.paidByPlayerId || "")
   const [playerIds, setPlayerIds] = useState(existing?.playerIds || [])
-  
+
   // Team booking states
   const [bookingType, setBookingType] = useState(existing?.bookingType || (existing?.teams?.length ? "Team" : "Individual"))
   const [teams, setTeams] = useState(existing?.teams || [])
- const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
+  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
   const [squadId, setSquadId] = useState(existing?.squadId || "")
   const [squadPickerOpen, setSquadPickerOpen] = useState(false)
-  
+
   const [turfModalOpen, setTurfModalOpen] = useState(false)
   const [paidByModalOpen, setPaidByModalOpen] = useState(false)
   const [playersModalOpen, setPlayersModalOpen] = useState(false)
@@ -103,7 +103,7 @@ export default function BookingForm() {
   // Calculate split costs based on mode
   const splitCosts = useMemo(() => {
     if (bookingType === "Individual") return {}
-    
+
     if (splitMode === "Team") {
       return calculateTeamWiseSplit(Number(amount || 0), teams)
     } else {
@@ -166,46 +166,46 @@ export default function BookingForm() {
 
   const handleSave = () => {
     // Validate sport
-    if (!sportId || sportId === "") { 
+    if (!sportId || sportId === "") {
       setError("Please select sport/game")
-      return 
+      return
     }
     // Validate turf
-    if (!turfId || turfId === "") { 
-      setError("Please select turf/ground") 
-      return 
+    if (!turfId || turfId === "") {
+      setError("Please select turf/ground")
+      return
     }
     // Validate date
-    if (!date) { 
-      setError("Please select a booking date") 
-      return 
+    if (!date) {
+      setError("Please select a booking date")
+      return
     }
     // Validate amount
-    if (!amount || amount === "0" || amount === "") { 
-      setError("Please enter total amount") 
-      return 
+    if (!amount || amount === "0" || amount === "") {
+      setError("Please enter total amount")
+      return
     }
     // Validate time
-    if (!startHour || !startMinute || !endHour || !endMinute) { 
-      setError("Please select start and end time") 
-      return 
+    if (!startHour || !startMinute || !endHour || !endMinute) {
+      setError("Please select start and end time")
+      return
     }
     // Validate paid by
-    if (!paidByPlayerId || paidByPlayerId === "") { 
-      setError("Please select who paid the turf owner") 
-      return 
+    if (!paidByPlayerId || paidByPlayerId === "") {
+      setError("Please select who paid the turf owner")
+      return
     }
-    
+
     // Validate players/teams
     if (bookingType === "Individual") {
-      if (!playerIds || playerIds.length === 0) { 
-        setError("Please add at least one player") 
-        return 
+      if (!playerIds || playerIds.length === 0) {
+        setError("Please add at least one player")
+        return
       }
     } else {
-      if (!teams || teams.length === 0) { 
-        setError("Please add at least one team") 
-        return 
+      if (!teams || teams.length === 0) {
+        setError("Please add at least one team")
+        return
       }
       if (teams.some((t) => !t.playerIds || t.playerIds.length === 0)) {
         setError("All teams must have at least one player")
@@ -223,7 +223,7 @@ export default function BookingForm() {
     }
 
     const payload = {
-      sportId, 
+      sportId,
       turfId,
       date: toDateKey(date),
       startTime: timeTo24(startHour, startMinute, startPeriod),
@@ -232,11 +232,11 @@ export default function BookingForm() {
       status,
       paidAmount:
         status === "Partial" ? Number(paidAmount)
-        : status === "Paid" ? Number(amount)
-        : 0,
+          : status === "Paid" ? Number(amount)
+            : 0,
       paidByPlayerId,
       bookingType,
-      ...(bookingType === "Individual" 
+      ...(bookingType === "Individual"
         ? { playerIds }
         : { teams, splitMode, squadId: squadId || null }
       )
@@ -365,7 +365,7 @@ export default function BookingForm() {
               <span className="text-slate-400 dark:text-slate-500">Select player</span>
             )}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
             </svg>
           </button>
 
@@ -388,18 +388,17 @@ export default function BookingForm() {
                 key={opt.value}
                 type="button"
                 onClick={() => handleBookingTypeChange(opt.value)}
-                className={`py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
-                  bookingType === opt.value
-                    ? "bg-green-500 text-black"
-                    : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
-                }`}
+                className={`py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${bookingType === opt.value
+                  ? "bg-green-500 text-black"
+                  : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
+                  }`}
               >
                 {opt.label}
               </button>
             ))}
           </div>
           <p className="text-xs text-slate-500 dark:text-gray-400">
-            {bookingType === "Individual" 
+            {bookingType === "Individual"
               ? "Select individual players who participated"
               : "Pick a squad or organize players into teams"
             }
@@ -515,16 +514,49 @@ export default function BookingForm() {
                   </button>
                 )}
               </div>
-              <TeamManager
-                teams={teams}
-                allPlayers={localPlayers}
-                onTeamsChange={(updatedTeams) => {
-                  setTeams(updatedTeams)
-                  if (splitMode === "Team" && updatedTeams.length < 2) {
-                    setSplitMode("Player")
-                  }
-                }}
-              />
+              <div className="space-y-3">
+                {teams.map((team) => {
+                  const squad = squads.find((s) => s.id === team.squadId)
+
+                  const squadBalance =
+                    squad?.memberPlayerIds.reduce((sum, playerId) => {
+                      const player = getPlayerById(playerId)
+                      return sum + (player?.balance || 0)
+                    }, 0) || 0
+
+                  return (
+                    <div
+                      key={team.id}
+                      className="rounded-2xl border border-green-500/20 bg-green-500/5 p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                            <span className="font-bold text-sm text-green-600">
+                              {team.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                            </span>
+                          </div>
+
+                          <h3 className="font-semibold text-sm text-slate-900 dark:text-white leading-tight truncate max-w-[100px]">
+                            {team.name}
+                          </h3>
+                        </div>
+
+                        <div className="text-right">
+                          <p
+                            className={`text-base font-bold ${squadBalance >= 0
+                              ? "text-green-600"
+                              : "text-red-500"
+                              }`}
+                          >
+                            {formatCurrency(squadBalance)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </GlassCard>
 
             {teams.length > 0 && amount && Number(amount) > 0 && (
@@ -565,7 +597,7 @@ export default function BookingForm() {
         <ModalBlurWrapper onClose={() => setPaidByModalOpen(false)}>
           <div className="flex items-center gap-2 mb-4">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
             </svg>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Paid By</h2>
           </div>
@@ -625,8 +657,8 @@ export default function BookingForm() {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Select Players</h2>
             </div>
@@ -714,6 +746,11 @@ export default function BookingForm() {
                 key={squad.id}
                 type="button"
                 onClick={() => {
+                  const alreadyAdded = teams.some(
+                    (t) => t.squadId === squad.id
+                  )
+
+                  if (alreadyAdded) return
                   const newTeam = {
                     id: `team_${Date.now()}`,
                     name: squad.name,

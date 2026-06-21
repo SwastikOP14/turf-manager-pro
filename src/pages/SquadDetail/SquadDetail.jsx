@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -7,35 +7,43 @@ import {
   Users,
   TrendingUp,
   TrendingDown,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from "lucide-react";
 import MobileLayout from "../../components/layout/MobileLayout";
 import GlassCard from "../../components/common/GlassCard";
-import BookingCard from "../../components/booking/BookingCard";
+import PlayerCard from "../../components/player/PlayerCard";
 import { useApp } from "../../context/useApp";
 import { useHaptics } from "../../context/HapticsContext";
 import { formatCurrency } from "../../utils/format";
-import { formatPhoneDisplay } from "../../utils/phone";
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function SquadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const {
-    squads,
     getSquadById,
     deleteSquad,
     getPlayerById,
-    bookings,
     getTurfById,
     getSportById,
+    bookings,
   } = useApp();
   const haptics = useHaptics();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showBookingHistory, setShowBookingHistory] = useState(false);
-  const [squadSearch, setSquadSearch] = useState("");
-  const [squadSortOpen, setSquadSortOpen] = useState(false);
-  const [squadSortType, setSquadSortType] = useState("Sort A-Z");
-  const squadSortRef = useRef(null);
+  const [showAllBookings, setShowAllBookings] = useState(false);
+  const [showAllPayments, setShowAllPayments] = useState(false);
+
   const squad = getSquadById(id);
 
   if (!squad) {
@@ -48,18 +56,46 @@ export default function SquadDetail() {
     );
   }
 
-  // Calculate squad balance
-  const squadBalance = squad.memberPlayerIds.reduce((total, playerId) => {
-    const player = getPlayerById(playerId);
+  const memberIds = squad.memberPlayerIds || [];
+
+  // Live squad balance = sum of member balances
+  const squadBalance = memberIds.reduce((total, pid) => {
+    const player = getPlayerById(pid);
     return total + (player?.balance || 0);
   }, 0);
 
-  // Get squad bookings
+  // Booking History — bookings where ANY member of this squad was in a team
   const squadBookings = useMemo(() => {
     return bookings
-      .filter((booking) => booking.squadId === squad.id)
+      .filter((booking) => {
+        if (!booking.teams?.length) return false;
+        return booking.teams.some((team) =>
+          team.playerIds?.some((pid) => memberIds.includes(pid))
+        );
+      })
       .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [bookings, squad.id]);
+  }, [bookings, memberIds]);
+
+  // Payment History — credit history items from all squad members
+  const paymentHistory = useMemo(() => {
+    const entries = [];
+    memberIds.forEach((pid) => {
+      const player = getPlayerById(pid);
+      if (!player?.history) return;
+      player.history
+        .filter((h) => h.type === "credit")
+        .forEach((h) => {
+          entries.push({
+            ...h,
+            playerName: player.name,
+            playerId: pid,
+          });
+        });
+    });
+    return entries.sort(
+      (a, b) => new Date(b.date || 0) - new Date(a.date || 0)
+    );
+  }, [memberIds, getPlayerById]);
 
   const handleDelete = () => {
     haptics.trigger([15, 50, 15]);
@@ -67,17 +103,18 @@ export default function SquadDetail() {
     navigate("/players");
   };
 
-  const handleEdit = () => {
-    navigate(`/squad/${squad.id}/edit`);
-  };
-
-  const displayedBookings = showBookingHistory
+  const displayedBookings = showAllBookings
     ? squadBookings
     : squadBookings.slice(0, 3);
+
+  const displayedPayments = showAllPayments
+    ? paymentHistory
+    : paymentHistory.slice(0, 4);
 
   return (
     <MobileLayout>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
+
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <button
@@ -86,10 +123,9 @@ export default function SquadDetail() {
           >
             <ArrowLeft size={18} className="text-slate-700 dark:text-white" />
           </button>
-
           <div className="flex gap-2">
             <button
-              onClick={handleEdit}
+              onClick={() => navigate(`/squad/${squad.id}/edit`)}
               className="w-10 h-10 rounded-xl bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center"
             >
               <Edit size={18} />
@@ -106,91 +142,40 @@ export default function SquadDetail() {
         {/* Squad Info Card */}
         <GlassCard style={{ padding: "20px" }}>
           <div className="flex items-center gap-3 mb-4">
-            <div
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "16px",
-                background: "linear-gradient(135deg, var(--brand), #00B4D8)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "16px",
+              background: "linear-gradient(135deg, var(--brand), #00B4D8)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
               <Users size={28} style={{ color: "#000" }} strokeWidth={2.5} />
             </div>
             <div>
-              <h1
-                style={{
-                  fontSize: "24px",
-                  fontWeight: 800,
-                  color: "var(--text-primary)",
-                  margin: 0,
-                  letterSpacing: "-0.02em",
-                }}
-              >
+              <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", margin: 0, letterSpacing: "-0.02em" }}>
                 {squad.name}
               </h1>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "var(--text-muted)",
-                  margin: "4px 0 0",
-                  fontWeight: 500,
-                }}
-              >
-                {squad.memberPlayerIds.length}{" "}
-                {squad.memberPlayerIds.length === 1 ? "member" : "members"}
+              <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: "4px 0 0", fontWeight: 500 }}>
+                {memberIds.length} {memberIds.length === 1 ? "member" : "members"}
               </p>
             </div>
           </div>
 
           {/* Squad Balance */}
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background:
-                squadBalance >= 0
-                  ? "rgba(16,185,129,0.08)"
-                  : "rgba(239,68,68,0.08)",
-              border:
-                squadBalance >= 0
-                  ? "1px solid rgba(16,185,129,0.2)"
-                  : "1px solid rgba(239,68,68,0.2)",
-            }}
-          >
+          <div className="rounded-2xl p-4" style={{
+            background: squadBalance >= 0 ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
+            border: squadBalance >= 0 ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(239,68,68,0.2)",
+          }}>
             <div className="flex items-center justify-between">
               <div>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--text-muted)",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    margin: 0,
-                  }}
-                >
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
                   Total Squad Balance
                 </p>
-                <p
-                  style={{
-                    fontSize: "28px",
-                    fontWeight: 800,
-                    color: squadBalance >= 0 ? "#10b981" : "#ef4444",
-                    margin: "4px 0 0",
-                    fontFeatureSettings: '"tnum" 1',
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  {formatCurrency(Math.abs(squadBalance))}
+                <p style={{ fontSize: "28px", fontWeight: 800, color: squadBalance >= 0 ? "#10b981" : "#ef4444", margin: "4px 0 0", fontFeatureSettings: '"tnum" 1', letterSpacing: "-0.03em" }}>
+                  {squadBalance >= 0 ? "↑" : "↓"} {formatCurrency(Math.abs(squadBalance))}
                 </p>
               </div>
-              {squadBalance >= 0 ? (
-                <TrendingUp size={32} style={{ color: "#10b981" }} />
-              ) : (
-                <TrendingDown size={32} style={{ color: "#ef4444" }} />
-              )}
+              {squadBalance >= 0
+                ? <TrendingUp size={32} style={{ color: "#10b981" }} />
+                : <TrendingDown size={32} style={{ color: "#ef4444" }} />}
             </div>
           </div>
         </GlassCard>
@@ -198,109 +183,134 @@ export default function SquadDetail() {
         {/* Players Section */}
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
-            Players ({squad.memberPlayerIds.length})
+            Players ({memberIds.length})
           </h2>
           <div className="space-y-2">
-            {squad.memberPlayerIds.map((playerId) => {
-              const player = getPlayerById(playerId);
+            {memberIds.map((pid) => {
+              const player = getPlayerById(pid);
               if (!player) return null;
-
-              return (
-                <GlassCard
-                  key={player.id}
-                  className="cursor-pointer hover:shadow-lg transition-all"
-                  style={{ padding: "14px 16px" }}
-                  onClick={() => navigate(`/player/${player.id}`)}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1">
-                        {player.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {formatPhoneDisplay(player.phone)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">
-                        Balance
-                      </p>
-                      <p
-                        className={`text-lg font-bold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
-                      >
-                        {formatCurrency(player.balance)}
-                      </p>
-                    </div>
-                  </div>
-                </GlassCard>
-              );
+              return <PlayerCard key={pid} player={player} />;
             })}
           </div>
         </div>
 
-        {/* Booking History Section */}
+        {/* Booking History */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               Booking History ({squadBookings.length})
             </h2>
-            {squadBookings.length > 3 && !showBookingHistory && (
+            {squadBookings.length > 3 && (
               <button
-                onClick={() => setShowBookingHistory(true)}
+                onClick={() => setShowAllBookings(!showAllBookings)}
                 className="text-sm font-semibold text-green-600 dark:text-green-400"
               >
-                View All
+                {showAllBookings ? "Show Less" : "View All"}
               </button>
             )}
           </div>
 
           {squadBookings.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {displayedBookings.map((booking) => {
-                const turf = getTurfById(booking.turfId);
                 const sport = getSportById(booking.sportId);
+                const turf = getTurfById(booking.turfId);
+                // Cost this squad paid = costPerSquad (amount / numTeams)
+                const numTeams = booking.teams?.length || 1;
+                const squadCost = booking.amount / numTeams;
+
                 return (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    turfName={turf?.name || "Unknown Turf"}
-                    sportName={sport?.name || "Sport"}
-                    sportId={sport?.id}
-                    sport={sport}
-                    selectMode={false}
-                    selected={false}
-                  />
+                  <GlassCard key={booking.id} style={{ padding: "14px 16px" }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div style={{
+                        width: "38px", height: "38px", borderRadius: "10px",
+                        background: "rgba(239,68,68,0.1)", display: "flex",
+                        alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      }}>
+                        <ArrowDownLeft size={18} style={{ color: "#ef4444" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-bold text-slate-900 dark:text-white">
+                          {sport?.name || "Sport"} • {booking.id}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          {turf?.name || "Turf"} • {formatDate(booking.date)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-base font-bold text-red-500">
+                          -{formatCurrency(squadCost)}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          ÷{numTeams} squads
+                        </p>
+                      </div>
+                    </div>
+                  </GlassCard>
                 );
               })}
-              {showBookingHistory && squadBookings.length > 3 && (
-                <button
-                  onClick={() => setShowBookingHistory(false)}
-                  className="w-full py-3 text-sm font-semibold text-slate-600 dark:text-slate-400"
-                >
-                  Show Less
-                </button>
-              )}
             </div>
           ) : (
             <GlassCard style={{ padding: "32px 24px", textAlign: "center" }}>
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
                 No bookings yet with this squad
               </p>
             </GlassCard>
           )}
         </div>
 
-        {/* Payment History Placeholder */}
+        {/* Payment History */}
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
-            Payment History
-          </h2>
-          <GlassCard style={{ padding: "32px 24px", textAlign: "center" }}>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Payment history will be available soon
-            </p>
-          </GlassCard>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Payment History ({paymentHistory.length})
+            </h2>
+            {paymentHistory.length > 4 && (
+              <button
+                onClick={() => setShowAllPayments(!showAllPayments)}
+                className="text-sm font-semibold text-green-600 dark:text-green-400"
+              >
+                {showAllPayments ? "Show Less" : "View All"}
+              </button>
+            )}
+          </div>
+
+          {paymentHistory.length > 0 ? (
+            <div className="space-y-2">
+              {displayedPayments.map((item) => (
+                <GlassCard key={item.id} style={{ padding: "14px 16px" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div style={{
+                      width: "38px", height: "38px", borderRadius: "10px",
+                      background: "rgba(16,185,129,0.1)", display: "flex",
+                      alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <ArrowUpRight size={18} style={{ color: "#10b981" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-slate-900 dark:text-white">
+                        {item.playerName}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {item.notes || "Balance Top-up"} • {formatDate(item.date)}
+                      </p>
+                    </div>
+                    <p className="text-base font-bold text-green-600 dark:text-green-400">
+                      +{formatCurrency(item.amount)}
+                    </p>
+                  </div>
+                </GlassCard>
+              ))}
+            </div>
+          ) : (
+            <GlassCard style={{ padding: "32px 24px", textAlign: "center" }}>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
+                No payments yet from squad members
+              </p>
+            </GlassCard>
+          )}
         </div>
+
       </div>
 
       {/* Delete Confirmation */}
@@ -324,8 +334,7 @@ export default function SquadDetail() {
                   Delete Squad?
                 </h2>
                 <p className="text-sm text-red-500 dark:text-red-400 mt-0.5 font-medium">
-                  This will permanently delete "{squad.name}". Members won't be
-                  affected.
+                  This will permanently delete "{squad.name}". Members won't be affected.
                 </p>
               </div>
             </div>

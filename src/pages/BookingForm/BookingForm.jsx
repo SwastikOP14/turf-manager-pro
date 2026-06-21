@@ -1,225 +1,262 @@
-import { useMemo, useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { Pencil, Check, Search, Trash2, X } from "lucide-react"
-import { createPortal } from "react-dom"
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Pencil, Check, Search, Trash2, X } from "lucide-react";
+import { createPortal } from "react-dom";
 
-import MobileLayout from "../../components/layout/MobileLayout"
-import GlassCard from "../../components/common/GlassCard"
-import SectionTitle from "../../components/common/SectionTitle"
-import InputField from "../../components/common/InputField"
-import DropdownField from "../../components/common/DropdownField"
-import DatePickerField from "../../components/common/DatePickerField"
-import TimePickerField from "../../components/common/TimePickerField"
-import SegmentedControl from "../../components/common/SegmentedControl"
-import PrimaryButton from "../../components/common/PrimaryButton"
-import AddTurfModal from "../../components/turf/AddTurfModal"
-import TeamManager from "../../components/booking/TeamManager"
-import TeamCostDisplay from "../../components/booking/TeamCostDisplay"
-import AddPlayerModal from "../../components/booking/AddPlayerModal"
-import { useApp } from "../../context/useApp"
-import { useModalBackHandler } from "../../hooks/useModalBackHandler"
+import MobileLayout from "../../components/layout/MobileLayout";
+import GlassCard from "../../components/common/GlassCard";
+import SectionTitle from "../../components/common/SectionTitle";
+import InputField from "../../components/common/InputField";
+import DropdownField from "../../components/common/DropdownField";
+import DatePickerField from "../../components/common/DatePickerField";
+import TimePickerField from "../../components/common/TimePickerField";
+import SegmentedControl from "../../components/common/SegmentedControl";
+import PrimaryButton from "../../components/common/PrimaryButton";
+import AddTurfModal from "../../components/turf/AddTurfModal";
+import TeamManager from "../../components/booking/TeamManager";
+import TeamCostDisplay from "../../components/booking/TeamCostDisplay";
+import AddPlayerModal from "../../components/booking/AddPlayerModal";
+import { useApp } from "../../context/useApp";
+import { useModalBackHandler } from "../../hooks/useModalBackHandler";
 import {
   toDateKey,
   timeTo24,
   timeFrom24,
-  formatCurrency
-} from "../../utils/format"
-import { formatPhoneDisplay } from "../../utils/phone"
-import { searchPlayers } from "../../utils/players"
+  formatCurrency,
+} from "../../utils/format";
+import { formatPhoneDisplay } from "../../utils/phone";
+import { searchPlayers } from "../../utils/players";
 import {
   calculateTeamWiseSplit,
   calculatePlayerWiseSplit,
-  isTeamWiseSplitAvailable
-} from "../../utils/costSplit"
+  isTeamWiseSplitAvailable,
+} from "../../utils/costSplit";
 
 function ModalBlurWrapper({ onClose, children }) {
   useEffect(() => {
-    document.body.classList.add("modal-open")
-    return () => document.body.classList.remove("modal-open")
-  }, [])
+    document.body.classList.add("modal-open");
+    return () => document.body.classList.remove("modal-open");
+  }, []);
 
-  useModalBackHandler(onClose)
+  useModalBackHandler(onClose);
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.25rem", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.25rem",
+        background: "rgba(0,0,0,0.7)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
       <div className="absolute inset-0" onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: "22rem", maxHeight: "85vh", overflowY: "auto", borderRadius: "1.5rem", padding: "1.25rem", boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}
-        className="bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10">
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "22rem",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          borderRadius: "1.5rem",
+          padding: "1.25rem",
+          boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
+        }}
+        className="bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10"
+      >
         {children}
       </div>
     </div>,
-    document.body
-  )
+    document.body,
+  );
 }
 
 export default function BookingForm() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const isEdit = Boolean(id)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEdit = Boolean(id);
 
   const {
-    bookings, players, turfs, sports, squads,
-    addBooking, updateBooking, deleteBooking, addTurf, getPlayerById
-  } = useApp()
+    bookings,
+    players,
+    turfs,
+    sports,
+    squads,
+    addBooking,
+    updateBooking,
+    deleteBooking,
+    addTurf,
+    getPlayerById,
+  } = useApp();
 
-  const existing = bookings.find((b) => b.id === id)
-  const start = timeFrom24(existing?.startTime)
-  const end = timeFrom24(existing?.endTime)
+  const existing = bookings.find((b) => b.id === id);
+  const start = timeFrom24(existing?.startTime);
+  const end = timeFrom24(existing?.endTime);
 
-  const [sportId, setSportId] = useState(existing?.sportId || "")
-  const [turfId, setTurfId] = useState(existing?.turfId || "")
-  const [date, setDate] = useState(existing?.date ? new Date(existing.date) : null)
-  const [amount, setAmount] = useState(existing ? String(existing.amount) : "")
-  const [status, setStatus] = useState(existing?.status || "Paid")
-  const [paidAmount, setPaidAmount] = useState(existing ? String(existing.paidAmount || 0) : "")
-  const [paidByPlayerId, setPaidByPlayerId] = useState(existing?.paidByPlayerId || "")
-  const [playerIds, setPlayerIds] = useState(existing?.playerIds || [])
+  const [sportId, setSportId] = useState(existing?.sportId || "");
+  const [turfId, setTurfId] = useState(existing?.turfId || "");
+  const [date, setDate] = useState(
+    existing?.date ? new Date(existing.date) : null,
+  );
+  const [amount, setAmount] = useState(existing ? String(existing.amount) : "");
+  const [status, setStatus] = useState(existing?.status || "Paid");
+  const [paidAmount, setPaidAmount] = useState(
+    existing ? String(existing.paidAmount || 0) : "",
+  );
+  const [paidByPlayerId, setPaidByPlayerId] = useState(
+    existing?.paidByPlayerId || "",
+  );
+  const [playerIds, setPlayerIds] = useState(existing?.playerIds || []);
 
   // Team booking states
-  const [bookingType, setBookingType] = useState(existing?.bookingType || (existing?.teams?.length ? "Team" : "Individual"))
-  const [teams, setTeams] = useState(existing?.teams || [])
-  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player")
-  const [squadId, setSquadId] = useState(existing?.squadId || "")
-  const [squadPickerOpen, setSquadPickerOpen] = useState(false)
+  const [bookingType, setBookingType] = useState(
+    existing?.bookingType || (existing?.teams?.length ? "Team" : "Individual"),
+  );
+  const [teams, setTeams] = useState(existing?.teams || []);
+  const [splitMode, setSplitMode] = useState(existing?.splitMode || "Player");
+  const [squadId, setSquadId] = useState(existing?.squadId || "");
+  const [squadPickerOpen, setSquadPickerOpen] = useState(false);
 
-  const [turfModalOpen, setTurfModalOpen] = useState(false)
-  const [paidByModalOpen, setPaidByModalOpen] = useState(false)
-  const [playersModalOpen, setPlayersModalOpen] = useState(false)
-  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false)
-  const [playerQuery, setPlayerQuery] = useState("")
-  const [paidByQuery, setPaidByQuery] = useState("")
-  const [error, setError] = useState("")
-  const [localPlayers, setLocalPlayers] = useState(players)
+  const [turfModalOpen, setTurfModalOpen] = useState(false);
+  const [paidByModalOpen, setPaidByModalOpen] = useState(false);
+  const [playersModalOpen, setPlayersModalOpen] = useState(false);
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [playerQuery, setPlayerQuery] = useState("");
+  const [paidByQuery, setPaidByQuery] = useState("");
+  const [error, setError] = useState("");
+  const [localPlayers, setLocalPlayers] = useState(players);
 
-  const [startHour, setStartHour] = useState(start.hour)
-  const [startMinute, setStartMinute] = useState(start.minute)
-  const [startPeriod, setStartPeriod] = useState(start.period)
-  const [endHour, setEndHour] = useState(end.hour)
-  const [endMinute, setEndMinute] = useState(end.minute)
-  const [endPeriod, setEndPeriod] = useState(end.period)
+  const [startHour, setStartHour] = useState(start.hour);
+  const [startMinute, setStartMinute] = useState(start.minute);
+  const [startPeriod, setStartPeriod] = useState(start.period);
+  const [endHour, setEndHour] = useState(end.hour);
+  const [endMinute, setEndMinute] = useState(end.minute);
+  const [endPeriod, setEndPeriod] = useState(end.period);
 
-  const remaining = Math.max(0, Number(amount || 0) - Number(paidAmount || 0))
+  const remaining = Math.max(0, Number(amount || 0) - Number(paidAmount || 0));
 
   // Calculate split costs based on mode
   const splitCosts = useMemo(() => {
-    if (bookingType === "Individual") return {}
+    if (bookingType === "Individual") return {};
 
     if (splitMode === "Team") {
-      return calculateTeamWiseSplit(Number(amount || 0), teams)
+      return calculateTeamWiseSplit(Number(amount || 0), teams);
     } else {
-      return calculatePlayerWiseSplit(Number(amount || 0), teams)
+      return calculatePlayerWiseSplit(Number(amount || 0), teams);
     }
-  }, [bookingType, splitMode, teams, amount])
+  }, [bookingType, splitMode, teams, amount]);
 
   const perPersonShare = useMemo(() => {
     if (bookingType === "Individual") {
-      if (!amount || !playerIds.length) return 0
-      return Number(amount) / playerIds.length
+      if (!amount || !playerIds.length) return 0;
+      return Number(amount) / playerIds.length;
     } else {
-      if (!amount || teams.length === 0) return 0
-      return splitCosts[teams[0]?.id]?.playerCost || 0
+      if (!amount || teams.length === 0) return 0;
+      return splitCosts[teams[0]?.id]?.playerCost || 0;
     }
-  }, [amount, playerIds, teams, splitCosts, bookingType])
+  }, [amount, playerIds, teams, splitCosts, bookingType]);
 
   const filteredPlayers = useMemo(
     () => searchPlayers(localPlayers, playerQuery),
-    [localPlayers, playerQuery]
-  )
+    [localPlayers, playerQuery],
+  );
 
   const filteredPaidBy = useMemo(
     () => searchPlayers(localPlayers, paidByQuery),
-    [localPlayers, paidByQuery]
-  )
+    [localPlayers, paidByQuery],
+  );
 
-  const sportOptions = sports.map((s) => ({ value: s.id, label: s.name }))
+  const sportOptions = sports.map((s) => ({ value: s.id, label: s.name }));
 
   const turfOptions = [
     ...turfs.map((t) => ({ value: t.id, label: t.name })),
-    { value: "__add_new__", label: "+ Add New Turf/Ground" }
-  ]
+    { value: "__add_new__", label: "+ Add New Turf/Ground" },
+  ];
 
   const handleTurfChange = (e) => {
-    if (e.target.value === "__add_new__") { setTurfModalOpen(true); return }
-    setTurfId(e.target.value)
-  }
+    if (e.target.value === "__add_new__") {
+      setTurfModalOpen(true);
+      return;
+    }
+    setTurfId(e.target.value);
+  };
 
   const togglePlayer = (pid) => {
     setPlayerIds((prev) =>
-      prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid]
-    )
-  }
+      prev.includes(pid) ? prev.filter((p) => p !== pid) : [...prev, pid],
+    );
+  };
 
   const handleBookingTypeChange = (type) => {
-    setBookingType(type)
+    setBookingType(type);
     if (type === "Individual") {
-      setTeams([])
+      setTeams([]);
     } else {
-      setPlayerIds([])
+      setPlayerIds([]);
     }
-  }
+  };
 
   const handlePlayerAdded = (newPlayer) => {
-    setLocalPlayers((prev) => [...prev, newPlayer])
-  }
+    setLocalPlayers((prev) => [...prev, newPlayer]);
+  };
 
-  const canUseTeamWiseSplit = isTeamWiseSplitAvailable(teams)
+  const canUseTeamWiseSplit = isTeamWiseSplitAvailable(teams);
 
   const handleSave = () => {
     // Validate sport
     if (!sportId || sportId === "") {
-      setError("Please select sport/game")
-      return
+      setError("Please select sport/game");
+      return;
     }
     // Validate turf
     if (!turfId || turfId === "") {
-      setError("Please select turf/ground")
-      return
+      setError("Please select turf/ground");
+      return;
     }
     // Validate date
     if (!date) {
-      setError("Please select a booking date")
-      return
+      setError("Please select a booking date");
+      return;
     }
     // Validate amount
     if (!amount || amount === "0" || amount === "") {
-      setError("Please enter total amount")
-      return
+      setError("Please enter total amount");
+      return;
     }
     // Validate time
     if (!startHour || !startMinute || !endHour || !endMinute) {
-      setError("Please select start and end time")
-      return
+      setError("Please select start and end time");
+      return;
     }
     // Validate paid by
     if (!paidByPlayerId || paidByPlayerId === "") {
-      setError("Please select who paid the turf owner")
-      return
+      setError("Please select who paid the turf owner");
+      return;
     }
 
     // Validate players/teams
     if (bookingType === "Individual") {
       if (!playerIds || playerIds.length === 0) {
-        setError("Please add at least one player")
-        return
+        setError("Please add at least one player");
+        return;
       }
     } else {
-      if (!teams || teams.length === 0) {
-        setError("Please add at least one team")
-        return
+      if (!teams || teams.length < 2) {
+        setError("Min. 2 squads required to book");
+        return;
       }
       if (teams.some((t) => !t.playerIds || t.playerIds.length === 0)) {
-        setError("All teams must have at least one player")
-        return
-      }
-      if (splitMode === "Team" && teams.length < 2) {
-        setError("At least 2 teams required for Team Wise Split")
-        return
+        setError("All squads must have at least one player");
+        return;
       }
     }
-
     if (status === "Partial" && (!paidAmount || paidAmount === "0")) {
-      setError("Please enter paid amount for partial payment")
-      return
+      setError("Please enter paid amount for partial payment");
+      return;
     }
 
     const payload = {
@@ -231,27 +268,33 @@ export default function BookingForm() {
       amount: Number(amount),
       status,
       paidAmount:
-        status === "Partial" ? Number(paidAmount)
-          : status === "Paid" ? Number(amount)
+        status === "Partial"
+          ? Number(paidAmount)
+          : status === "Paid"
+            ? Number(amount)
             : 0,
       paidByPlayerId,
       bookingType,
       ...(bookingType === "Individual"
         ? { playerIds }
-        : { teams, splitMode, squadId: squadId || null }
-      )
-    }
+        : { teams, splitMode, squadId: squadId || null }),
+    };
 
-    if (isEdit) updateBooking(id, payload)
-    else addBooking(payload)
-    navigate("/")
-  }
+    if (isEdit) updateBooking(id, payload);
+    else addBooking(payload);
+    navigate("/");
+  };
 
   const handleDelete = () => {
-    if (!window.confirm("Are you sure you want to delete this booking? This action cannot be undone.")) return
-    deleteBooking(id)
-    navigate("/")
-  }
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this booking? This action cannot be undone.",
+      )
+    )
+      return;
+    deleteBooking(id);
+    navigate("/");
+  };
 
   return (
     <MobileLayout hideFab>
@@ -295,15 +338,26 @@ export default function BookingForm() {
           <DatePickerField
             label="Date"
             selected={date}
-            onChange={(v) => { setDate(v); setError("") }}
+            onChange={(v) => {
+              setDate(v);
+              setError("");
+            }}
           />
 
           <TimePickerField
             label="Time"
-            startHour={startHour} startMinute={startMinute} startPeriod={startPeriod}
-            onStartHourChange={setStartHour} onStartMinuteChange={setStartMinute} onStartPeriodChange={setStartPeriod}
-            endHour={endHour} endMinute={endMinute} endPeriod={endPeriod}
-            onEndHourChange={setEndHour} onEndMinuteChange={setEndMinute} onEndPeriodChange={setEndPeriod}
+            startHour={startHour}
+            startMinute={startMinute}
+            startPeriod={startPeriod}
+            onStartHourChange={setStartHour}
+            onStartMinuteChange={setStartMinute}
+            onStartPeriodChange={setStartPeriod}
+            endHour={endHour}
+            endMinute={endMinute}
+            endPeriod={endPeriod}
+            onEndHourChange={setEndHour}
+            onEndMinuteChange={setEndMinute}
+            onEndPeriodChange={setEndPeriod}
           />
         </GlassCard>
 
@@ -320,8 +374,14 @@ export default function BookingForm() {
           />
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900 dark:text-white">Payment Status</label>
-            <SegmentedControl options={["Paid", "Partial", "Pending"]} value={status} onChange={setStatus} />
+            <label className="text-sm font-medium text-slate-900 dark:text-white">
+              Payment Status
+            </label>
+            <SegmentedControl
+              options={["Paid", "Partial", "Pending"]}
+              value={status}
+              onChange={setStatus}
+            />
           </div>
 
           {status === "Partial" && (
@@ -330,11 +390,17 @@ export default function BookingForm() {
                 label="Amount Paid Till Now"
                 prefix="₹"
                 value={paidAmount}
-                onChange={(e) => setPaidAmount(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) =>
+                  setPaidAmount(e.target.value.replace(/\D/g, ""))
+                }
               />
               <div className="rounded-2xl p-3 bg-green-500/10 border border-green-500/20 flex justify-between text-sm font-semibold">
-                <span className="text-green-700 dark:text-green-400">Paid {formatCurrency(paidAmount)}</span>
-                <span className="text-orange-400">Remaining {formatCurrency(remaining)}</span>
+                <span className="text-green-700 dark:text-green-400">
+                  Paid {formatCurrency(paidAmount)}
+                </span>
+                <span className="text-orange-400">
+                  Remaining {formatCurrency(remaining)}
+                </span>
               </div>
             </>
           )}
@@ -357,21 +423,37 @@ export default function BookingForm() {
                 <span className="text-slate-900 dark:text-white font-medium text-sm">
                   {getPlayerById(paidByPlayerId)?.name}
                 </span>
-                <span className={`ml-2 text-xs font-semibold ${(getPlayerById(paidByPlayerId)?.balance ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                <span
+                  className={`ml-2 text-xs font-semibold ${(getPlayerById(paidByPlayerId)?.balance ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}
+                >
                   {formatCurrency(getPlayerById(paidByPlayerId)?.balance ?? 0)}
                 </span>
               </div>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500">Select player</span>
+              <span className="text-slate-400 dark:text-slate-500">
+                Select player
+              </span>
             )}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-green-500 shrink-0"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
           </button>
 
           {paidByPlayerId && (
             <p className="text-xs text-slate-500 dark:text-gray-400">
-              {getPlayerById(paidByPlayerId)?.name} paid the turf owner. This does not change split logic.
+              {getPlayerById(paidByPlayerId)?.name} paid the turf owner. This
+              does not change split logic.
             </p>
           )}
         </GlassCard>
@@ -388,10 +470,11 @@ export default function BookingForm() {
                 key={opt.value}
                 type="button"
                 onClick={() => handleBookingTypeChange(opt.value)}
-                className={`py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${bookingType === opt.value
-                  ? "bg-green-500 text-black"
-                  : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
-                  }`}
+                className={`py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                  bookingType === opt.value
+                    ? "bg-green-500 text-black"
+                    : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
+                }`}
               >
                 {opt.label}
               </button>
@@ -400,8 +483,7 @@ export default function BookingForm() {
           <p className="text-xs text-slate-500 dark:text-gray-400">
             {bookingType === "Individual"
               ? "Select individual players who participated"
-              : "Pick a squad or organize players into teams"
-            }
+              : "Pick a squad or organize players into teams"}
           </p>
         </GlassCard>
 
@@ -413,9 +495,9 @@ export default function BookingForm() {
               options={["Team Wise", "Player Wise"]}
               value={splitMode === "Team" ? "Team Wise" : "Player Wise"}
               onChange={(mode) => {
-                const selected = mode === "Team Wise" ? "Team" : "Player"
-                setSplitMode(selected)
-                setError("")
+                const selected = mode === "Team Wise" ? "Team" : "Player";
+                setSplitMode(selected);
+                setError("");
               }}
             />
             {splitMode === "Team" && !canUseTeamWiseSplit && (
@@ -428,8 +510,7 @@ export default function BookingForm() {
             <p className="text-xs text-slate-500 dark:text-gray-400">
               {splitMode === "Team"
                 ? "Total ÷ teams → each team's share ÷ players in that team"
-                : "Total ÷ all players across every team equally"
-              }
+                : "Total ÷ all players across every team equally"}
             </p>
           </GlassCard>
         )}
@@ -450,34 +531,44 @@ export default function BookingForm() {
             {playerIds.length > 0 && (
               <div className="space-y-2">
                 {playerIds.map((pid) => {
-                  const p = getPlayerById(pid)
-                  if (!p) return null
+                  const p = getPlayerById(pid);
+                  if (!p) return null;
                   return (
                     <div
                       key={pid}
                       className="flex items-center justify-between p-4 rounded-2xl bg-green-500/8 border border-green-500/30 hover:bg-green-500/15 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-green-700 dark:text-green-400">{p.name}</p>
-                        <p className={`text-xs font-semibold mt-0.5 ${p.balance >= 0 ? "text-green-600 dark:text-green-500" : "text-red-500"}`}>
+                        <p className="text-sm font-bold text-green-700 dark:text-green-400">
+                          {p.name}
+                        </p>
+                        <p
+                          className={`text-xs font-semibold mt-0.5 ${p.balance >= 0 ? "text-green-600 dark:text-green-500" : "text-red-500"}`}
+                        >
                           Balance: {formatCurrency(p.balance)}
                         </p>
                       </div>
                       <div className="text-right pl-4 shrink-0">
-                        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">Booking Share</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
+                          Booking Share
+                        </p>
                         <p className="text-lg font-bold text-green-700 dark:text-green-400 mt-0.5">
                           {formatCurrency(perPersonShare)}
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setPlayerIds((prev) => prev.filter((id) => id !== pid))}
+                        onClick={() =>
+                          setPlayerIds((prev) =>
+                            prev.filter((id) => id !== pid),
+                          )
+                        }
                         className="p-2 ml-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors shrink-0"
                       >
                         <X size={16} />
                       </button>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -516,13 +607,13 @@ export default function BookingForm() {
               </div>
               <div className="space-y-3">
                 {teams.map((team) => {
-                  const squad = squads.find((s) => s.id === team.squadId)
+                  const squad = squads.find((s) => s.id === team.squadId);
 
                   const squadBalance =
                     squad?.memberPlayerIds.reduce((sum, playerId) => {
-                      const player = getPlayerById(playerId)
-                      return sum + (player?.balance || 0)
-                    }, 0) || 0
+                      const player = getPlayerById(playerId);
+                      return sum + (player?.balance || 0);
+                    }, 0) || 0;
 
                   return (
                     <div
@@ -533,7 +624,11 @@ export default function BookingForm() {
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                             <span className="font-bold text-sm text-green-600">
-                              {team.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                              {team.name
+                                .split(" ")
+                                .map((w) => w[0])
+                                .join("")
+                                .slice(0, 2)}
                             </span>
                           </div>
 
@@ -544,17 +639,18 @@ export default function BookingForm() {
 
                         <div className="text-right">
                           <p
-                            className={`text-base font-bold ${squadBalance >= 0
-                              ? "text-green-600"
-                              : "text-red-500"
-                              }`}
+                            className={`text-base font-bold ${
+                              squadBalance >= 0
+                                ? "text-green-600"
+                                : "text-red-500"
+                            }`}
                           >
                             {formatCurrency(squadBalance)}
                           </p>
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </GlassCard>
@@ -571,9 +667,7 @@ export default function BookingForm() {
           </>
         )}
 
-        {error && (
-          <p className="text-sm text-red-500 text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
         <div className="space-y-3">
           <PrimaryButton
@@ -587,8 +681,8 @@ export default function BookingForm() {
         open={turfModalOpen}
         onClose={() => setTurfModalOpen(false)}
         onSave={(form) => {
-          const turf = addTurf(form)
-          setTurfId(turf.id)
+          const turf = addTurf(form);
+          setTurfId(turf.id);
         }}
       />
 
@@ -596,14 +690,30 @@ export default function BookingForm() {
       {paidByModalOpen && (
         <ModalBlurWrapper onClose={() => setPaidByModalOpen(false)}>
           <div className="flex items-center gap-2 mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-green-500"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Paid By</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Paid By
+            </h2>
           </div>
 
           <div className="relative mb-3">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search
+              size={14}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
             <input
               type="text"
               value={paidByQuery}
@@ -616,36 +726,49 @@ export default function BookingForm() {
 
           <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-hide">
             {filteredPaidBy.map((player) => {
-              const selected = paidByPlayerId === player.id
+              const selected = paidByPlayerId === player.id;
               return (
                 <button
                   key={player.id}
                   type="button"
-                  onClick={() => { setPaidByPlayerId(player.id); setPaidByModalOpen(false) }}
+                  onClick={() => {
+                    setPaidByPlayerId(player.id);
+                    setPaidByModalOpen(false);
+                  }}
                   className={`w-full flex items-center justify-between rounded-2xl p-3 border transition-all cursor-pointer text-left
                     ${selected ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-sm ${selected ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                    <p
+                      className={`font-semibold text-sm ${selected ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}
+                    >
                       {player.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-slate-500 dark:text-gray-400">{formatPhoneDisplay(player.phone)}</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {formatPhoneDisplay(player.phone)}
+                      </p>
                       <span className="text-xs">•</span>
-                      <p className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                      <p
+                        className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
+                      >
                         {formatCurrency(player.balance)}
                       </p>
                     </div>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
-                    ${selected ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
+                    ${selected ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}
+                  >
                     {selected && <Check size={11} className="text-white" />}
                   </div>
                 </button>
-              )
+              );
             })}
             {filteredPaidBy.length === 0 && (
-              <p className="text-sm text-center text-slate-400 py-4">No players found</p>
+              <p className="text-sm text-center text-slate-400 py-4">
+                No players found
+              </p>
             )}
           </div>
         </ModalBlurWrapper>
@@ -656,19 +779,38 @@ export default function BookingForm() {
         <ModalBlurWrapper onClose={() => setPlayersModalOpen(false)}>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-green-500"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Select Players</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Select Players
+              </h2>
             </div>
-            <span className="text-sm text-slate-500 dark:text-gray-400">{playerIds.length} selected</span>
+            <span className="text-sm text-slate-500 dark:text-gray-400">
+              {playerIds.length} selected
+            </span>
           </div>
 
           {/* Search + Add Player row */}
           <div className="flex gap-2 my-3">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search
+                size={14}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              />
               <input
                 type="text"
                 value={playerQuery}
@@ -688,7 +830,7 @@ export default function BookingForm() {
 
           <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide mb-4">
             {filteredPlayers.map((player) => {
-              const checked = playerIds.includes(player.id)
+              const checked = playerIds.includes(player.id);
               return (
                 <button
                   key={player.id}
@@ -698,38 +840,50 @@ export default function BookingForm() {
                     ${checked ? "bg-green-500/15 border-green-500/50" : "bg-slate-100 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-green-500/30"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-sm ${checked ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                    <p
+                      className={`font-semibold text-sm ${checked ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}
+                    >
                       {player.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-slate-500 dark:text-gray-400">{formatPhoneDisplay(player.phone)}</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">
+                        {formatPhoneDisplay(player.phone)}
+                      </p>
                       <span className="text-xs text-slate-400">•</span>
-                      <p className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                      <p
+                        className={`text-xs font-semibold ${player.balance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
+                      >
                         {formatCurrency(player.balance)}
                       </p>
                     </div>
                   </div>
-                  <div className={`w-5 h-5 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all
-                    ${checked ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}>
+                  <div
+                    className={`w-5 h-5 rounded-xl border-2 flex items-center justify-center shrink-0 transition-all
+                    ${checked ? "bg-green-500 border-green-500" : "border-slate-300 dark:border-white/30"}`}
+                  >
                     {checked && <Check size={11} className="text-white" />}
                   </div>
                 </button>
-              )
+              );
             })}
             {filteredPlayers.length === 0 && (
-              <p className="text-sm text-center text-slate-400 py-4">No players found</p>
+              <p className="text-sm text-center text-slate-400 py-4">
+                No players found
+              </p>
             )}
           </div>
 
           <button
             type="button"
-            onClick={() => { setPlayersModalOpen(false); setPlayerQuery("") }}
+            onClick={() => {
+              setPlayersModalOpen(false);
+              setPlayerQuery("");
+            }}
             className="w-full py-3.5 rounded-2xl bg-green-500 hover:bg-green-600 text-black font-bold text-[15px] cursor-pointer transition-colors"
           >
             {playerIds.length > 0
               ? `Done (${playerIds.length})  •  ${formatCurrency(perPersonShare)} / person`
-              : "Done"
-            }
+              : "Done"}
           </button>
         </ModalBlurWrapper>
       )}
@@ -747,32 +901,37 @@ export default function BookingForm() {
                 type="button"
                 onClick={() => {
                   const alreadyAdded = teams.some(
-                    (t) => t.squadId === squad.id
-                  )
+                    (t) => t.squadId === squad.id,
+                  );
 
-                  if (alreadyAdded) return
+                  if (alreadyAdded) return;
                   const newTeam = {
                     id: `team_${Date.now()}`,
                     name: squad.name,
                     playerIds: squad.memberPlayerIds,
                     squadId: squad.id,
-                  }
-                  setTeams((prev) => [...prev, newTeam])
-                  setSquadId(squad.id)
-                  setSquadPickerOpen(false)
+                  };
+                  setTeams((prev) => [...prev, newTeam]);
+                  setSquadId(squad.id);
+                  setSquadPickerOpen(false);
                 }}
                 className="w-full flex items-center justify-between rounded-2xl p-3 border border-black/5 dark:border-white/10 bg-slate-100 dark:bg-white/5 hover:border-green-500/30 transition-all cursor-pointer text-left"
               >
                 <div>
-                  <p className="font-semibold text-sm text-slate-900 dark:text-white">{squad.name}</p>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white">
+                    {squad.name}
+                  </p>
                   <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                    {squad.memberPlayerIds.length} {squad.memberPlayerIds.length === 1 ? "member" : "members"}
+                    {squad.memberPlayerIds.length}{" "}
+                    {squad.memberPlayerIds.length === 1 ? "member" : "members"}
                   </p>
                 </div>
               </button>
             ))}
             {squads.length === 0 && (
-              <p className="text-sm text-center text-slate-400 py-4">No squads created yet</p>
+              <p className="text-sm text-center text-slate-400 py-4">
+                No squads created yet
+              </p>
             )}
           </div>
         </ModalBlurWrapper>
@@ -786,5 +945,5 @@ export default function BookingForm() {
         />
       )}
     </MobileLayout>
-  )
+  );
 }

@@ -1,22 +1,47 @@
 import { createId } from "./id"
-import {
-  calculateTeamWiseSplit,
-  calculatePlayerWiseSplit
-} from "./costSplit"
 
+// ─── Helper: compute per-player costs using SQUAD-EQUAL split ───────────────
+// Formula: costPerSquad = amount / numSquads
+//          costPerPlayer = costPerSquad / playersInSquad
+// This ensures each squad pays equal share, then splits within squad equally.
+function computeSquadSplitCosts(amount, teams) {
+  const numSquads = teams.length
+  if (numSquads === 0) return {}
+
+  const costPerSquad = amount / numSquads
+  const result = {} // { [playerId]: cost }
+
+  teams.forEach((team) => {
+    const playerIds = team.playerIds || []
+    if (playerIds.length === 0) return
+    const costPerPlayer = costPerSquad / playerIds.length
+    playerIds.forEach((pid) => {
+      result[pid] = costPerPlayer
+    })
+  })
+
+  return result
+}
+
+// ─── Main function ───────────────────────────────────────────────────────────
 export function applySharesToPlayers(players, booking, previousBooking = null) {
   let nextPlayers = [...players]
 
+  // ── REVERT previous booking's deductions ──────────────────────────────────
   const revert = (targetBooking) => {
-    // Handle individual bookings
-    if (targetBooking?.playerIds?.length) {
+    if (!targetBooking) return
+
+    // Individual booking reversal
+    if (
+      targetBooking.bookingType === "Individual" ||
+      (!targetBooking.bookingType && targetBooking.playerIds?.length)
+    ) {
+      if (!targetBooking.playerIds?.length) return
+
       const share = targetBooking.amount / targetBooking.playerIds.length
 
       nextPlayers = nextPlayers.map((player) => {
-        if (!targetBooking.playerIds.includes(player.id)) {
-          return player
-        }
-
+        if (!targetBooking.playerIds.includes(player.id)) return player
         return {
           ...player,
           balance: player.balance + share,
@@ -28,57 +53,57 @@ export function applySharesToPlayers(players, booking, previousBooking = null) {
       return
     }
 
-    // Handle team bookings
-    if (targetBooking?.teams?.length) {
-      const splitCosts =
-        targetBooking.splitMode === "Team"
-          ? calculateTeamWiseSplit(targetBooking.amount, targetBooking.teams)
-          : calculatePlayerWiseSplit(targetBooking.amount, targetBooking.teams)
+    // Team/Squad booking reversal — use stored playerSplitCost if available
+    if (targetBooking.bookingType === "Team" || targetBooking.teams?.length) {
+      if (!targetBooking.teams?.length) return
+
+      // Prefer stored playerSplitCost for precision
+      const storedCosts = targetBooking.playerSplitCost || null
+      const fallbackCosts = storedCosts
+        ? null
+        : computeSquadSplitCosts(targetBooking.amount, targetBooking.teams)
 
       nextPlayers = nextPlayers.map((player) => {
-        let playerShare = 0
-        const teamWithPlayer = targetBooking.teams.find((team) =>
-          team.playerIds.includes(player.id)
-        )
+        const cost = storedCosts
+          ? storedCosts[player.id]
+          : fallbackCosts[player.id]
 
-        if (teamWithPlayer && splitCosts[teamWithPlayer.id]) {
-          playerShare = splitCosts[teamWithPlayer.id].playerCost
-        }
-
-        if (playerShare === 0) return player
+        if (!cost || cost === 0) return player
 
         return {
           ...player,
-          balance: player.balance + playerShare,
+          balance: player.balance + cost,
           history: player.history.filter(
             (item) => item.bookingId !== targetBooking.id
           )
         }
       })
-      return
     }
   }
 
+  // Run reversal if we have a previous booking (edit or delete)
   if (previousBooking) {
     revert(previousBooking)
   }
 
+  // If booking is null, this was a delete — just return after reversal
   if (!booking) {
     return nextPlayers
   }
 
-  // Handle individual bookings
-  if (booking.bookingType === "Individual" || booking.playerIds?.length) {
-    if (!booking.playerIds?.length) {
-      return nextPlayers
-    }
+  // ── APPLY new booking's deductions ────────────────────────────────────────
+
+  // Individual booking
+  if (
+    booking.bookingType === "Individual" ||
+    (!booking.bookingType && booking.playerIds?.length)
+  ) {
+    if (!booking.playerIds?.length) return nextPlayers
 
     const share = booking.amount / booking.playerIds.length
 
     return nextPlayers.map((player) => {
-      if (!booking.playerIds.includes(player.id)) {
-        return player
-      }
+      if (!booking.playerIds.includes(player.id)) return player
 
       const historyItem = {
         id: createId("h"),
@@ -101,29 +126,27 @@ export function applySharesToPlayers(players, booking, previousBooking = null) {
     })
   }
 
-  // Handle team bookings
+  // Team/Squad booking — use squad-equal split formula
   if (booking.bookingType === "Team" || booking.teams?.length) {
-    if (!booking.teams?.length) {
-      return nextPlayers
-    }
+    if (!booking.teams?.length) return nextPlayers
 
-    const splitCosts =
-      booking.splitMode === "Team"
-        ? calculateTeamWiseSplit(booking.amount, booking.teams)
-        : calculatePlayerWiseSplit(booking.amount, booking.teams)
+    // Use stored playerSplitCost from AppProvider if available,
+    // otherwise compute fresh
+    const costs =
+      booking.playerSplitCost ||
+      computeSquadSplitCosts(booking.amount, booking.teams)
+
+    // Build a map of playerId → teamName for history notes
+    const playerTeamName = {}
+    booking.teams.forEach((team) => {
+      ;(team.playerIds || []).forEach((pid) => {
+        playerTeamName[pid] = team.name || "Squad"
+      })
+    })
 
     return nextPlayers.map((player) => {
-      const teamWithPlayer = booking.teams.find((team) =>
-        team.playerIds.includes(player.id)
-      )
-
-      if (!teamWithPlayer || !splitCosts[teamWithPlayer.id]) {
-        return player
-      }
-
-      const playerShare = splitCosts[teamWithPlayer.id].playerCost
-
-      if (playerShare === 0) return player
+      const cost = costs[player.id]
+      if (!cost || cost === 0) return player
 
       const historyItem = {
         id: createId("h"),
@@ -133,14 +156,14 @@ export function applySharesToPlayers(players, booking, previousBooking = null) {
         date: booking.date,
         startTime: booking.startTime,
         endTime: booking.endTime,
-        amount: playerShare,
+        amount: cost,
         type: "debit",
-        notes: `Booking ${booking.id} (${teamWithPlayer.name})`
+        notes: `Booking ${booking.id} (${playerTeamName[player.id] || "Squad"})`
       }
 
       return {
         ...player,
-        balance: player.balance - playerShare,
+        balance: player.balance - cost,
         history: [historyItem, ...player.history]
       }
     })

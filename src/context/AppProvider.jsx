@@ -217,6 +217,30 @@ export function AppProvider({ children }) {
     setData((prev) => {
       const { id, nextCounter } = createBookingId(prev.bookings, prev.bookingCounter)
 
+      // Store calculated squad cost split so we can reverse precisely on edit/delete.
+      let squadSplitCost = null
+      let playerSplitCost = null
+
+      if (booking?.bookingType === "Team" && Array.isArray(booking.teams)) {
+        const teams = booking.teams || []
+        const teamCount = teams.length || 0
+        const amount = Number(booking.amount || 0)
+
+        // Per requirement: costPerSquad = amount / teams.length
+        squadSplitCost = teamCount > 0 ? amount / teamCount : 0
+        playerSplitCost = {}
+
+        teams.forEach((team) => {
+          const playerIds = team.playerIds || []
+          const perPlayer =
+            playerIds.length > 0 ? squadSplitCost / playerIds.length : 0
+
+          playerIds.forEach((pid) => {
+            playerSplitCost[pid] = perPlayer
+          })
+        })
+      }
+
       const entry = {
         id,
         paidAmount:
@@ -228,13 +252,15 @@ export function AppProvider({ children }) {
         ...booking,
         // id must win over anything in booking payload
         id,
+        squadSplitCost,
+        playerSplitCost,
       }
 
       created = entry
 
       return {
         ...prev,
-        bookingCounter: nextCounter,   // ← persist high-water mark
+        bookingCounter: nextCounter, // ← persist high-water mark
         bookings: [...prev.bookings, entry],
         players: applySharesToPlayers(prev.players, entry)
       }
@@ -249,17 +275,50 @@ export function AppProvider({ children }) {
     setData((prev) => {
       const previous = prev.bookings.find((booking) => booking.id === id)
 
-      const entry = {
+      // Build next entry first, then recompute split costs deterministically.
+      const nextBooking = {
         ...previous,
         ...updates,
-        paidAmount:
-          updates.status === "Paid"
-            ? updates.amount ?? previous.amount
-            : updates.status === "Partial"
-              ? Number(updates.paidAmount ?? previous.paidAmount) || 0
-              : updates.status === "Pending"
-                ? 0
-                : previous.paidAmount
+      }
+
+      const nextPaidAmount =
+        updates.status === "Paid"
+          ? updates.amount ?? previous.amount
+          : updates.status === "Partial"
+            ? Number(updates.paidAmount ?? previous.paidAmount) || 0
+            : updates.status === "Pending"
+              ? 0
+              : previous.paidAmount
+
+      nextBooking.paidAmount = nextPaidAmount
+
+      let squadSplitCost = null
+      let playerSplitCost = null
+
+      if (nextBooking?.bookingType === "Team" && Array.isArray(nextBooking.teams)) {
+        const teams = nextBooking.teams || []
+        const teamCount = teams.length || 0
+        const amount = Number(nextBooking.amount || 0)
+
+        // Per requirement: costPerSquad = amount / teams.length
+        squadSplitCost = teamCount > 0 ? amount / teamCount : 0
+        playerSplitCost = {}
+
+        teams.forEach((team) => {
+          const playerIds = team.playerIds || []
+          const perPlayer =
+            playerIds.length > 0 ? squadSplitCost / playerIds.length : 0
+
+          playerIds.forEach((pid) => {
+            playerSplitCost[pid] = perPlayer
+          })
+        })
+      }
+
+      const entry = {
+        ...nextBooking,
+        squadSplitCost,
+        playerSplitCost,
       }
 
       updated = entry
@@ -287,6 +346,7 @@ export function AppProvider({ children }) {
       }
     })
   }
+
 
   const addBalance = (playerId, payload) => {
     setData((prev) => ({

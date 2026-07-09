@@ -1,6 +1,5 @@
 import { useRef, useState } from "react"
-import { Moon, Sun, ChevronDown, Trash2 } from "lucide-react"
-
+import { Moon, Sun, Monitor, ChevronDown, Trash2 } from "lucide-react"
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import SettingItem from "../../components/common/SettingItem"
@@ -8,16 +7,17 @@ import PrimaryButton from "../../components/common/PrimaryButton"
 import DropdownField from "../../components/common/DropdownField"
 import AddTurfModal from "../../components/turf/AddTurfModal"
 import AddSportModal from "../../components/sport/AddSportModal"
+import ConfirmDialog from "../../components/common/ConfirmDialog"
 import { useTheme } from "../../context/useTheme"
 import { useApp } from "../../context/useApp"
+import { useHaptics } from "../../context/HapticsContext"
 import { exportToXlsx, parseImportFile } from "../../utils/dataBackup"
 
 export default function Settings() {
-  const { darkMode, toggleTheme } = useTheme()
-  const { 
-    settings, updateSettings, 
-    turfs, sports, 
-    bookings, players,
+  const { theme, darkMode, setThemeMode } = useTheme()
+  const haptics = useHaptics()
+  const {
+    settings, updateSettings, turfs, sports, bookings, players, squads,
     addTurf, addSport, deleteTurf, deleteSport,
     addBooking,
     importAppData
@@ -35,6 +35,10 @@ export default function Settings() {
   const [exportFilename, setExportFilename] = useState("turf-bookings")
   const fileInputRef = useRef(null)
 
+  // Delete confirmation dialogs
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null) // { type: 'turf' | 'sport', item: object }
+
   const handleExportXlsx = () => {
     setExportModalOpen(true)
   }
@@ -50,7 +54,7 @@ export default function Settings() {
       const filename = exportFilename.trim()
 
       const result = await exportToXlsx(
-        { bookings, turfs, sports, players },
+        { bookings, turfs, sports, players, squads },
         filename
       )
 
@@ -67,6 +71,13 @@ export default function Settings() {
     window.open("https://drive.google.com/drive/my-drive", "_blank")
   }
 
+  const cycleTheme = () => {
+    const order = ["light", "system", "dark"]
+    const idx = order.indexOf(theme)
+    haptics.trigger(10)
+    setThemeMode(order[(idx + 1) % order.length])
+  }
+
   const handleImportClick = () => {
     setImportMessage("")
     fileInputRef.current?.click()
@@ -80,27 +91,49 @@ export default function Settings() {
 
     try {
       setImportMessage("")
-      const parsedBookings = await parseImportFile(file)
-      
+      const parsedBookings = await parseImportFile(file, turfs, sports, squads)
+
       // Transform parsed data to match app's booking format
-      const bookings = parsedBookings.map((b) => ({
-        id: b.bookingId || `booking-${Date.now()}-${Math.random()}`,
-        date: b.date,
-        location: b.location,
-        amount: b.amount,
-        totalAmount: b.amount,
-        paidAmount: b.paidAmount,
-        status: b.status.toLowerCase(),
-        paidBy: b.paidBy,
-        playerList: b.playerNames,
-        nosOfPlayers: b.numPlayers,
-        playerIds: [],
-        turfId: "",
-        sportId: "",
-        startTime: "",
-        endTime: ""
-      }))
-      
+      const bookings = parsedBookings.map((b) => {
+        // Normalize status to match app's status values
+        let normalizedStatus = b.status.toLowerCase()
+        if (normalizedStatus === "unpaid") {
+          normalizedStatus = "pending"
+        }
+        // Capitalize first letter for display
+        normalizedStatus = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)
+
+        return {
+          id: b.bookingId || `booking-${Date.now()}-${Math.random()}`,
+          date: b.date,
+          location: b.location,
+          amount: b.amount,
+          totalAmount: b.amount,
+          paidAmount: b.paidAmount,
+          status: normalizedStatus,
+          paidBy: b.paidBy,
+          playerList: b.playerNames || "",
+          nosOfPlayers: b.nosOfPlayers || 0,
+          perPersonCost: b.perPersonCost || 0,
+          squadName: b.squadName || "",
+          squadMatched: b.squadMatched || false,
+          squadId: b.squadId || "",
+          teams: b.teams || [],
+          playerIds: (() => {
+            if (b.bookingType !== "Individual" || !b.playerNames) return []
+            const names = b.playerNames.split(",").map(n => n.trim().toLowerCase())
+            return players.filter(p => names.includes(p.name.toLowerCase())).map(p => p.id)
+          })(), turfId: b.turfId || "",
+          sportId: b.sportId || "",
+          turfName: b.turfName || "Unknown Turf",
+          sportName: b.sport || "Sport",
+          startTime: b.startTime || "00:00",
+          endTime: b.endTime || "01:00",
+          bookingType: b.bookingType || "Individual",
+          paidByPlayerId: ""
+        }
+      })
+
       setPreviewBookings(bookings)
       setImportPreviewOpen(true)
     } catch (error) {
@@ -115,52 +148,95 @@ export default function Settings() {
       setImportMessage("No bookings to import")
       return
     }
-    
+
     const newBookings = previewBookings.map((b) => ({
       id: b.id,
       date: b.date,
       location: b.location,
       amount: b.amount,
       totalAmount: b.totalAmount,
+      paidAmount: b.paidAmount,
       status: b.status,
       paidBy: b.paidBy,
       playerList: b.playerList,
       nosOfPlayers: b.nosOfPlayers,
-      playerIds: [],
-      turfId: "",
-      sportId: "",
-      startTime: "",
-      endTime: ""
+      perPersonCost: b.perPersonCost,
+      squadName: b.squadName,
+      squadId: b.squadId || "",
+      teams: b.teams || [],
+      playerIds: b.playerIds || [],
+      playerList: b.playerList || "",
+      nosOfPlayers: b.nosOfPlayers || 0,
+      turfId: b.turfId || "",
+      sportId: b.sportId || "",
+      startTime: b.startTime || "00:00",
+      endTime: b.endTime || "01:00",
+      bookingType: b.bookingType || "Individual",
+      paidByPlayerId: b.paidByPlayerId || ""
     }))
 
-    newBookings.forEach(booking => addBooking(booking))
-    setImportMessage(`Imported ${previewBookings.length} bookings successfully!`)
+    // Skip bookings that already exist (same date + same start/end time)
+    const duplicates = []
+    const toImport = []
+
+    newBookings.forEach((booking) => {
+      const isDuplicate = bookings.some(
+        (existing) =>
+          existing.date === booking.date &&
+          existing.startTime === booking.startTime &&
+          existing.endTime === booking.endTime
+      )
+      if (isDuplicate) {
+        duplicates.push(booking)
+      } else {
+        toImport.push(booking)
+      }
+    })
+
+    toImport.forEach(booking => addBooking(booking))
+
+    if (toImport.length === 0) {
+      setImportMessage(`All ${duplicates.length} booking(s) already exist — nothing imported.`)
+    } else if (duplicates.length > 0) {
+      setImportMessage(`Imported ${toImport.length} booking(s). Skipped ${duplicates.length} duplicate(s).`)
+    } else {
+      setImportMessage(`Imported ${toImport.length} booking(s) successfully!`)
+    }
+
     setImportPreviewOpen(false)
     setPreviewBookings([])
   }
 
   const handleDeleteTurf = (turf) => {
-    if (window.confirm(`Are you sure you want to delete "${turf.name}"? This action cannot be undone.`)) {
-      deleteTurf(turf.id)
-    }
+    setDeleteTarget({ type: 'turf', item: turf })
+    setDeleteConfirmOpen(true)
   }
 
   const handleDeleteSport = (sport) => {
-    if (window.confirm(`Are you sure you want to delete "${sport.name}"? This action cannot be undone.`)) {
-      deleteSport(sport.id)
+    setDeleteTarget({ type: 'sport', item: sport })
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (deleteTarget?.type === 'turf') {
+      deleteTurf(deleteTarget.item.id)
+    } else if (deleteTarget?.type === 'sport') {
+      deleteSport(deleteTarget.item.id)
     }
+    setDeleteConfirmOpen(false)
+    setDeleteTarget(null)
   }
 
   return (
     <MobileLayout>
-      <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            Settings
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
-            Manage your app preferences
-          </p>
+      <div className="pt-3 px-4 pb-24 space-y-3 animate-fade-in-up">
+
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight">Settings</h1>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Manage your preferences</p>
+          </div>
         </div>
 
         <GlassCard className="flex items-center gap-4">
@@ -169,13 +245,13 @@ export default function Settings() {
             alt="Turf Manager Pro"
             className="h-20 w-auto max-w-55 object-contain"
           />
-          <p className="text-sm text-slate-500 dark:text-gray-400">
+          <p className="text-[14px] text-slate-500 dark:text-slate-400 font-normal">
             Professional Turf Booking App
           </p>
         </GlassCard>
 
         <GlassCard className="space-y-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white mb-3">
             App Preferences
           </h2>
 
@@ -185,30 +261,30 @@ export default function Settings() {
             onChange={(e) =>
               updateSettings({ language: e.target.value })
             }
-            options={["English", "Hindi"]}
+            options={["English", "Hindi", "Odia", "Bengali", "Kerelam", "Assamee", "Haryanvi"]}
           />
 
           <SettingItem
             title="Theme"
-            subtitle={darkMode ? "Dark mode enabled" : "Light mode enabled"}
+            subtitle={theme === "system" ? "Following system" : darkMode ? "Dark mode enabled" : "Light mode enabled"}
             rightElement={
               <button
-                onClick={toggleTheme}
+                onClick={cycleTheme}
                 className="
-                  w-11 h-11 rounded-2xl
-                  bg-slate-100 dark:bg-white/5
-                  border border-black/10 dark:border-white/10
-                  flex items-center justify-center
-                "
+        w-11 h-11 rounded-2xl
+        bg-slate-100 dark:bg-white/5
+        border border-black/10 dark:border-white/10
+        flex items-center justify-center
+      "
               >
-                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === "dark" ? <Moon size={18} /> : theme === "light" ? <Sun size={18} /> : <Monitor size={18} />}
               </button>
             }
           />
         </GlassCard>
 
         <GlassCard className="space-y-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+          <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white mb-3">
             Notifications
           </h2>
 
@@ -222,13 +298,14 @@ export default function Settings() {
               title={label}
               rightElement={
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    haptics.trigger(10)
                     updateSettings({
                       notifications: {
                         [key]: !settings.notifications[key]
                       }
                     })
-                  }
+                  }}
                   className={`
                     w-14 h-8 rounded-full relative transition
                     ${settings.notifications[key]
@@ -250,23 +327,17 @@ export default function Settings() {
         {/* Turf Management */}
         <GlassCard className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white">
               Turf Management ({turfs.length})
             </h2>
             <button
               onClick={() => setTurfDropdownOpen(!turfDropdownOpen)}
-              className="
-                flex items-center gap-2 px-3 py-2 rounded-xl
-                bg-slate-100 dark:bg-white/5
-                border border-black/10 dark:border-white/10
-                text-slate-600 dark:text-slate-400
-                hover:bg-slate-200 dark:hover:bg-white/10
-                transition-colors text-sm
-              "
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-[14px] font-medium"
             >
               View All
-              <ChevronDown 
-                size={14} 
+              <ChevronDown
+                size={14}
+                strokeWidth={1.8}
                 className={`transition-transform ${turfDropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
@@ -276,7 +347,7 @@ export default function Settings() {
             <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
               {turfs.length > 0 ? (
                 turfs.map((turf) => (
-                  <div 
+                  <div
                     key={turf.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
                   >
@@ -291,7 +362,7 @@ export default function Settings() {
                       )}
                     </div>
                     <button
-                      onClick={() => handleDeleteTurf(turf)}
+                      onClick={() => { haptics.trigger([10, 50, 10]); handleDeleteTurf(turf) }}
                       className="
                         p-2 rounded-lg
                         text-slate-400 hover:text-red-500 hover:bg-red-500/10
@@ -311,8 +382,8 @@ export default function Settings() {
           )}
 
           <button
-            onClick={() => setAddTurfModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+            onClick={() => { haptics.trigger(30); setAddTurfModalOpen(true) }}
+            className="w-full py-3.5 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
           >
             Add Turf/Ground
           </button>
@@ -321,23 +392,17 @@ export default function Settings() {
         {/* Sport Management */}
         <GlassCard className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white">
               Sport Management ({sports.length})
             </h2>
             <button
               onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
-              className="
-                flex items-center gap-2 px-3 py-2 rounded-xl
-                bg-slate-100 dark:bg-white/5
-                border border-black/10 dark:border-white/10
-                text-slate-600 dark:text-slate-400
-                hover:bg-slate-200 dark:hover:bg-white/10
-                transition-colors text-sm
-              "
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-[14px] font-medium"
             >
               View All
-              <ChevronDown 
-                size={14} 
+              <ChevronDown
+                size={14}
+                strokeWidth={1.8}
                 className={`transition-transform ${sportDropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
@@ -347,18 +412,18 @@ export default function Settings() {
             <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/5">
               {sports.length > 0 ? (
                 sports.map((sport) => (
-                  <div 
+                  <div
                     key={sport.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white/10 border border-black/5 dark:border-white/10"
                   >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{sport.icon || "🏅"}</span>
-                    <p className="font-medium text-slate-900 dark:text-white text-sm">
-                      {sport.name}
-                    </p>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{sport.icon || "🏅"}</span>
+                      <p className="font-medium text-slate-900 dark:text-white text-sm">
+                        {sport.name}
+                      </p>
+                    </div>
                     <button
-                      onClick={() => handleDeleteSport(sport)}
+                      onClick={() => { haptics.trigger([10, 50, 10]); handleDeleteSport(sport) }}
                       className="
                         p-2 rounded-lg
                         text-slate-400 hover:text-red-500 hover:bg-red-500/10
@@ -378,21 +443,21 @@ export default function Settings() {
           )}
 
           <button
-            onClick={() => setAddSportModalOpen(true)}
-            className="w-full py-4 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+            onClick={() => { haptics.trigger(30); setAddSportModalOpen(true) }}
+            className="w-full py-3.5 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
           >
             Add Sport/Game
           </button>
         </GlassCard>
 
         <GlassCard className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white">
             Data Management
           </h2>
 
           <button
             type="button"
-            onClick={handleBackupToGoogleDrive}
+            onClick={() => { haptics.trigger(30); handleBackupToGoogleDrive() }}
             className="w-full py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 font-semibold hover:bg-blue-500/20 transition-colors"
           >
             Backup to Google Drive
@@ -400,15 +465,15 @@ export default function Settings() {
 
           <button
             type="button"
-            onClick={handleImportClick}
-            className="w-full py-3 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
+            onClick={() => { haptics.trigger(30); handleImportClick() }}
+            className="w-full py-3 rounded-2xl bg-green-500/10 onClick={handleConfirmImport} border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
           >
             Import Bookings (Excel)
           </button>
 
           <button
             type="button"
-            onClick={handleExportXlsx}
+            onClick={() => { haptics.trigger(30); handleExportXlsx() }}
             className="w-full py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 font-semibold hover:bg-purple-500/20 transition-colors"
           >
             Export Bookings (Excel)
@@ -462,14 +527,122 @@ export default function Settings() {
       {/* Import Preview Modal */}
       {importPreviewOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto">
+          <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl p-5 max-h-[80vh] overflow-y-auto" style={{ paddingBottom: "80px" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 Import Preview ({previewBookings.length} bookings)
               </h2>
               <button
                 onClick={() => {
-                  setImportPreviewOpen(false)
+                  {/* Import Preview Modal */ }
+                  {
+                    importPreviewOpen && (
+                      <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+                        <div className="w-full bg-white dark:bg-slate-900 rounded-t-3xl flex flex-col" style={{ maxHeight: "85vh" }}>
+                          <div className="flex items-center justify-between p-5 pb-4">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                              Import Preview ({previewBookings.length} bookings)
+                            </h2>
+                            <button
+                              onClick={() => {
+                                setImportPreviewOpen(false)
+                                setPreviewBookings([])
+                              }}
+                              className="text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div className="px-5 overflow-y-auto flex-1">
+                            {previewBookings.length > 0 ? (
+                              <div className="space-y-3">
+                                {previewBookings.map((booking, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                                  >
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Date</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">{booking.date}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Turf</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">{booking.turfName}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Sport</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">{booking.sportName}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Booking Type</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">
+                                          {booking.bookingType === "Team"
+                                            ? `Squad — ${booking.squadName || "Unknown"}${booking.squadMatched ? " ✓" : " (not found)"}`
+                                            : "Individual"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Players ({booking.nosOfPlayers})</p>
+                                        <p className="font-medium text-slate-900 dark:text-white text-xs leading-snug">
+                                          {booking.playerList || "—"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Amount</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">₹{booking.totalAmount}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Per Person</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">
+                                          ₹{booking.perPersonCost?.toFixed(2) ?? "0.00"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Paid By</p>
+                                        <p className="font-medium text-slate-900 dark:text-white">{booking.paidBy}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-slate-500 dark:text-gray-400">Status</p>
+                                        <p className={`font-medium capitalize ${booking.status === "paid" ? "text-green-600" :
+                                          booking.status === "partial" ? "text-yellow-600" :
+                                            booking.status === "pending" ? "text-orange-600" :
+                                              "text-red-600"
+                                          }`}>
+                                          {booking.status}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-center text-slate-500 py-8">No bookings to import</p>
+                            )}
+                          </div>
+
+                          <div className="flex gap-3 p-5 pt-4 border-t border-slate-200 dark:border-slate-700" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}>
+                            <button
+                              onClick={() => {
+                                setImportPreviewOpen(false)
+                                setPreviewBookings([])
+                              }}
+                              className="flex-1 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleConfirmImport}
+                              className="flex-1 py-3 rounded-2xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors"
+                            >
+                              Confirm Import
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  } setImportPreviewOpen(false)
                   setPreviewBookings([])
                 }}
                 className="text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -491,8 +664,12 @@ export default function Settings() {
                         <p className="font-medium text-slate-900 dark:text-white">{booking.date}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-gray-400">Location</p>
-                        <p className="font-medium text-slate-900 dark:text-white">{booking.location}</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Turf</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.turfName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Sport</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{booking.sportName}</p>
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">Players</p>
@@ -508,12 +685,11 @@ export default function Settings() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 dark:text-gray-400">Status</p>
-                        <p className={`font-medium capitalize ${
-                          booking.status === "paid" ? "text-green-600" :
+                        <p className={`font-medium capitalize ${booking.status === "paid" ? "text-green-600" :
                           booking.status === "partial" ? "text-yellow-600" :
-                          booking.status === "pending" ? "text-orange-600" :
-                          "text-red-600"
-                        }`}>
+                            booking.status === "pending" ? "text-orange-600" :
+                              "text-red-600"
+                          }`}>
                           {booking.status}
                         </p>
                       </div>
@@ -536,7 +712,7 @@ export default function Settings() {
                 Cancel
               </button>
               <button
-                onClick={handleConfirmImport}
+                onClick={() => { haptics.trigger([10, 30, 10]); handleConfirmImport() }}
                 className="flex-1 py-3 rounded-2xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors"
               >
                 Confirm Import
@@ -595,6 +771,17 @@ export default function Settings() {
           </div>
         </div>
       )}
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        title={deleteTarget?.type === 'turf' ? "Delete Turf" : "Delete Sport"}
+        message={
+          <>Are you sure you want to delete <b>{deleteTarget?.item?.name}</b>? This action cannot be undone.</>
+        }
+        confirmLabel={`Delete ${deleteTarget?.type === 'turf' ? 'Turf' : 'Sport'}`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => { setDeleteConfirmOpen(false); setDeleteTarget(null) }}
+      />
     </MobileLayout>
   )
 }

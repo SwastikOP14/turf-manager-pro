@@ -15,14 +15,20 @@ export function calculateTeamWiseSplit(amount, teams) {
   const result = {}
 
   teams.forEach((team) => {
-    const playerCount = team.playerIds?.length || 0
+    // Only count players NOT marked as excluded for this booking
+    const excludedIds = team.excludedPlayerIds || []
+    const activePlayerIds = (team.playerIds || []).filter(
+      (pid) => !excludedIds.includes(pid)
+    )
+    const playerCount = activePlayerIds.length
     const playerCost = playerCount > 0 ? teamAmount / playerCount : 0
 
     result[team.id] = {
       teamAmount,
       playerCost,
       playerCount,
-      totalTeamPlayers: playerCount
+      totalTeamPlayers: team.playerIds?.length || 0,
+      activePlayerIds
     }
   })
 

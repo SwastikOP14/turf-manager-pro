@@ -6,10 +6,7 @@ export default function InputField({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label
-          className="text-xs font-600 uppercase tracking-wider"
-          style={{ color: "var(--text-muted)", fontSize: "11px", letterSpacing: "0.05em" }}
-        >
+        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
           {label}
         </label>
       )}
@@ -29,9 +26,12 @@ export default function InputField({
               readOnly={readOnly}
               onChange={onChange}
               placeholder={placeholder}
-              style={{ textAlign: centered ? "center" : "left" }}
               className="flex-1 min-w-0 bg-transparent outline-none"
-              style={{ color: "var(--text-primary)", background: "transparent", textAlign: centered ? "center" : "left" }}
+              style={{
+                color: "var(--text-primary)",
+                background: "transparent",
+                textAlign: centered ? "center" : "left"
+              }}
             />
             {rightElement && <span style={{ flexShrink: 0 }}>{rightElement}</span>}
           </div>

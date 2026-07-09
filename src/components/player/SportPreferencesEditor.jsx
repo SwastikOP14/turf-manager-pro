@@ -1,5 +1,8 @@
 import { useState } from "react"
-import { Trash2, ChevronDown, ChevronUp, Plus } from "lucide-react"
+import { createPortal } from "react-dom"
+import { useEffect } from "react"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
+import { Trash2, ChevronDown, ChevronUp, Plus, X } from "lucide-react"
 import { useTheme } from "../../context/useTheme"
 import {
   SUPPORTED_SPORTS, getSportMeta, defaultPref, buildSummary,
@@ -261,46 +264,66 @@ function SportCard({ pref, onUpdate, onRemove, darkMode }) {
 function SportPicker({ existingIds, onPick, onClose, darkMode }) {
   const available = SUPPORTED_SPORTS.filter((s) => !existingIds.includes(s.id))
 
-  return (
+  // Lock body scroll + back gesture
+  useEffect(() => {
+    document.body.classList.add("modal-open")
+    return () => document.body.classList.remove("modal-open")
+  }, [])
+
+  useModalBackHandler(onClose)
+
+  return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center p-5"
       style={{ zIndex: 99999, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xs rounded-2xl overflow-hidden"
+        className="w-full max-w-sm rounded-3xl overflow-hidden flex flex-col"
         style={{
           background: darkMode ? "#111827" : "#ffffff",
           border: darkMode ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(0,0,0,0.10)",
           boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
+          maxHeight: "80vh",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className="px-5 py-4"
-          style={{ borderBottom: darkMode ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)" }}
-        >
-          <p className="font-bold text-slate-900 dark:text-white text-[16px]">Add Sport</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select a sport to add</p>
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <div>
+            <p className="font-bold text-slate-900 dark:text-white text-lg">Add Sport</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Select a sport to add</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0"
+          >
+            <X size={17} />
+          </button>
         </div>
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto px-5 pb-5 space-y-2">
           {available.map((s) => (
             <button
               key={s.id}
               type="button"
               onClick={() => { onPick(s.id); onClose() }}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-colors"
+              style={{
+                background: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                border: darkMode ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)",
+              }}
             >
               <span className="text-2xl">{s.emoji}</span>
               <span className="text-[15px] font-medium text-slate-900 dark:text-white">{s.name}</span>
             </button>
           ))}
           {available.length === 0 && (
-            <p className="px-5 py-6 text-sm text-center text-slate-400">All sports added</p>
+            <p className="py-6 text-sm text-center text-slate-400">All sports added</p>
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

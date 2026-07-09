@@ -1,33 +1,17 @@
 import { Sun, Moon, Monitor, Smartphone } from "lucide-react"
-import { useState, useEffect } from "react"
 import { useTheme } from "../../context/useTheme"
+import { useHaptics } from "../../context/HapticsContext"
 import appLogo from "../../assets/app logo.png"
 
 export default function Header() {
   const { darkMode, theme, setThemeMode } = useTheme()
-  
-  // Haptics state — stored in localStorage
-  const [hapticsEnabled, setHapticsEnabled] = useState(() => {
-    const stored = localStorage.getItem("hapticsEnabled")
-    return stored !== null ? stored === "true" : true
-  })
-
-  useEffect(() => {
-    localStorage.setItem("hapticsEnabled", String(hapticsEnabled))
-  }, [hapticsEnabled])
+  const { enabled: hapticsEnabled, toggle: toggleHaptics, trigger } = useHaptics()
 
   const cycleTheme = () => {
     const order = ["light", "system", "dark"]
     const idx   = order.indexOf(theme)
+    trigger(10)
     setThemeMode(order[(idx + 1) % order.length])
-  }
-
-  const toggleHaptics = () => {
-    setHapticsEnabled(prev => !prev)
-    // Provide haptic feedback if enabling
-    if (!hapticsEnabled && navigator.vibrate) {
-      navigator.vibrate(50)
-    }
   }
 
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor
@@ -119,7 +103,7 @@ export default function Header() {
             </button>
 
             <button
-              onClick={toggleHaptics}
+              onClick={() => { if (!hapticsEnabled) trigger(30); toggleHaptics() }}
               aria-label="Toggle haptics"
               style={{
                 ...iconBtnStyle,

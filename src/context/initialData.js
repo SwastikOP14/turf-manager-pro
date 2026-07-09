@@ -136,16 +136,18 @@ export function getInitialData() {
     }
   ]
 
-  const squads = [
+ const squads = [
     {
       id: "sq1",
       name: "Weekend Warriors",
-      memberPlayerIds: ["p1", "p2", "p3"]
+      memberPlayerIds: ["p1", "p2", "p3"],
+      contributions: []
     },
     {
       id: "sq2",
       name: "Morning Crew",
-      memberPlayerIds: ["p4", "p5", "p6"]
+      memberPlayerIds: ["p4", "p5", "p6"],
+      contributions: []
     }
   ]
 

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useModalBackHandler } from "../../hooks/useModalBackHandler"
 import { CalendarIcon } from "./AppIcons"
+import { useHaptics } from "../../context/HapticsContext"
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
@@ -50,6 +51,7 @@ function DateModal({
   endDate,
   onClose
 }) {
+  const haptics = useHaptics()
   const today = new Date()
   const initDate = selected || startDate || today
   const [viewYear, setViewYear] = useState(initDate.getFullYear())
@@ -67,16 +69,19 @@ function DateModal({
   const firstDay = getFirstDayOfWeek(viewYear, viewMonth)
 
   function prevMonth() {
+    haptics.trigger(10)
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1) }
     else setViewMonth(m => m - 1)
   }
   function nextMonth() {
+    haptics.trigger(10)
     if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1) }
     else setViewMonth(m => m + 1)
   }
 
   function handleDayClick(day) {
     const clicked = new Date(viewYear, viewMonth, day)
+    haptics.trigger(10)
     onChange(clicked)
   }
 
@@ -86,7 +91,7 @@ function DateModal({
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-xl px-6">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 backdrop-blur-xl px-6">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-xs rounded-3xl bg-white dark:bg-[#111827] border border-black/10 dark:border-white/10 shadow-2xl p-5 animate-fade-in-up">
@@ -216,7 +221,7 @@ export default function DatePickerField({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-medium text-slate-900 dark:text-white">
+        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
           {label}
         </label>
       )}

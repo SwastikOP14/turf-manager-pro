@@ -57,9 +57,14 @@ export default function AddPlayer() {
   return (
     <MobileLayout hideFab>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
-        <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.03em", margin: 0 }}>
-          Add Player
-        </h1>
+        
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Add Player</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Add a new team member</p>
+          </div>
+        </div>
 
         <GlassCard className="flex flex-col items-center gap-3 py-6">
           <PhotoUpload
@@ -90,7 +95,7 @@ export default function AddPlayer() {
           />
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900 dark:text-white">
+            <label className="text-[14px] font-medium text-slate-700 dark:text-slate-300">
               Preferred Payment
             </label>
             <SegmentedControl
@@ -102,7 +107,7 @@ export default function AddPlayer() {
         </GlassCard>
 
         {error && (
-          <p className="text-sm text-red-500 text-center">{error}</p>
+          <p className="text-[12px] text-red-500 text-center font-normal">{error}</p>
         )}
 
         <PrimaryButton

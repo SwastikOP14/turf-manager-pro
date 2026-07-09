@@ -1,15 +1,15 @@
-export default function StatCard({ title, value, gradient, icon: Icon }) {
+export default function StatCard({ title, value, gradient, icon: Icon, footer }) {
   const bg = gradient || "linear-gradient(135deg, var(--brand), #00B4D8)"
   return (
     <div
       style={{
         borderRadius: "16px",
         background: bg,
-        padding: "18px 16px",
+        padding: "12px 12px",
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
-        minHeight: "96px",
+        gap: "6px",
+        minHeight: "76px",
         boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
         position: "relative",
         overflow: "hidden",
@@ -41,12 +41,17 @@ export default function StatCard({ title, value, gradient, icon: Icon }) {
         </div>
       )}
 
-      <p style={{ fontSize: "22px", fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em", fontFeatureSettings: '"tnum" 1' }}>
+      <p style={{ fontSize: "18px", fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em", fontFeatureSettings: '"tnum" 1' }}>
         {value}
       </p>
       <p style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.75)", margin: 0, textTransform: "uppercase", letterSpacing: "0.06em" }}>
         {title}
       </p>
+      {footer && (
+        <div style={{ marginTop: "2px" }}>
+          {footer}
+        </div>
+      )}
     </div>
   )
 }

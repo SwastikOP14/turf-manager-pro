@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { createPortal } from "react-dom"
 import { X, Check, Search } from "lucide-react"
+import PhotoUpload from "../common/PhotoUpload"
+import { compressImage } from "../../utils/imageCompress"
 import { useApp } from "../../context/useApp"
 import { useHaptics } from "../../context/HapticsContext"
 import { useModalBackHandler } from "../../hooks/useModalBackHandler"
@@ -10,8 +12,9 @@ import { formatPhoneDisplay } from "../../utils/phone"
 export default function AddSquadModal({ onClose, onSquadAdded }) {
   const { players, addSquad } = useApp()
   const haptics = useHaptics()
-  
+
   const [squadName, setSquadName] = useState("")
+  const [imageUrl, setImageUrl] = useState(null)
   const [selectedPlayerIds, setSelectedPlayerIds] = useState(new Set())
   const [searchQuery, setSearchQuery] = useState("")
   const [error, setError] = useState("")
@@ -38,12 +41,12 @@ export default function AddSquadModal({ onClose, onSquadAdded }) {
 
   const handleSave = () => {
     const name = squadName.trim()
-    
+
     if (!name) {
       setError("Please enter squad name")
       return
     }
-    
+
     if (selectedPlayerIds.size === 0) {
       setError("Please select at least one player")
       return
@@ -51,7 +54,8 @@ export default function AddSquadModal({ onClose, onSquadAdded }) {
 
     const result = addSquad({
       name,
-      memberPlayerIds: Array.from(selectedPlayerIds)
+      memberPlayerIds: Array.from(selectedPlayerIds),
+      imageUrl
     })
 
     if (!result.ok) {
@@ -66,8 +70,8 @@ export default function AddSquadModal({ onClose, onSquadAdded }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-99999 flex items-center justify-center p-5"
-      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)" }}
+      className="fixed inset-0 flex items-center justify-center p-5"
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", zIndex: 99999 }}
       onClick={onClose}
     >
       <div
@@ -87,6 +91,16 @@ export default function AddSquadModal({ onClose, onSquadAdded }) {
           >
             <X size={17} />
           </button>
+        </div>
+
+        <div className="flex flex-col items-center py-1">
+          <PhotoUpload
+            name={squadName}
+            photo={imageUrl}
+            onPhotoChange={setImageUrl}
+            size="medium"
+            type="squad"
+          />
         </div>
 
         {/* Squad Name Input */}

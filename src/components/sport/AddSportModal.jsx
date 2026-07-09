@@ -3,12 +3,14 @@ import { X } from "lucide-react"
 
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
+import { useHaptics } from "../../context/HapticsContext"
 
 export default function AddSportModal({
   open,
   onClose,
   onSave
 }) {
+  const haptics = useHaptics()
   const [form, setForm] = useState({
     name: "",
     icon: "" // Default to no icon
@@ -22,6 +24,7 @@ export default function AddSportModal({
       return
     }
 
+    haptics.trigger(30)
     onSave(form)
     setForm({ name: "", icon: "" })
     setError("")
@@ -38,7 +41,7 @@ export default function AddSportModal({
           </h2>
 
           <button
-            onClick={onClose}
+            onClick={() => { haptics.trigger(10); onClose() }}
             className="
               w-10 h-10 rounded-xl
               bg-red-500/15 text-red-500

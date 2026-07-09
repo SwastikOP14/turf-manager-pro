@@ -74,3 +74,43 @@ export function filterBookingsByPeriod(bookings, period, customRange = null) {
 
   return bookings
 }
+export function getPreviousPeriodRange(period, customRange = null) {
+  const now = new Date()
+
+  if (period === "This Week") {
+    const { start } = getWeekRange(now)
+    const prevEnd = new Date(start)
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    prevEnd.setHours(23, 59, 59, 999)
+    const prevStart = new Date(prevEnd)
+    prevStart.setDate(prevStart.getDate() - 6)
+    prevStart.setHours(0, 0, 0, 0)
+    return { start: prevStart, end: prevEnd }
+  }
+
+  if (period === "This Month") {
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    return getMonthRange(prevMonthDate)
+  }
+
+  if (period === "This Year") {
+    const prevYearDate = new Date(now.getFullYear() - 1, 0, 1)
+    return getYearRange(prevYearDate)
+  }
+
+  if (period === "Custom" && customRange?.start && customRange?.end) {
+    const durationMs = endOfDay(customRange.end) - startOfDay(customRange.start)
+    const prevEnd = new Date(startOfDay(customRange.start))
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    prevEnd.setHours(23, 59, 59, 999)
+    const prevStart = new Date(prevEnd.getTime() - durationMs)
+    return { start: prevStart, end: prevEnd }
+  }
+
+  return null
+}
+
+export function filterBookingsByDateRange(bookings, start, end) {
+  if (!start || !end) return []
+  return bookings.filter((booking) => isDateInRange(booking.date, start, end))
+}

@@ -18,6 +18,9 @@
     },
     "EdgeToEdge": {
       "enabled": true
+    },
+    "Keyboard": {
+      "resize": "none"
     }
   }
 }

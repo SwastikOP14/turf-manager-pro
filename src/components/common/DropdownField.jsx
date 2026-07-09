@@ -2,6 +2,7 @@ import { ChevronDown, Check } from "lucide-react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { useModalBackHandler } from "../../hooks/useModalBackHandler"
+import { useHaptics } from "../../context/HapticsContext"
 
 export default function DropdownField({
   label,
@@ -11,24 +12,25 @@ export default function DropdownField({
   placeholder = "Select",
   className = ""
 }) {
-  const [isOpen, setIsOpen]     = useState(false)
+  const haptics = useHaptics()
+  const [isOpen, setIsOpen] = useState(false)
   const [menuStyle, setMenuStyle] = useState({})
   const wrapperRef = useRef(null)
   const triggerRef = useRef(null)
-  const menuRef    = useRef(null)
+  const menuRef = useRef(null)
 
   // ─── Calculate position ONCE when opening ───────────────────────
   // Use scrollY so menu is absolutely positioned in document space,
   // not viewport space — it doesn't move when the page scrolls.
   const open = useCallback(() => {
     if (!triggerRef.current) return
-    const rect    = triggerRef.current.getBoundingClientRect()
-    const absTop  = rect.bottom + window.scrollY
-    const absLeft = rect.left   + window.scrollX
+    const rect = triggerRef.current.getBoundingClientRect()
+    const absTop = rect.bottom + window.scrollY
+    const absLeft = rect.left + window.scrollX
 
     // Header height — clamp so dropdown never covers the sticky header
     const headerEl = document.querySelector("header")
-    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 0
+    const headerH = headerEl ? headerEl.getBoundingClientRect().bottom : 0
 
     const spaceBelow = window.innerHeight - rect.bottom
     const spaceAbove = rect.top - headerH   // space above = from header bottom to trigger
@@ -50,8 +52,8 @@ export default function DropdownField({
 
     setMenuStyle({
       position: "absolute",
-      top:   `${top}px`,
-      left:  `${absLeft}px`,
+      top: `${top}px`,
+      left: `${absLeft}px`,
       width: `${rect.width}px`,
       maxHeight: `${Math.min(maxH, Math.max(spaceBelow, spaceAbove) - 8)}px`,
       zIndex: 99999,
@@ -93,6 +95,7 @@ export default function DropdownField({
     : ""
 
   const handleSelect = (optionValue) => {
+    haptics.trigger(10)
     onChange({ target: { value: optionValue } })
     close()
   }
@@ -101,7 +104,7 @@ export default function DropdownField({
   return (
     <div className={`flex flex-col gap-2 ${className}`} ref={wrapperRef}>
       {label && (
-        <label className="text-sm font-medium text-slate-900 dark:text-white">
+        <label className="text-sm" style={{ color: "var(--text-primary)" }}>
           {label}
         </label>
       )}
@@ -150,7 +153,7 @@ export default function DropdownField({
           )}
 
           {options.map((option) => {
-            const optVal   = typeof option === "string" ? option : option.value
+            const optVal = typeof option === "string" ? option : option.value
             const optLabel = typeof option === "string" ? option : option.label
             const selected = optVal === value
             return (

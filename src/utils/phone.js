@@ -14,7 +14,7 @@ export function normalizePhone(phone = "") {
 
 export function isValidIndianPhone(phone = "") {
   const normalized = normalizePhone(phone)
-  return Boolean(normalized && /^[6-9]\d{9}$/.test(normalized))
+  return Boolean(normalized && /^\d{10}$/.test(normalized))
 }
 
 export function formatPhoneDisplay(phone = "") {

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Trash2, X, Edit } from "lucide-react"
-
+import ConfirmDialog from "../../components/common/ConfirmDialog"
 import MobileLayout from "../../components/layout/MobileLayout"
 import BookingPeriodTabs from "../../components/booking/BookingPeriodTabs"
 import BookingFilterMenu from "../../components/booking/BookingFilterMenu"
@@ -144,9 +144,15 @@ export default function Bookings() {
 
   return (
     <MobileLayout onFabClick={() => navigate("/booking/new")}>
-      <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
+      <div className="pt-3 px-4 pb-24 space-y-3 animate-fade-in-up">
 
-        {/* ── Header removed - replaced with haptics toggle in global Header component ── */}
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight">Bookings</h1>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Manage your turf sessions</p>
+          </div>
+        </div>
 
         {/* ── Collapsible calendar dropdown ────────────────────────────── */}
         <BookingCalendar
@@ -196,33 +202,23 @@ export default function Bookings() {
           {(selectedDate ? calendarDayBookings : filteredBookings).map(renderBookingCard)}
 
           {(selectedDate ? calendarDayBookings : filteredBookings).length === 0 && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "48px 24px", gap: "14px" }}>
-              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                <rect x="12" y="8" width="48" height="56" rx="10" fill="var(--brand-subtle)" />
-                <rect x="20" y="20" width="32" height="4" rx="2" fill="var(--brand)" opacity="0.5" />
-                <rect x="20" y="30" width="24" height="4" rx="2" fill="var(--brand)" opacity="0.35" />
-                <rect x="20" y="40" width="28" height="4" rx="2" fill="var(--brand)" opacity="0.25" />
-                <circle cx="52" cy="54" r="12" fill="var(--bg-card)" stroke="var(--bg-border)" strokeWidth="1.5" />
-                <text x="52" y="59" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--text-muted)">?</text>
+            <div className="flex flex-col items-center text-center py-12 px-6 gap-3.5">
+              <svg width="48" height="48" viewBox="0 0 72 72" fill="none" className="text-slate-300 dark:text-slate-600">
+                <rect x="12" y="8" width="48" height="56" rx="10" fill="currentColor" fillOpacity="0.2" />
+                <rect x="20" y="20" width="32" height="4" rx="2" fill="currentColor" fillOpacity="0.5" />
+                <rect x="20" y="30" width="24" height="4" rx="2" fill="currentColor" fillOpacity="0.35" />
+                <rect x="20" y="40" width="28" height="4" rx="2" fill="currentColor" fillOpacity="0.25" />
+                <circle cx="52" cy="54" r="12" fill="currentColor" fillOpacity="0.1" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.3" />
+                <text x="52" y="59" textAnchor="middle" fontSize="14" fontWeight="700" fill="currentColor" fillOpacity="0.6">?</text>
               </svg>
               <div>
-                <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                <p className="text-[16px] font-bold text-slate-900 dark:text-white">
                   {selectedDate ? "No bookings on this date" : "No bookings yet"}
                 </p>
-                <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "6px 0 0" }}>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5">
                   {selectedDate ? "Try selecting a different date" : "Tap + to add your first booking"}
                 </p>
               </div>
-              {!selectedDate && (
-                <button
-                  type="button"
-                  onClick={() => {}}
-                  className="btn-primary"
-                  style={{ width: "auto", padding: "0 24px", fontSize: "13px" }}
-                >
-                  Add Booking
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -263,7 +259,7 @@ export default function Bookings() {
               <X size={17} className="text-white" />
             </button>
             <span className="text-white font-bold text-[15px] flex-1 select-none">
-              {selectedIds.size} Selected
+              {selectedIds.size}
             </span>
             
             {selectedIds.size === 1 && (
@@ -278,8 +274,7 @@ export default function Bookings() {
             <button type="button"
               onClick={() => selectedIds.size > 0 && setConfirmDelete(true)}
               disabled={selectedIds.size === 0}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-sm shrink-0 active:scale-95 disabled:opacity-40"
-              style={{ background: "#ef4444", color: "#fff" }}>
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold text-[14px] shrink-0 active:scale-95 disabled:opacity-40">
               <Trash2 size={15} />
               Delete
             </button>
@@ -287,45 +282,15 @@ export default function Bookings() {
         </div>
       )}
 
-      {/* ── Delete confirmation sheet ─────────────────────────────────────── */}
-      {confirmDelete && (
-        <div
-          className="fixed inset-0 z-99999 flex items-end"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
-          onClick={() => setConfirmDelete(false)}
-        >
-          <div
-            className="w-full bg-white dark:bg-[#0f172a] rounded-t-3xl px-5 pt-5 pb-8 space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto" />
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-red-500/15 flex items-center justify-center shrink-0">
-                <Trash2 size={20} className="text-red-500" />
-              </div>
-              <div>
-                <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">
-                  Delete Bookings?
-                </h2>
-                <p className="text-sm text-red-500 dark:text-red-400 mt-0.5 font-medium">
-                  You are about to permanently delete {selectedIds.size} booking record{selectedIds.size !== 1 ? "s" : ""}.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]">
-                Cancel
-              </button>
-              <button type="button" onClick={handleDeleteConfirmed}
-                className="flex-1 py-3.5 rounded-2xl bg-red-500 text-white font-bold text-[15px] flex items-center justify-center gap-2">
-                <Trash2 size={16} />
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Delete confirmation ─────────────────────────────────────── */}
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete Bookings?"
+        message={`You are about to permanently delete ${selectedIds.size} booking record${selectedIds.size !== 1 ? "s" : ""}.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {/* ── Edit Booking Sheet ────────────────────────────────────────────── */}
       {editMode && selectedIds.size === 1 && (

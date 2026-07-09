@@ -14,6 +14,7 @@ import AddPlayer from "../pages/AddPlayer/AddPlayer"
 import EditPlayer from "../pages/EditPlayer/EditPlayer"
 import SquadDetail from "../pages/SquadDetail/SquadDetail"
 import SquadEdit from "../pages/SquadEdit/SquadEdit"
+import SquadPlayerDetail from "../pages/SquadPlayerDetail/SquadPlayerDetail"
 import { useBackButton } from "../hooks/useBackButton"
 
 function AppContent() {
@@ -35,6 +36,7 @@ function AppContent() {
 
       <Route path="/squad/:id" element={<SquadDetail />} />
       <Route path="/squad/:id/edit" element={<SquadEdit />} />
+      <Route path="/squad/:squadId/player/:playerId" element={<SquadPlayerDetail />} />
     </Routes>
   )
 }

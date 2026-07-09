@@ -4,12 +4,14 @@ import { X } from "lucide-react"
 import Modal from "../common/Modal"
 import InputField from "../common/InputField"
 import { formatPhoneInput, isValidIndianPhone } from "../../utils/phone"
+import { useHaptics } from "../../context/HapticsContext"
 
 export default function AddTurfModal({
   open,
   onClose,
   onSave
 }) {
+  const haptics = useHaptics()
   const [form, setForm] = useState({
     name: "",
     location: "",
@@ -33,6 +35,7 @@ export default function AddTurfModal({
       return
     }
 
+    haptics.trigger(30)
     onSave(form)
     setForm({
       name: "",
@@ -54,7 +57,7 @@ export default function AddTurfModal({
           </h2>
 
           <button
-            onClick={onClose}
+            onClick={() => { haptics.trigger(10); onClose() }}
             className="
               w-10 h-10 rounded-xl
               bg-red-500/15 text-red-500

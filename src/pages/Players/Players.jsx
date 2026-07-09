@@ -79,7 +79,7 @@ export default function Players() {
   const navigate = useNavigate()
   const haptics = useHaptics()
 
-  const [view, setView] = useState("players") // "players" | "squads"
+  const [view, setView] = useState(() => sessionStorage.getItem("playersPageView") || "squads")  
   const [search, setSearch] = useState("")
   const [sortOpen, setSortOpen] = useState(false)
   const [sortType, setSortType] = useState("Sort A-Z")
@@ -113,6 +113,10 @@ export default function Players() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [squadSortOpen])
 
+  useEffect(() => {
+    sessionStorage.setItem("playersPageView", view)
+  }, [view])
+
   const filteredPlayers = filterAndSort(players, search, sortType)
   const filteredSquads = filterAndSortSquads(squads, squadSearch, squadSortType, getPlayerById)
 
@@ -120,70 +124,64 @@ export default function Players() {
     if (view === "players") setShowAddModal(true)
     else setShowAddSquadModal(true)
   }
+  const switchToPlayers = () => {
+    haptics.trigger(10)
+    setShowAddModal(false)
+    setShowAddSquadModal(false)
+    setSortOpen(false)
+    setSquadSortOpen(false)
+    setView("players")
+  }
+
+  const switchToSquads = () => {
+    haptics.trigger(10)
+    setShowAddModal(false)
+    setShowAddSquadModal(false)
+    setSortOpen(false)
+    setSquadSortOpen(false)
+    setView("squads")
+  }
 
   return (
     <MobileLayout onFabClick={handleFabClick}>
-      <div className="pt-4 px-5 pb-5 space-y-4 animate-fade-in-up">
+      <div className="pt-3 px-4 pb-24 space-y-3 animate-fade-in-up">
+
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight">Players</h1>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Manage your team roster</p>
+          </div>
+        </div>
         {/* Squads / Players toggle */}
-        <div style={{
-          display: "flex",
-          background: "var(--bg-card)",
-          border: "1.5px solid var(--bg-border)",
-          borderRadius: "14px",
-          padding: "4px",
-          gap: "4px",
-        }}>
+        <div className="flex bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-2xl p-1 gap-1">
           <button
             type="button"
-            onClick={() => setView("squads")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              padding: "10px 0",
-              borderRadius: "10px",
-              border: "none",
-              fontSize: "14px",
-              fontWeight: 700,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              background: view === "squads" ? "var(--brand)" : "transparent",
-              color: view === "squads" ? "#000" : "var(--text-muted)",
-            }}
+            onClick={switchToSquads}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-none font-semibold cursor-pointer transition-all text-[14px]
+              ${view === "squads"
+                ? "bg-green-600 text-white"
+                : "bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
           >
-            <Layers size={16} />
+            <Layers size={18} strokeWidth={1.8} />
             Squads
           </button>
           <button
             type="button"
-            onClick={() => setView("players")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              padding: "10px 0",
-              borderRadius: "10px",
-              border: "none",
-              fontSize: "14px",
-              fontWeight: 700,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              background: view === "players" ? "var(--brand)" : "transparent",
-              color: view === "players" ? "#000" : "var(--text-muted)",
-            }}
+            onClick={switchToPlayers}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-none font-semibold cursor-pointer transition-all text-[14px]
+              ${view === "players"
+                ? "bg-green-600 text-white"
+                : "bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
           >
-            <Users size={16} />
+            <Users size={18} strokeWidth={1.8} />
             Players
           </button>
         </div>
 
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-normal m-0">
           {view === "players"
             ? `${players.length} total · Manage balances & dues`
             : `${squads.length} squad${squads.length === 1 ? "" : "s"} · Manage your teams`}
@@ -391,7 +389,21 @@ export default function Players() {
             </div>
           </>
         )}
-        </div>
+      </div>
+
+      {showAddModal && (
+        <AddPlayerModal
+          onClose={() => setShowAddModal(false)}
+          onPlayerAdded={() => setShowAddModal(false)}
+        />
+      )}
+
+      {showAddSquadModal && (
+        <AddSquadModal
+          onClose={() => setShowAddSquadModal(false)}
+          onSquadAdded={() => setShowAddSquadModal(false)}
+        />
+      )}
     </MobileLayout>
   )
 }

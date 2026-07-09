@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Check, Search, Trash2 } from "lucide-react"
+import PhotoUpload from "../../components/common/PhotoUpload"
+import { compressImage } from "../../utils/imageCompress"
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import InputField from "../../components/common/InputField"
@@ -16,14 +18,13 @@ export default function SquadEdit() {
   const navigate = useNavigate()
   const haptics = useHaptics()
   const { players, getSquadById, updateSquad, deleteSquad } = useApp()
-
   const squad = getSquadById(id)
-
   const [name, setName] = useState(squad?.name || "")
+  const [imageUrl, setImageUrl] = useState(squad?.imageUrl || null)
   const [memberIds, setMemberIds] = useState(squad?.memberPlayerIds || [])
   const [query, setQuery] = useState("")
   const [error, setError] = useState("")
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const filteredPlayers = useMemo(
     () => searchPlayers(players, query),
@@ -46,19 +47,28 @@ export default function SquadEdit() {
       prev.includes(pid) ? prev.filter((id) => id !== pid) : [...prev, pid]
     )
   }
+  const handleRemoveImage = () => {
+    haptics.trigger(8)
+    setImageUrl(null)
+  }
 
   const handleSave = () => {
-    if (!name.trim()) {
-      setError("Please enter a squad name")
-      return
+    try {
+      if (!name.trim()) {
+        setError("Please enter a squad name")
+        return
+      }
+      if (memberIds.length === 0) {
+        setError("Please select at least one player")
+        return
+      }
+      haptics.trigger([10, 30, 10])
+      updateSquad(id, { name: name.trim(), memberPlayerIds: memberIds, imageUrl })
+      navigate(`/squad/${id}`)
+    } catch (error) {
+      console.error('Error saving squad:', error)
+      setError('Failed to save squad. Please try again.')
     }
-    if (memberIds.length === 0) {
-      setError("Please select at least one player")
-      return
-    }
-    haptics.trigger([10, 30, 10])
-    updateSquad(id, { name: name.trim(), memberPlayerIds: memberIds })
-    navigate(`/squad/${id}`)
   }
 
   const handleDelete = () => {
@@ -70,6 +80,24 @@ export default function SquadEdit() {
   return (
     <MobileLayout hideFab>
       <div className="pt-2 px-5 pb-5 space-y-4 animate-fade-in-up">
+        
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Squad</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage squad members</p>
+          </div>
+
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-10 h-10 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+
+        {/* Remove old header */}
+        <div className="hidden">
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={() => navigate(`/squad/${id}`)}
@@ -85,8 +113,18 @@ export default function SquadEdit() {
             <Trash2 size={18} />
           </button>
         </div>
+        </div>
 
         <GlassCard className="space-y-4">
+          <div className="flex flex-col items-center py-2">
+            <PhotoUpload
+              name={name || squad.name}
+              photo={imageUrl}
+              onPhotoChange={setImageUrl}
+              size="medium"
+            />
+          </div>
+
           <InputField
             label="Squad Name"
             value={name}

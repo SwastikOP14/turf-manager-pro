@@ -15,9 +15,20 @@ export function HapticsProvider({ children }) {
     })
   }, [])
 
-  const trigger = useCallback((pattern = 10) => {
+  const trigger = useCallback(async (pattern = 10) => {
     if (!enabled) return
-    try { navigator.vibrate?.(pattern) } catch {}
+    try {
+      const { Haptics, ImpactStyle } = await import("@capacitor/haptics")
+      if (Array.isArray(pattern)) {
+        await Haptics.impact({ style: ImpactStyle.Medium })
+      } else if (pattern >= 30) {
+        await Haptics.impact({ style: ImpactStyle.Heavy })
+      } else {
+        await Haptics.impact({ style: ImpactStyle.Light })
+      }
+    } catch {
+      try { navigator.vibrate?.(pattern) } catch {}
+    }
   }, [enabled])
 
   return (

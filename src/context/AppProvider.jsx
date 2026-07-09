@@ -6,7 +6,7 @@ import { createId, createBookingId } from "../utils/id"
 import { normalizePhone, isValidIndianPhone } from "../utils/phone"
 import { isDuplicateName, isDuplicatePhone } from "../utils/players"
 import { createEmptyPlayer } from "./initialData"
-import { applySharesToPlayers } from "../utils/bookingShares"
+import { applySharesToPlayers, applySquadShares, applySquadPlayerHistory } from "../utils/bookingShares"
 
 export function AppProvider({ children }) {
   const [data, setData] = useState(() => loadAppData())
@@ -84,11 +84,11 @@ export function AppProvider({ children }) {
       players: prev.players.map((player) =>
         player.id === id
           ? {
-              ...player,
-              ...updates,
-              ...(name ? { name } : {}),
-              ...(phone ? { phone } : {})
-            }
+            ...player,
+            ...updates,
+            ...(name ? { name } : {}),
+            ...(phone ? { phone } : {})
+          }
           : player
       )
     }))
@@ -172,7 +172,7 @@ export function AppProvider({ children }) {
 
   const addSquad = (squad) => {
     const name = squad.name?.trim()
-    
+
     if (!name) {
       return { ok: false, error: "Squad name is required" }
     }
@@ -207,6 +207,70 @@ export function AppProvider({ children }) {
       squads: (prev.squads || []).filter((squad) => squad.id !== id)
     }))
     return { ok: true }
+  }
+
+  // Contribute from player's personal balance to a squad's pool
+  const contributeToSquad = (squadId, playerId, amount) => {
+    const numAmount = Number(amount)
+    if (!numAmount || numAmount <= 0) {
+      return { ok: false, error: "Enter a valid amount" }
+    }
+
+    const player = data.players.find((p) => p.id === playerId)
+    if (!player) return { ok: false, error: "Player not found" }
+
+    if (player.balance < numAmount) {
+      return { ok: false, error: "Low balance — not enough to contribute this amount" }
+    }
+
+    const contributionItem = {
+      id: createId("c"),
+      playerId,
+      amount: numAmount,
+      date: new Date().toISOString().split("T")[0],
+      notes: `Contributed to squad`,
+    }
+
+    const historyItem = {
+      id: createId("h"),
+      bookingId: null,
+      sportId: null,
+      turfId: null,
+      date: contributionItem.date,
+      startTime: "",
+      endTime: "",
+      amount: numAmount,
+      type: "debit",
+      paymentMode: "",
+      notes: `Squad contribution`,
+    }
+
+    setData((prev) => ({
+      ...prev,
+      squads: (prev.squads || []).map((sq) =>
+        sq.id === squadId
+          ? { ...sq, contributions: [...(sq.contributions || []), contributionItem] }
+          : sq
+      ),
+      players: prev.players.map((p) =>
+        p.id === playerId
+          ? {
+            ...p,
+            balance: p.balance - numAmount,
+            history: [historyItem, ...p.history],
+          }
+          : p
+      ),
+    }))
+
+    return { ok: true }
+  }
+
+  // Check if squad balance is sufficient for a prospective booking cost
+  const getSquadBalance = (squadId) => {
+    const squad = squads.find((sq) => sq.id === squadId)
+    if (!squad) return 0
+    return (squad.contributions || []).reduce((sum, c) => sum + (c.amount || 0), 0)
   }
 
   // ────────────────────────────────────────────────────────────────────────
@@ -262,7 +326,11 @@ export function AppProvider({ children }) {
         ...prev,
         bookingCounter: nextCounter, // ← persist high-water mark
         bookings: [...prev.bookings, entry],
-        players: applySharesToPlayers(prev.players, entry)
+        players: applySquadPlayerHistory(
+          applySharesToPlayers(prev.players, entry),
+          entry
+        ),
+        squads: applySquadShares(prev.squads || [], entry)
       }
     })
 
@@ -328,7 +396,12 @@ export function AppProvider({ children }) {
         bookings: prev.bookings.map((booking) =>
           booking.id === id ? entry : booking
         ),
-        players: applySharesToPlayers(prev.players, entry, previous)
+        players: applySquadPlayerHistory(
+          applySharesToPlayers(prev.players, entry, previous),
+          entry,
+          previous
+        ),
+        squads: applySquadShares(prev.squads || [], entry, previous)
       }
     })
 
@@ -342,7 +415,12 @@ export function AppProvider({ children }) {
       return {
         ...prev,
         bookings: prev.bookings.filter((booking) => booking.id !== id),
-        players: applySharesToPlayers(prev.players, null, previous)
+        players: applySquadPlayerHistory(
+          applySharesToPlayers(prev.players, null, previous),
+          null,
+          previous
+        ),
+        squads: applySquadShares(prev.squads || [], null, previous)
       }
     })
   }
@@ -409,35 +487,37 @@ export function AppProvider({ children }) {
   }
 
   const value = {
-      players,
-      turfs,
-      sports,
-      bookings,
-      squads,
-      settings,
-      getPlayerById,
-      getTurfById,
-      getSportById,
-      getSquadById,
-      addPlayer,
-      updatePlayer,
-      deletePlayer,
-      addTurf,
-      updateTurf,
-      deleteTurf,
-      addSport,
-      updateSport,
-      deleteSport,
-      addSquad,
-      updateSquad,
-      deleteSquad,
-      addBooking,
-      updateBooking,
-      deleteBooking,
-      addBalance,
-      updateSettings,
-      importAppData
-    }
+    players,
+    turfs,
+    sports,
+    bookings,
+    squads,
+    settings,
+    getPlayerById,
+    getTurfById,
+    getSportById,
+    getSquadById,
+    getSquadBalance,
+    addPlayer,
+    updatePlayer,
+    deletePlayer,
+    addTurf,
+    updateTurf,
+    deleteTurf,
+    addSport,
+    updateSport,
+    deleteSport,
+    addSquad,
+    updateSquad,
+    deleteSquad,
+    contributeToSquad,
+    addBooking,
+    updateBooking,
+    deleteBooking,
+    addBalance,
+    updateSettings,
+    importAppData
+  }
 
   return (
     <AppContext.Provider value={value}>

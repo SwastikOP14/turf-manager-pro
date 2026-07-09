@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { X } from "lucide-react"
 import { useApp } from "../../context/useApp"
@@ -14,6 +14,7 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
   const [preferredPayment, setPreferredPayment] = useState("UPI")
   const [photo, setPhoto] = useState(null)
   const [error, setError] = useState("")
+  const phoneInputRef = useRef(null)
 
   useModalBackHandler(onClose)
 
@@ -35,7 +36,7 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-9999 flex items-center justify-center p-5">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center p-5" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
 
@@ -64,7 +65,7 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
 
           {/* Photo */}
           <div className="flex justify-center pt-2 pb-1">
-            <PhotoUpload name={name} photo={photo} onPhotoChange={setPhoto} size="large" />
+            <PhotoUpload name={name} photo={photo} onPhotoChange={setPhoto} size="medium" type="player" />
           </div>
 
           {/* Player Name */}
@@ -92,16 +93,34 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
               Mobile Number
             </label>
             <input
+              ref={phoneInputRef}
               value={phone}
-              onChange={(e) => { setPhone(formatPhoneInput(e.target.value)); setError("") }}
+              onChange={(e) => {
+                const input = e.target
+                const prevCursor = input.selectionStart
+                const digitsBeforeCursor = input.value.slice(0, prevCursor).replace(/\D/g, "").length
+
+                const formatted = formatPhoneInput(input.value)
+                setPhone(formatted)
+                setError("")
+
+                requestAnimationFrame(() => {
+                  if (!phoneInputRef.current) return
+                  // "+91 " is always 4 characters, then digits, with one extra space after the 5th digit
+                  let newPos = 4 + digitsBeforeCursor
+                  if (digitsBeforeCursor > 5) newPos += 1
+                  newPos = Math.min(newPos, formatted.length)
+                  phoneInputRef.current.setSelectionRange(newPos, newPos)
+                })
+              }}
               placeholder="+91 9876543210"
               inputMode="numeric"
               className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition
-                bg-slate-100 dark:bg-white/8
-                border border-slate-200 dark:border-white/10
-                text-slate-900 dark:text-white
-                placeholder-slate-400 dark:placeholder-slate-500
-                focus:border-green-500 dark:focus:border-green-500"
+                          bg-slate-100 dark:bg-white/8
+                          border border-slate-200 dark:border-white/10
+                          text-slate-900 dark:text-white
+                          placeholder-slate-400 dark:placeholder-slate-500
+                          focus:border-green-500 dark:focus:border-green-500"
             />
           </div>
 

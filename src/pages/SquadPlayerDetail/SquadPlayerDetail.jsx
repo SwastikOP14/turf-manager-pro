@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { Trophy, Plus, Trash2, X } from "lucide-react"
+import { Trophy, Plus, Trash2, X, Users } from "lucide-react"
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import PlayerAvatar from "../../components/common/PlayerAvatar"
@@ -381,7 +381,7 @@ export default function SquadPlayerDetail() {
                   onClick={() => setShowAllContributions((v) => !v)}
                   className="text-sm font-semibold text-green-600 dark:text-green-400"
                 >
-                  {showAllContributions ? "Show Less" : "View All"}
+                  {showAllContributions ? "See Few" : "See All"}
                 </button>
               )}
             </div>
@@ -390,23 +390,22 @@ export default function SquadPlayerDetail() {
               {visibleContributions.map((c, i) => (
                 <GlassCard key={c.id || i} style={{ padding: "14px 16px" }}>
                   <div className="flex items-center justify-between gap-3">
-                    {/* Icon Container */}
+                    {/* Icon Container (Using Users icon matching target layout) */}
                     <div style={{
                       width: "38px", height: "38px", borderRadius: "10px",
                       background: "rgba(16,185,129,0.1)", display: "flex",
                       alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"
-                        strokeLinejoin="round">
-                        <polyline points="7 17 17 7" /><polyline points="7 7 17 7 17 17" />
-                      </svg>
+                      <Users size={18} style={{ color: "#10b981" }} />
                     </div>
 
                     {/* Information */}
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-slate-900 dark:text-white">
                         Squad Contribution
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {formatDate(c.date || c.createdAt)}
                       </p>
                     </div>
 

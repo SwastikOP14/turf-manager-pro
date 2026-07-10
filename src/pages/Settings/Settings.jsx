@@ -334,7 +334,7 @@ export default function Settings() {
               onClick={() => setTurfDropdownOpen(!turfDropdownOpen)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-[14px] font-medium"
             >
-              View All
+              See All
               <ChevronDown
                 size={14}
                 strokeWidth={1.8}
@@ -399,7 +399,7 @@ export default function Settings() {
               onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-[14px] font-medium"
             >
-              View All
+              See All
               <ChevronDown
                 size={14}
                 strokeWidth={1.8}

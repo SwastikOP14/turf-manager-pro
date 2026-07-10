@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Edit, Trash2, TrendingUp, TrendingDown,
-  ArrowDownLeft, ArrowUpRight,
+  ArrowDownLeft, ArrowUpRight, Users,
 } from "lucide-react";
 import { getInitials } from "../../utils/initials";
 import MobileLayout from "../../components/layout/MobileLayout";
@@ -26,6 +27,7 @@ export default function SquadDetail() {
   const {
     getSquadById, deleteSquad, getPlayerById, updateSquad,
     getTurfById, getSportById, bookings, contributeToSquad,
+    updatePlayer,
   } = useApp();
   const haptics = useHaptics();
 
@@ -267,7 +269,7 @@ export default function SquadDetail() {
             {squadBookings.length > 3 && (
               <button onClick={() => setShowAllBookings(!showAllBookings)}
                 className="text-[14px] font-semibold text-green-600 dark:text-green-400 bg-none border-none cursor-pointer">
-                {showAllBookings ? "Show Less" : "View All"}
+                {showAllBookings ? "See Few" : "See All"}
               </button>
             )}
           </div>
@@ -326,16 +328,17 @@ export default function SquadDetail() {
                         });
                       }}
                     >
+                      {/* Icon Container (Using Users icon colored Purple for Squad Booking) */}
                       <div style={{
                         width: "38px", height: "38px", borderRadius: "10px",
-                        background: "rgba(239,68,68,0.1)", display: "flex",
+                        background: "rgba(139,92,246,0.1)", display: "flex",
                         alignItems: "center", justifyContent: "center", flexShrink: 0,
                       }}>
-                        <ArrowDownLeft size={18} style={{ color: "#ef4444" }} />
+                        <Users size={18} style={{ color: "#8b5cf6" }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-bold text-slate-900 dark:text-white">
-                          {sport?.name || "Sport"} • {booking.id}
+                          Squad Booking • {booking.id}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           {turf?.name || "Turf"} • {formatDate(booking.date)}
@@ -415,7 +418,7 @@ export default function SquadDetail() {
             {paymentHistory.length > 4 && (
               <button onClick={() => setShowAllPayments(!showAllPayments)}
                 className="text-sm font-semibold text-green-600 dark:text-green-400">
-                {showAllPayments ? "Show Less" : "View All"}
+                {showAllPayments ? "See Few" : "See All"}
               </button>
             )}
           </div>
@@ -425,19 +428,20 @@ export default function SquadDetail() {
               {displayedPayments.map((item) => (
                 <GlassCard key={item.id} style={{ padding: "14px 16px" }}>
                   <div className="flex items-center justify-between gap-3">
+                    {/* Icon Container (Using Users icon matching target layout) */}
                     <div style={{
                       width: "38px", height: "38px", borderRadius: "10px",
                       background: "rgba(16,185,129,0.1)", display: "flex",
                       alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}>
-                      <ArrowUpRight size={18} style={{ color: "#10b981" }} />
+                      <Users size={18} style={{ color: "#10b981" }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-slate-900 dark:text-white">
                         {item.playerName}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {item.notes || "Squad Top-up"} • {formatDate(item.date)}
+                        Contributed to squad • {formatDate(item.date)}
                       </p>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
@@ -536,23 +540,22 @@ export default function SquadDetail() {
         </div>
       )}
 
-      {/* Edit Payment Modal */}
-      {editPaymentModal && (
+      {/* Edit Payment Modal (Converted to centered pop-up with custom Portal) */}
+      {editPaymentModal && createPortal(
         <div
-          className="fixed inset-0 z-99999 flex items-end"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+          className="fixed inset-0 z-99999 flex items-center justify-center p-5"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}
           onClick={() => setEditPaymentModal(null)}
         >
           <div
-            className="w-full bg-white dark:bg-[#0f172a] rounded-t-3xl px-5 pt-5 pb-8 space-y-4"
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#0f172a] p-5 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto" />
             <div>
-              <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">
+              <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white">
                 Edit Contribution
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
                 From <span className="font-semibold">{editPaymentModal.playerName}</span> · Currently{" "}
                 <span className="text-green-600 font-semibold">
                   {formatCurrency(editPaymentModal.currentAmount)}
@@ -560,18 +563,16 @@ export default function SquadDetail() {
               </p>
             </div>
 
-            <div style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              background: "var(--bg-card)", border: "1.5px solid var(--bg-border)",
-              borderRadius: "12px", padding: "0 14px", height: "52px",
-            }}>
+            {/* Input Box Container (Adjusted styles for absolute dark-theme visibility) */}
+            <div className="flex items-center gap-2 rounded-xl px-3.5 h-[52px] bg-black/4 dark:bg-white/5 border border-black/10 dark:border-white/10">
               <span className="text-slate-500 font-semibold">₹</span>
               <input
                 type="number"
                 value={editPaymentAmount}
                 onChange={(e) => { setEditPaymentAmount(e.target.value); setEditPaymentError(""); }}
                 placeholder="Enter new amount"
-                style={{ flex: 1, background: "transparent", outline: "none", fontSize: "16px", color: "var(--text-primary)", border: "none" }}
+                style={{ flex: 1, background: "transparent", outline: "none", fontSize: "16px", border: "none" }}
+                className="text-slate-900 dark:text-white"
               />
             </div>
 
@@ -579,11 +580,11 @@ export default function SquadDetail() {
               <p className="text-sm text-red-500 font-medium">{editPaymentError}</p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setEditPaymentModal(null)}
-                className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]"
+                className="flex-1 py-2.5 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-semibold text-sm"
               >
                 Cancel
               </button>
@@ -597,23 +598,54 @@ export default function SquadDetail() {
                   }
                   const delta = parsed - editPaymentModal.currentAmount;
                   if (delta !== 0) {
-                    const result = contributeToSquad(squad.id, editPaymentModal.playerId, delta);
-                    if (!result.ok) {
-                      setEditPaymentError(result.error);
-                      return;
+                    // 1. Find the target contribution inside the squad first to get its exact date
+                    const contributionObj = (squad.contributions || []).find(
+                      (c) => c.id === editPaymentModal.contributionId
+                    );
+
+                    if (contributionObj) {
+                      // 2. Update the contribution entry inside the squad
+                      const updatedContributions = (squad.contributions || []).map((c) =>
+                        c.id === editPaymentModal.contributionId ? { ...c, amount: parsed } : c
+                      );
+                      updateSquad(squad.id, { contributions: updatedContributions });
+
+                      // 3. Update the matching item in the player's personal transaction history & wallet balance
+                      const playerObj = getPlayerById(editPaymentModal.playerId);
+                      if (playerObj) {
+                        const updatedHistory = (playerObj.history || []).map((h) => {
+                          const matchesOldAmount = h.amount === editPaymentModal.currentAmount;
+                          
+                          // Compare strictly first, fall back to calendar-day comparison to handle different ISO formats
+                          const matchesDate = h.date === contributionObj.date || 
+                            h.createdAt === contributionObj.createdAt ||
+                            (h.date && contributionObj.date && new Date(h.date).toDateString() === new Date(contributionObj.date).toDateString());
+                          
+                          if (matchesOldAmount && matchesDate) {
+                            return { ...h, amount: parsed }; // Sync with the new edited amount
+                          }
+                          return h;
+                        });
+
+                        updatePlayer(playerObj.id, {
+                          balance: playerObj.balance - delta,
+                          history: updatedHistory,
+                        });
+                      }
                     }
                   }
                   haptics.trigger([10, 30, 10]);
                   setEditPaymentModal(null);
                   setEditPaymentAmount("");
                 }}
-                className="flex-1 py-3.5 rounded-2xl bg-green-500 text-black font-bold text-[15px]"
+                className="flex-1 py-2.5 rounded-2xl bg-green-600 text-white font-semibold text-sm"
               >
                 Save
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Remove Players Confirmation */}

@@ -118,7 +118,7 @@ export default function EditBookingSheet({ booking, onSave, onClose }) {
                 onClick={() => setShowAllMisc(!showAllMisc)}
                 className="text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-0.5"
               >
-                {showAllMisc ? "Show less" : "See all"} {!showAllMisc && "→"}
+                {showAllMisc ? "See Few" : "See all"} {!showAllMisc && "→"}
               </button>
             )}
           </div>

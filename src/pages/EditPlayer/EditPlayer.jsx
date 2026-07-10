@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef } from "react"
+import { createPortal } from "react-dom"
 import { useParams, useNavigate } from "react-router-dom"
-import { Trash2, X } from "lucide-react"
+import { Trash2, X, User, Users, Wallet } from "lucide-react"
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
 import InputField from "../../components/common/InputField"
@@ -56,8 +57,14 @@ export default function EditPlayer() {
   const [showAllHistory, setShowAllHistory] = useState(false)
   const [showAllBookings, setShowAllBookings] = useState(false)
   const [balanceModalOpen, setBalanceModalOpen] = useState(false)
+  const [editTopUpOpen, setEditTopUpOpen] = useState(false)
+  const [editItem, setEditItem] = useState(null)
+  const [editAmount, setEditAmount] = useState("")
+  const [editError, setEditError] = useState("")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [error, setError] = useState("")
+  const [historyFilter, setHistoryFilter] = useState("All") // "All", "Personal", "Squad"
+  const [bookingFilter, setBookingFilter] = useState("All") // "All", "Individual", "Squad"
   const phoneInputRef = useRef(null)
   // Bookings this player took part in — either as an Individual booking,
   // or via a Squad they're a member of (and not excluded from that booking).
@@ -77,6 +84,19 @@ export default function EditPlayer() {
     }).sort((a, b) => new Date(b.date) - new Date(a.date))
   }, [bookings, id])
 
+  // Filter bookings dynamically based on active filter button
+  const filteredBookings = useMemo(() => {
+    if (bookingFilter === "Individual") {
+      return playerBookings.filter(
+        (b) => b.bookingType === "Individual" || (!b.bookingType && b.playerIds?.length)
+      )
+    }
+    if (bookingFilter === "Squad") {
+      return playerBookings.filter((b) => b.bookingType === "Team")
+    }
+    return playerBookings
+  }, [playerBookings, bookingFilter])
+
   // Payment history = only balance events (top-ups, squad contributions)
   // Never includes booking-debit entries.
   const paymentHistory = useMemo(() => {
@@ -84,6 +104,17 @@ export default function EditPlayer() {
       .filter((h) => h.notes === "Balance added" || h.notes === "Squad contribution")
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
   }, [player.history])
+
+  // Filter history dynamically based on active filter button
+  const filteredHistory = useMemo(() => {
+    if (historyFilter === "Personal") {
+      return paymentHistory.filter((h) => h.notes === "Balance added")
+    }
+    if (historyFilter === "Squad") {
+      return paymentHistory.filter((h) => h.notes === "Squad contribution")
+    }
+    return paymentHistory
+  }, [paymentHistory, historyFilter])
 
   if (!player) {
     return (
@@ -255,27 +286,47 @@ export default function EditPlayer() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">
-                Booking History ({playerBookings.length})
+                Booking History ({filteredBookings.length})
               </h2>
-              {playerBookings.length > 3 && (
-                <button
-                  onClick={() => setShowAllBookings(!showAllBookings)}
-                  className="text-[14px] font-semibold text-green-600 dark:text-green-400 bg-none border-none cursor-pointer"
-                >
-                  {showAllBookings ? "Show Less" : "View All"}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {/* Segment Filter (Left of See All button) */}
+                <div className="flex rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 p-0.5 text-[11px] font-semibold">
+                  {["All", "Individual", "Squad"].map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setBookingFilter(f)}
+                      className={`px-2 py-0.5 transition-all rounded-md ${bookingFilter === f
+                        ? "bg-green-600 text-white shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-955 dark:hover:text-slate-200"
+                        }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredBookings.length > 3 && (
+                  <button
+                    onClick={() => setShowAllBookings(!showAllBookings)}
+                    className="text-[14px] font-semibold text-green-600 dark:text-green-400 bg-none border-none cursor-pointer"
+                  >
+                    {showAllBookings ? "See Few" : "See All"}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
-              {(showAllBookings ? playerBookings : playerBookings.slice(0, 3)).map((booking) => {
+              {(showAllBookings ? filteredBookings : filteredBookings.slice(0, 3)).map((booking) => {
                 const turf = getTurfById(booking.turfId)
                 const sport = getSportById(booking.sportId)
 
                 let shareAmount = 0
                 let squadName = null
+                const isIndividual = booking.bookingType === "Individual" || (!booking.bookingType && booking.playerIds?.length)
 
-                if (booking.bookingType === "Individual" || (!booking.bookingType && booking.playerIds?.length)) {
+                if (isIndividual) {
                   shareAmount = booking.playerIds?.length > 0
                     ? booking.amount / booking.playerIds.length
                     : 0
@@ -292,21 +343,27 @@ export default function EditPlayer() {
                   }
                 }
 
+                // Differentiate styles: Blue for Individual Booking, Purple for Squad Booking
+                const iconBg = isIndividual ? "rgba(59,130,246,0.1)" : "rgba(139,92,246,0.1)"
+                const iconColor = isIndividual ? "#3b82f6" : "#8b5cf6"
+
                 return (
                   <GlassCard key={booking.id} style={{ padding: "14px 16px" }}>
                     <div className="flex items-center justify-between gap-3">
                       <div style={{
                         width: "38px", height: "38px", borderRadius: "10px",
-                        background: "rgba(239,68,68,0.1)", display: "flex",
+                        background: iconBg, display: "flex",
                         alignItems: "center", justifyContent: "center", flexShrink: 0,
                       }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="17" y1="7" x2="7" y2="17" /><polyline points="17 17 7 17 7 7" />
-                        </svg>
+                        {isIndividual ? (
+                          <User size={18} style={{ color: iconColor }} />
+                        ) : (
+                          <Users size={18} style={{ color: iconColor }} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-bold text-slate-900 dark:text-white">
-                          {sport?.name || "Booking"} • {booking.id}
+                          {isIndividual ? "Individual Booking" : "Squad Booking"} • {booking.id}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           {turf?.name || "—"} • {formatDisplayDate(booking.date)}
@@ -339,25 +396,46 @@ export default function EditPlayer() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">
-                Payment History ({paymentHistory.length})
+                Payment History ({filteredHistory.length})
               </h2>
-              {paymentHistory.length > 4 && (
-                <button
-                  onClick={() => setShowAllHistory(!showAllHistory)}
-                  className="text-sm font-semibold text-green-600 dark:text-green-400"
-                  style={{ background: "none", border: "none", cursor: "pointer" }}
-                >
-                  {showAllHistory ? "Show Less" : "View All"}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {/* Segment Filter (Left of See All button) */}
+                <div className="flex rounded-lg overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 p-0.5 text-[11px] font-semibold">
+                  {["All", "Personal", "Squad"].map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setHistoryFilter(f)}
+                      className={`px-2 py-0.5 transition-all rounded-md ${historyFilter === f
+                        ? "bg-green-600 text-white shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-200"
+                        }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredHistory.length > 4 && (
+                  <button
+                    onClick={() => setShowAllHistory(!showAllHistory)}
+                    className="text-sm font-semibold text-green-600 dark:text-green-400"
+                    style={{ background: "none", border: "none", cursor: "pointer" }}
+                  >
+                    {showAllHistory ? "See Few" : "See All"}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
-              {(showAllHistory ? paymentHistory : paymentHistory.slice(0, 4)).map((item) => {
+              {(showAllHistory ? filteredHistory : filteredHistory.slice(0, 4)).map((item) => {
                 const isTopUp = item.notes === "Balance added"
                 const matchedSquad = !isTopUp
                   ? squads.find((sq) => (sq.contributions || []).some(
-                    (c) => c.playerId === id && c.amount === item.amount && c.date === item.date
+                    (c) => c.playerId === id &&
+                      c.amount === item.amount &&
+                      (c.date === item.date || (c.date && item.date && new Date(c.date).toDateString() === new Date(item.date).toDateString()))
                   ))
                   : null
 
@@ -366,39 +444,41 @@ export default function EditPlayer() {
                   ? `${item.paymentMode || ""}${item.paymentMode ? " • " : ""}${formatDisplayDate(item.date)}`
                   : formatDisplayDate(item.date)
 
+                // Differentiate styles: Cyan for Personal Top-up, Green for Squad Contribution
+                const iconBg = isTopUp ? "rgba(6,182,212,0.1)" : "rgba(16,185,129,0.1)"
+                const iconColor = isTopUp ? "#06b6d4" : "#10b981"
+                const amountClass = isTopUp ? "text-cyan-600 dark:text-cyan-400" : "text-green-600 dark:text-green-400"
+
                 return (
                   <GlassCard key={item.id} style={{ padding: "14px 16px" }}>
                     <div className="flex items-center justify-between gap-3">
                       <div style={{
                         width: "38px", height: "38px", borderRadius: "10px",
-                        background: "rgba(16,185,129,0.1)", display: "flex",
+                        background: iconBg, display: "flex",
                         alignItems: "center", justifyContent: "center", flexShrink: 0,
                       }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
-                        </svg>
+                        {isTopUp ? (
+                          <Wallet size={18} style={{ color: iconColor }} />
+                        ) : (
+                          <Users size={18} style={{ color: iconColor }} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-bold text-slate-900 dark:text-white">{title}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                        <p className="text-base font-bold text-green-600 dark:text-green-400">
+                        <p className={`text-base font-bold ${amountClass}`}>
                           +{formatCurrency(item.amount)}
                         </p>
                         {isTopUp && (
                           <button
                             type="button"
                             onClick={() => {
-                              const newAmount = window.prompt(`Edit top-up amount`, String(item.amount))
-                              if (newAmount === null) return
-                              const parsed = Number(newAmount)
-                              if (isNaN(parsed) || parsed < 0) { alert("Enter a valid amount"); return }
-                              const diff = parsed - item.amount
-                              updatePlayer(id, {
-                                balance: player.balance + diff,
-                                history: player.history.map(h => h.id === item.id ? { ...h, amount: parsed } : h)
-                              })
+                              setEditItem(item)
+                              setEditAmount(String(item.amount))
+                              setEditError("")
+                              setEditTopUpOpen(true)
                             }}
                             style={{ fontSize: "11px", fontWeight: 700, color: "var(--brand)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                           >
@@ -450,6 +530,74 @@ export default function EditPlayer() {
         playerName={player.name}
         onSubmit={(payload) => addBalance(id, payload)}
       />
+
+      {/* Edit Top-up Modal */}
+      {editTopUpOpen && editItem && createPortal(
+        <div
+          className="fixed inset-0 z-99999 flex items-center justify-center p-5"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}
+          onClick={() => { setEditTopUpOpen(false); setEditItem(null); }}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#0f172a] p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="text-[18px] font-semibold text-slate-900 dark:text-white">
+                Edit Top-up Amount
+              </h2>
+              <p className="text-[14px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+                {player.name} · Current amount: <span className="font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(editItem.amount)}</span>
+              </p>
+            </div>
+
+            {/* Input Box Container (Adjusted styles for absolute dark-theme visibility) */}
+            <div className="flex items-center gap-2 rounded-xl px-3.5 h-[52px] bg-black/4 dark:bg-white/5 border border-black/10 dark:border-white/10">
+              <span className="text-slate-500 font-semibold">₹</span>
+              <input
+                type="number"
+                value={editAmount}
+                onChange={(e) => { setEditAmount(e.target.value); setEditError("") }}
+                placeholder="Enter new amount"
+                style={{ flex: 1, background: "transparent", outline: "none", fontSize: "16px", border: "none" }}
+                className="text-slate-900 dark:text-white"
+              />
+            </div>
+
+            {editError && <p className="text-sm text-red-500 font-medium">{editError}</p>}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { setEditTopUpOpen(false); setEditItem(null); }}
+                className="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-semibold text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const parsed = Number(editAmount)
+                  if (isNaN(parsed) || parsed < 0 || editAmount.trim() === "") {
+                    setEditError("Enter a valid amount")
+                    return
+                  }
+                  const diff = parsed - editItem.amount
+                  updatePlayer(id, {
+                    balance: player.balance + diff,
+                    history: player.history.map(h => h.id === editItem.id ? { ...h, amount: parsed } : h)
+                  })
+                  setEditTopUpOpen(false)
+                  setEditItem(null)
+                }}
+                className="px-4 py-2.5 rounded-2xl bg-green-600 text-white font-semibold text-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       <Modal open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)} title="Delete Player" className="max-w-sm">
         <div className="space-y-4">

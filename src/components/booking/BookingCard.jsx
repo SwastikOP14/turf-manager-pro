@@ -106,7 +106,8 @@ export default function BookingCard({
 
   const handleClick = () => {
     endPress()
-    if (selectMode) { haptics.trigger(8); onSelect?.(booking.id) }
+    haptics.trigger(10) // Standard tactile booking-press trigger
+    if (selectMode) { onSelect?.(booking.id) }
     else navigate(`/booking/${booking.id}/edit`)
   }
 

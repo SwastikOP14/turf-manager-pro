@@ -79,18 +79,15 @@ export default function EditBookingSheet({ booking, onSave, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-99999 flex items-end"
-      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)" }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-5"
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full bg-white dark:bg-[#0f172a] rounded-t-3xl px-5 pt-4 pb-8 space-y-4"
-        style={{ maxHeight: "90vh", overflowY: "auto" }}
+        className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#0f172a] p-5 space-y-4 shadow-2xl border border-black/10 dark:border-white/10"
+        style={{ maxHeight: "85vh", overflowY: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle + header */}
-        <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto mb-1" />
-
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-[18px] font-bold text-slate-900 dark:text-white">
@@ -100,9 +97,9 @@ export default function EditBookingSheet({ booking, onSave, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center"
+            className="w-8 h-8 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0"
           >
-            <X size={17} />
+            <X size={16} />
           </button>
         </div>
 
@@ -213,20 +210,20 @@ export default function EditBookingSheet({ booking, onSave, onClose }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]"
+            className="flex-1 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-sm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 py-3.5 rounded-2xl bg-green-500 text-black font-bold text-[15px]"
+            className="flex-1 py-2.5 rounded-2xl bg-green-600 text-white font-bold text-sm"
           >
-            Save Changes
+            Save
           </button>
         </div>
       </div>

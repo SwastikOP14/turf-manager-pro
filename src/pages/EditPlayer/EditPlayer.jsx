@@ -149,15 +149,26 @@ export default function EditPlayer() {
   }
 
   const handleSavePrefs = () => {
+    haptics.trigger([10, 30, 10]) // Success haptic
     updatePlayer(id, { sportPreferences: sportPrefs })
     setPrefsDirty(false)
     setError("")
+    setActiveTab("Basic Info") // Auto switch back to Basic Info tab on save
   }
 
   const handleRevertPrefs = () => {
+    haptics.trigger(8)
     setSportPrefs(player?.sportPreferences || [])
     setPrefsDirty(false)
   }
+
+  // Intercept physical back-button click during Sport Preference configuration [1.1.8]
+  useModalBackHandler(activeTab === "Sport Preferences" ? () => {
+    haptics.trigger(8);
+    setSportPrefs(player?.sportPreferences || []);
+    setPrefsDirty(false);
+    setActiveTab("Basic Info"); // Safely discard edits and go back to Basic Info tab
+  } : null)
 
   const handleDeletePlayer = () => {
     const result = deletePlayer(id)
@@ -262,7 +273,7 @@ export default function EditPlayer() {
           </GlassCard>
         </div>
 
-        <button onClick={() => setBalanceModalOpen(true)}
+        <button onClick={() => { haptics.trigger(10); setBalanceModalOpen(true); }}
           className="w-full py-3.5 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors">
           Add Balance
         </button>

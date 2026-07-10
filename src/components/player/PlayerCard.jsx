@@ -52,8 +52,8 @@ export default function PlayerCard({
 
   const handleClick = () => {
     clearTimeout(pressTimer.current)
+    haptics.trigger(10) // Standard tactile list-press trigger
     if (selectMode) {
-      haptics.trigger(8)
       onSelect?.(player.id)
       return
     }

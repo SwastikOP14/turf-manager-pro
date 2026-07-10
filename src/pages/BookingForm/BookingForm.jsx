@@ -1186,7 +1186,7 @@ export default function BookingForm() {
               onClick={() => setLowBalanceConfirm(null)}
               className="flex-1 py-3.5 rounded-2xl border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 font-semibold text-[15px]"
             >
-              Cancel Booking
+              Cancel
             </button>
             <button
               type="button"
@@ -1196,7 +1196,7 @@ export default function BookingForm() {
               }}
               className="flex-1 py-3.5 rounded-2xl bg-red-500 text-white font-bold text-[15px]"
             >
-              Continue Booking
+              Continue
             </button>
           </div>
         </ModalBlurWrapper>

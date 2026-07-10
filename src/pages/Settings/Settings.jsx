@@ -262,6 +262,7 @@ export default function Settings() {
               updateSettings({ language: e.target.value })
             }
             options={["English", "Hindi", "Odia", "Bengali", "Kerelam", "Assamee", "Haryanvi"]}
+            placeholder={null}
           />
 
           <SettingItem

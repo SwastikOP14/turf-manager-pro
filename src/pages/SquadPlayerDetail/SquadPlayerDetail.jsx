@@ -192,6 +192,9 @@ export default function SquadPlayerDetail() {
   const [deleteAchId, setDeleteAchId] = useState(null)
   const [showAllContributions, setShowAllContributions] = useState(false)
 
+  // Registers the native hardware back button to dismiss the contribute modal [1.1.8]
+  useModalBackHandler(balanceModalOpen ? () => setBalanceModalOpen(false) : null)
+
   const playerSquadBookings = useMemo(() => {
     if (!player) return []
     return bookings.filter((b) => {
@@ -254,7 +257,7 @@ export default function SquadPlayerDetail() {
       <div className="pt-3 px-4 pb-24 space-y-3 animate-fade-in-up">
 
         {/* Page Header */}
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight">Player Details</h1>
             <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">View player information and activity</p>
@@ -288,7 +291,7 @@ export default function SquadPlayerDetail() {
         </div>
 
         <button
-          onClick={() => setBalanceModalOpen(true)}
+          onClick={() => { haptics.trigger(10); setBalanceModalOpen(true); }}
           className="w-full py-3.5 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 font-semibold hover:bg-green-500/20 transition-colors"
         >
           Contribute

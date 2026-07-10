@@ -77,7 +77,6 @@ export default function AddPlayerModal({ onClose, onPlayerAdded }) {
               value={name}
               onChange={(e) => { setName(e.target.value); setError("") }}
               placeholder="e.g., Arjun Sharma"
-              autoFocus
               className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition
                 bg-slate-100 dark:bg-white/8
                 border border-slate-200 dark:border-white/10

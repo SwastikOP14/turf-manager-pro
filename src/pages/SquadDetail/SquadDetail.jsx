@@ -6,6 +6,7 @@ import {
   ArrowDownLeft, ArrowUpRight, Users,
 } from "lucide-react";
 import { getInitials } from "../../utils/initials";
+import { useModalBackHandler } from "../../hooks/useModalBackHandler";
 import MobileLayout from "../../components/layout/MobileLayout";
 import GlassCard from "../../components/common/GlassCard";
 import PlayerCard from "../../components/player/PlayerCard";
@@ -45,6 +46,9 @@ export default function SquadDetail() {
   const [editPaymentAmount, setEditPaymentAmount] = useState("");
   const [editPaymentError, setEditPaymentError] = useState("");
   const squad = getSquadById(id);
+
+  // Register physical back button to safely dismiss inline edit modal [1.1.8]
+  useModalBackHandler(editPaymentModal ? () => setEditPaymentModal(null) : null);
 
   if (!squad) {
     return (

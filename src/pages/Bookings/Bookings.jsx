@@ -172,8 +172,8 @@ export default function Bookings() {
             </p>
             <button
               type="button"
-              onClick={() => setSelectedDate(null)}
-              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-white font-medium"
+              onClick={() => { haptics.trigger(10); setSelectedDate(null); }}
+              className="text-[11px] font-bold text-red-500 dark:text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full hover:bg-red-500/20 active:scale-95 transition-all"
             >
               Clear ×
             </button>
@@ -264,7 +264,7 @@ export default function Bookings() {
             
             {selectedIds.size === 1 && (
               <button type="button"
-                onClick={handleEditBooking}
+                onClick={() => { haptics.trigger(10); handleEditBooking(); }}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-white/30 text-white text-sm font-semibold shrink-0 active:scale-95">
                 <Edit size={14} />
                 Edit

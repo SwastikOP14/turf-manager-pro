@@ -79,7 +79,7 @@ export default function EditBookingSheet({ booking, onSave, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-5"
+      className="fixed inset-0 z-99999 flex items-center justify-center p-5"
       style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(10px)" }}
       onClick={onClose}
     >

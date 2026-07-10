@@ -102,14 +102,20 @@ export default function SquadDetail() {
     <MobileLayout>
       <div className="pt-3 px-4 pb-24 space-y-3 animate-fade-in-up">
 
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight">{squad.name}</h1>
+        {/* Page Header (Restored clean back arrow to return to Squads) */}
+        <div className="flex items-center gap-3 mb-3">
+          <button
+            onClick={() => navigate("/players")}
+            className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center active:scale-95 transition-all"
+          >
+            <ArrowLeft size={18} className="text-slate-700 dark:text-white" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white leading-tight truncate">{squad.name}</h1>
             <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Squad overview & history</p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => navigate(`/squad/${squad.id}/edit`)}
               className="w-10 h-10 rounded-xl bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center"

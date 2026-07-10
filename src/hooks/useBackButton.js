@@ -21,13 +21,15 @@ export function useBackButton() {
   const location = useLocation()
 
   useEffect(() => {
-    let cleanup = null
+    let active = true
+    let listener = null
 
     const setup = async () => {
       try {
         const { App } = await import("@capacitor/app")
+        if (!active) return
 
-        const listener = await App.addListener("backButton", () => {
+        listener = await App.addListener("backButton", () => {
           // If any modal is open, close the top one first
           if (modalStack.length > 0) {
             const dismiss = modalStack[modalStack.length - 1]
@@ -42,14 +44,18 @@ export function useBackButton() {
             navigate(-1)
           }
         })
-
-        cleanup = () => listener.remove()
       } catch {
         // Browser — no intervention needed
       }
     }
 
     setup()
-    return () => cleanup?.()
+
+    return () => {
+      active = false
+      if (listener) {
+        listener.remove()
+      }
+    }
   }, [location.pathname, navigate])
 }

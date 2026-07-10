@@ -1,6 +1,8 @@
 import { useMemo, useState, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useParams, useNavigate } from "react-router-dom"
+import { useModalBackHandler } from "../../hooks/useModalBackHandler"
+import { useHaptics } from "../../context/HapticsContext"
 import { Trash2, X, User, Users, Wallet } from "lucide-react"
 import MobileLayout from "../../components/layout/MobileLayout"
 import GlassCard from "../../components/common/GlassCard"
